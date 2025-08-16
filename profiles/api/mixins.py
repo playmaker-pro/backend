@@ -37,16 +37,18 @@ class ProfileRetrieveMixin:
         if not serializer_class:
             return Response(status=status.HTTP_204_NO_CONTENT)
 
+        context = self.get_serializer_context()
+        context.update({
+            "request": request,
+            "label_context": "profile",
+            "premium_viewer": request.user.is_authenticated
+            and request.user.profile
+            and request.user.profile.is_premium,
+            "is_anonymous": is_anonymous,
+        })
         serializer = serializer_class(
             profile_object,
-            context={
-                "request": request,
-                "label_context": "profile",
-                "premium_viewer": request.user.is_authenticated
-                and request.user.profile
-                and request.user.profile.is_premium,
-                "is_anonymous": is_anonymous,
-            },
+            context=context,
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 

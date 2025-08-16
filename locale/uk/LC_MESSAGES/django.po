@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-12 21:31+0200\n"
+"POT-Creation-Date: 2025-08-12 21:33+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,7 +16,10 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=4; plural=(n % 1 == 0 && n % 10 == 1 && n % 100 != "
+"11 ? 0 : n % 1 == 0 && n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % "
+"100 > 14) ? 1 : n % 1 == 0 && (n % 10 ==0 || (n % 10 >=5 && n % 10 <=9) || "
+"(n % 100 >=11 && n % 100 <=14 )) ? 2: 3);\n"
 
 #: api/i18n_config.py:12 backend/settings/base.py:200
 #: profiles/migrations/0083_language.py:76
@@ -98,7 +101,7 @@ msgstr ""
 
 #: clubs/models.py:708
 msgid "Age category of the team. Specified for the juniors"
-msgstr "Kategoria wiekowa drużyny. Określone dla juniorów"
+msgstr "Вікова категорія команди. Вказується для юніорів"
 
 #: clubs/models.py:896
 msgid "Nazwa drużyny"
@@ -129,14 +132,12 @@ msgid "Stypendia"
 msgstr ""
 
 #: clubs/models.py:977
-#, fuzzy
-#| msgid "Zwrot za buty lub rękawice"
 msgid "Zwroty za buty/rękawice"
-msgstr "Boots or gloves reimbursement"
+msgstr ""
 
 #: clubs/models.py:982 roles/definitions.py:223
 msgid "Sprzęt treningowy"
-msgstr "Training equipment"
+msgstr "Тренувальне обладнання"
 
 #: clubs/models.py:987
 msgid "Sprzęt wyjściowy"
@@ -144,7 +145,7 @@ msgstr ""
 
 #: clubs/models.py:992 profiles/models.py:1532
 msgid "Drugi trener"
-msgstr "Assistant Coach"
+msgstr "Асистент тренера"
 
 #: clubs/models.py:997
 msgid "Fizjoterapeuta"
@@ -173,7 +174,7 @@ msgstr ""
 #: fantasy/templates/fantasy/_table.html:12 notifications/services.py:12
 #: profiles/models.py:100 roles/definitions.py:6
 msgid "Piłkarz"
-msgstr "Player"
+msgstr "Гравець"
 
 #: fantasy/templates/fantasy/_table.html:13 profiles/models.py:835
 msgid "Pozycja"
@@ -186,7 +187,7 @@ msgstr ""
 #: fantasy/templates/fantasy/_table.html:15 profiles/models.py:806
 #: profiles/models.py:1997
 msgid "Poziom rozgrywkowy"
-msgstr "Competition level"
+msgstr "Рівень змагань"
 
 #: fantasy/templates/fantasy/_table.html:35
 #: fantasy/templates/fantasy/_table.html:57
@@ -364,11 +365,11 @@ msgstr ""
 
 #: labels/translations.py:12
 msgid "Młodzieżowiec"
-msgstr "Youth Player"
+msgstr "Молодіжний гравець"
 
 #: labels/translations.py:13
 msgid "Bramkarz 185+"
-msgstr "Goalkeeper 185+"
+msgstr "Воротар 185+"
 
 #: labels/translations.py:14
 msgid "UEFA_PRO"
@@ -380,128 +381,128 @@ msgstr "UEFA A"
 
 #: labels/translations.py:16
 msgid "Trenerzy przed 30tka"
-msgstr "Coaches under 30"
+msgstr "Тренери до 30"
 
 #: labels/translations.py:17
 msgid "Trenerzy przed 40tka"
-msgstr "Coaches under 40"
+msgstr "Тренери до 40"
 
 #: labels/translations.py:18
 msgid "Trener defensywny"
-msgstr "Defensive Coach"
+msgstr "Захисний тренер"
 
 #: labels/translations.py:19
 msgid "Trener ofensywny"
-msgstr "Offensive Coach"
+msgstr "Атакувальний тренер"
 
 #: labels/translations.py:20 labels/translations.py:41
 msgid "Partnerzy PlayMaker"
-msgstr "PlayMaker Partners"
+msgstr "Партнери PlayMaker"
 
 #: labels/translations.py:21
 msgid "Junior w seniorach"
-msgstr "Junior in Seniors"
+msgstr "Юніор у дорослих"
 
 #: labels/translations.py:22 profiles/models.py:696 roles/definitions.py:97
 msgid "Nie szukam klubu"
-msgstr "Not looking for a club"
+msgstr "Не шукаю клуб"
 
 #: labels/translations.py:23 profiles/models.py:694 roles/definitions.py:95
 msgid "Szukam klubu"
-msgstr "Looking for a club"
+msgstr "Шукаю клуб"
 
 #: labels/translations.py:24
 msgid "Otwarty na propozycje"
-msgstr "Open to offers"
+msgstr ""
 
 #: labels/translations.py:25 labels/translations.py:36
 msgid "Spoza UE"
-msgstr "Non-EU"
+msgstr "Не з ЄС"
 
 #: labels/translations.py:26 labels/translations.py:37
 msgid "z UE"
-msgstr "EU"
+msgstr "з ЄС"
 
 #: labels/translations.py:31
 msgid "Młodzieżowcy"
-msgstr "Youth Players"
+msgstr "Молодіжні гравці"
 
 #: labels/translations.py:32
 msgid "Wysocy bramkarze"
-msgstr "Tall Goalkeepers"
+msgstr "Високі воротарі"
 
 #: labels/translations.py:33
 msgid "Trenerzy profesjonalni"
-msgstr "Professional Coaches"
+msgstr "Професійні тренери"
 
 #: labels/translations.py:34
 msgid "Trenerzy z UEFA A"
-msgstr "UEFA A Coaches"
+msgstr "Тренери UEFA A"
 
 #: labels/translations.py:35
 msgid "Młodzi trenerzy"
-msgstr "Young Coaches"
+msgstr "Молоді тренери"
 
 #: labels/translations.py:38
 msgid "Piłkarze otwarci na propozycje"
-msgstr "Players Open to Offers"
+msgstr "Гравці відкриті до пропозицій"
 
 #: labels/translations.py:39
-msgid "Piłkarze szukający klubu"
-msgstr "Looking for a club"
+msgid "Piłkarze szukający klub"
+msgstr "Гравці шукають клуб"
 
 #: labels/translations.py:40
 msgid "Juniorzy w seniorach"
-msgstr "Juniors in Seniors"
+msgstr "Юніори у дорослих"
 
 #: labels/translations.py:42
 msgid "Trenerzy ofensywni"
-msgstr "Offensive Coaches"
+msgstr "Атакувальні тренери"
 
 #: labels/translations.py:43
 msgid "Trenerzy defensywni"
-msgstr "Defensive Coaches"
+msgstr "Захисні тренери"
 
 #: inquiries/api/serializers.py:122
 msgid "NOWE"
-msgstr "New"
+msgstr "Нове"
 
 #: inquiries/api/serializers.py:123
 msgid "WYSŁANO"
-msgstr "Sent"
+msgstr "Надіслано"
 
 #: inquiries/api/serializers.py:124
 msgid "PRZECZYTANE"
-msgstr "Read"
+msgstr "Прочитано"
 
 #: inquiries/api/serializers.py:125
 msgid "ZAAKCEPTOWANE"
-msgstr "Accepted"
+msgstr "Прийнято"
 
 #: inquiries/api/serializers.py:126
 msgid "ODRZUCONE"
-msgstr "Rejected"
+msgstr "Відхилено"
 
 msgid "Podstawowy plan"
-msgstr "Basic plan"
+msgstr "Базовий план"
 
 msgid "Premium 3 zapytania"
-msgstr "Premium 3 inquiries"
+msgstr "Premium 3 запити"
 
 msgid "Premium 5 zapytania"
-msgstr "Premium 5 inquiries"
+msgstr "Premium 5 запитів"
 
 msgid "Premium 10 zapytania"
-msgstr "Premium 10 inquiries"
+msgstr "Premium 10 запитів"
 
-msgid "Dodatkowe 3 zapytań dostępne dla profilów premium"
-msgstr "Additional 3 inquiries available for premium profiles"
+msgid "Dodatkowe 3 zapytań dostępne dla profili premium"
+msgstr "Додаткові 3 запити доступні для преміум-профілів"
 
-msgid "Dodatkowe 5 zapytań dostępne dla profilów premium"
-msgstr "Additional 5 inquiries available for premium profiles"
+msgid "Dodatkowe 5 zapytań dostępne dla profili premium"
+msgstr "Додаткові 5 запитів доступні для преміум-профілів"
 
-msgid "Dodatkowe 10 zapytań dostępne dla profilów premium"
-msgstr "Additional 10 inquiries available for premium profiles"
+msgid "Dodatkowe 10 zapytań dostępne dla profili premium"
+msgstr "Додаткові 10 запитів доступні для преміум-профілів"
 
 #: mailing/models.py:108
 msgid ""
@@ -577,230 +578,235 @@ msgstr ""
 
 #: notifications/models.py:52
 msgid "ODCZYTANO"
-msgstr "READ"
+msgstr "ПРОЧИТАНО"
 
 #: notifications/models.py:52
 msgid "NIE ODCZYTANO"
-msgstr "UNREAD"
+msgstr "НЕ ПРОЧИТАНО"
 
 #: notifications/models.py:58
 msgid "Powiadomienia użytkownika"
-msgstr "User notifications"
+msgstr "Сповіщення користувача"
 
 #: notifications/models.py:59
 msgid "Powiadomienia użytkowników"
-msgstr "User notifications"
+msgstr "Сповіщення користувачів"
 
 #: notifications/services.py:12
+#, fuzzy
+#| msgid "Piłkarz"
 msgid "Piłkarka"
-msgstr "Player"
+msgstr "Гравець"
 
 #: notifications/services.py:13 profiles/models.py:1494 roles/definitions.py:7
 msgid "Trener"
-msgstr "Coach"
+msgstr "Тренер"
 
 #: notifications/services.py:13
+#, fuzzy
+#| msgid "Trener"
 msgid "Trenerka"
-msgstr "Coach"
+msgstr "Тренерка"
 
 #: notifications/services.py:14
 #, fuzzy
 #| msgid "Działacz klubu"
 msgid "Działacz klubowy"
-msgstr "Club Official"
+msgstr "Діяч клубу"
 
 #: notifications/services.py:14
 #, fuzzy
 #| msgid "Działacz klubu"
 msgid "Działaczka klubowa"
-msgstr "Club Official"
+msgstr "Діячка клубу"
 
 #: notifications/services.py:15 roles/definitions.py:11
 msgid "Kibic"
-msgstr "Fan"
+msgstr "Вболівальник"
 
 #: notifications/services.py:16
 msgid "Manager"
-msgstr "Manager"
+msgstr "Менеджер"
 
 #: notifications/services.py:17 roles/definitions.py:13
 msgid "Sędzia"
-msgstr "Referee"
+msgstr "Суддя"
 
 #: notifications/services.py:18 roles/definitions.py:10
 msgid "Skaut"
-msgstr "Scout"
+msgstr "Скаут"
 
 #: notifications/services.py:66
 msgid "Anonimowy profil"
-msgstr "Anonymous profile"
+msgstr "Анонімний профіль"
 
 #: notifications/templates.py:59
 msgid "Skorzystaj z wersji próbnej Premium"
-msgstr "Try Premium trial version"
+msgstr "Скористайтесь пробною версією Premium"
 
 #: notifications/templates.py:60
 msgid "Wypróbuj 3 dni premium za darmo!"
-msgstr "Try 3 days of premium for free!"
+msgstr "Спробуйте 3 дні преміуму безкоштовно!"
 
 #: notifications/templates.py:65
 msgid "Przejdź na Premium"
-msgstr "Go Premium"
+msgstr "Перейти на Premium"
 
 #: notifications/templates.py:66
 msgid "Sprawdź wszystkie możliwości i zyskaj przewagę!"
-msgstr "Check all features and gain an advantage!"
+msgstr "Перевірте всі можливості та отримайте перевагу!"
 
 #: notifications/templates.py:71
 msgid "Zweryfikuj swój profil"
-msgstr "Verify your profile"
+msgstr "Підтвердіть свій профіль"
 
 #: notifications/templates.py:72
 msgid "Dodaj linki do profili piłkarskich i zweryfikuj swój profil."
-msgstr "Add links to football profiles and verify your profile."
+msgstr "Додайте посилання на футбольні профілі та підтвердіть свій профіль."
 
 #: notifications/templates.py:77
 msgid "Profil tymczasowo ukryty"
-msgstr "Profile temporarily hidden"
+msgstr "Профіль тимчасово прихований"
 
 #: notifications/templates.py:78
 msgid ""
 "Popraw informacje w profilu (imię, nazwisko, zdjęcie), aby przywrócić "
 "widoczność."
 msgstr ""
-"Fix profile information (first name, last name, photo) to restore visibility."
+"Виправте інформацію в профілі (ім'я, прізвище, фото), щоб відновити "
+"видимість."
 
 #: notifications/templates.py:83
 msgid "Twoje konto Premium wygasło!"
-msgstr "Your Premium account has expired!"
+msgstr "Ваш Premium-акаунт закінчився!"
 
 #: notifications/templates.py:84
 msgid "Nie czekaj – wróć do PREMIUM i korzystaj ze wszystkich funkcji!"
-msgstr "Don't wait – return to PREMIUM and use all features!"
+msgstr "Не чекайте – поверніться до PREMIUM і використовуйте всі функції!"
 
 #: notifications/templates.py:89
 msgid "Ranking PM"
-msgstr "PM Ranking"
+msgstr "PM-рейтинг"
 
 #: notifications/templates.py:90
 msgid "Sprawdź, kto ma najwyższy PM Score w tym miesiacu"
-msgstr "Check who has the highest PM Score this month"
+msgstr "Перевірте, хто має найвищий PM Score цього місяця"
 
 #: notifications/templates.py:95
 #, python-brace-format
 msgid "Już {visited_by_count} osób wyświetliło Twój profil!"
-msgstr "Already {visited_by_count} people viewed your profile!"
+msgstr "Вже {visited_by_count} осіб переглянули ваш профіль!"
 
 #: notifications/templates.py:96 notifications/templates.py:132
 msgid "Kliknij tutaj, aby zobaczyc kto to."
-msgstr "Click here to see who it was."
+msgstr "Натисніть тут, щоб побачити, хто це був."
 
 #: notifications/templates.py:101
 msgid "Witaj w PlayMaker!"
-msgstr "Welcome to PlayMaker!"
+msgstr "Ласкаво просимо до PlayMaker!"
 
 #: notifications/templates.py:102
 msgid ""
 "Dziękujemy za dołączenie do społeczności, Twoja podróż zaczyna się tutaj! "
 "Sprawdź, co daje Ci PlayMaker!"
 msgstr ""
-"Thanks for joining the community, your journey starts here! Check what "
-"PlayMaker offers you!"
+"Дякуємо за приєднання до спільноти, ваша подорож починається тут! "
+"Подивіться, що пропонує вам PlayMaker!"
 
 #: notifications/templates.py:107
 msgid "Ktoś Cię obserwuje"
-msgstr "Someone is following you"
+msgstr "Хтось стежить за вами"
 
 #: notifications/templates.py:108
 msgid "Zobacz kto zaobserwował Twój profil."
-msgstr "See who followed your profile."
+msgstr "Подивіться, хто почав стежити за вашим профілем."
 
 #: notifications/templates.py:113
 #, python-brace-format
 msgid "{profile} zaakceptował twoje zaproszenie."
-msgstr "{profile} accepted your invitation."
+msgstr "{profile} прийняв ваше запрошення."
 
 #: notifications/templates.py:114 notifications/templates.py:120
 #: notifications/templates.py:126
 msgid "Kliknij, aby sprawdzic odpowiedz."
-msgstr "Click to check the response."
+msgstr "Натисніть, щоб перевірити відповідь."
 
 #: notifications/templates.py:119
 #, python-brace-format
 msgid "{profile} odrzucił twoje zaproszenie."
-msgstr "{profile} rejected your invitation."
+msgstr "{profile} відхилив ваше запрошення."
 
 #: notifications/templates.py:125
 #, python-brace-format
 msgid "{profile} odczytał twoje zaproszenie."
-msgstr "{profile} read your invitation."
+msgstr "{profile} прочитав ваше запрошення."
 
 #: notifications/templates.py:131
 msgid "Wyświetlono twój profil"
-msgstr "Your profile was viewed"
+msgstr "Ваш профіль було переглянуто"
 
 #: notifications/templates.py:137
 msgid "Ustaw zapotrzebowanie transferowe!"
-msgstr "Set transfer requirements!"
+msgstr "Встановіть трансферні вимоги!"
 
 #: notifications/templates.py:138
 msgid "Kliknij tutaj, aby ustawic swoje zapotrzebowanie."
-msgstr "Click here to set your requirements."
+msgstr "Натисніть тут, щоб встановити свої вимоги."
 
 #: notifications/templates.py:143
 msgid "Ustaw status transferowy"
-msgstr "Set transfer status"
+msgstr "Встановити трансферний статус"
 
 #: notifications/templates.py:144
 msgid "Kliknij tutaj, aby ustawic swój status."
-msgstr "Click here to set your status."
+msgstr "Натисніть тут, щоб встановити свій статус."
 
 #: notifications/templates.py:149
 msgid "Zaproś znajomych"
-msgstr "Invite friends"
+msgstr "Запросіть друзів"
 
 #: notifications/templates.py:150
 msgid "Zapraszaj i wygrywaj nagrody!"
-msgstr "Invite and win prizes!"
+msgstr "Запрошуйте та вигравайте призи!"
 
 #: notifications/templates.py:155
 msgid "Dodaj linki"
-msgstr "Add links"
+msgstr "Додати посилання"
 
 #: notifications/templates.py:156 notifications/templates.py:162
 #: notifications/templates.py:168
 msgid "Kliknij tutaj, aby przejść do profilu."
-msgstr "Click here to go to your profile."
+msgstr "Натисніть тут, щоб перейти до свого профілю."
 
 #: notifications/templates.py:161
 msgid "Dodaj video"
-msgstr "Add video"
+msgstr "Додати відео"
 
 #: notifications/templates.py:167
 msgid "Dodaj aktualną drużynę"
-msgstr "Add current team"
+msgstr "Додати поточну команду"
 
 #: notifications/templates.py:173
 msgid "Otrzymałeś/aś nowe zapytanie"
-msgstr "You get the new inquiry"
+msgstr "Ви отримали новий запит"
 
 #: notifications/templates.py:174
 #, python-brace-format
 msgid "{profile} wysłał Ci zapytanie o kontakt."
-msgstr "{profile} sent you a contact inquiry."
+msgstr "{profile} надіслав вам запит на контакт."
 
 #: notifications/templates.py:179
 msgid "Twój profil został zweryfikowany!"
-msgstr "Your profile has been verified!"
+msgstr "Ваш профіль було верифіковано!"
 
 #: notifications/templates.py:180
 msgid ""
 "Potwierdziliśmy Twoją tożsamość. Korzystaj z PLAYMAKER.pro bez ograniczeń!"
-msgstr "We've confirmed your identity. Use PLAYMAKER.pro without limitations!"
+msgstr "Ми підтвердили вашу особу. Користуйтесь PLAYMAKER.pro без обмежень!"
 
 #: notifications/templates.py:186 notifications/templates.py:187
 msgid "Test"
-msgstr "Test"
+msgstr "Тест"
 
 #: plays/templates/plays/_tab_playmaker.html:6
 msgid "Zawodnicy"
@@ -808,7 +814,7 @@ msgstr ""
 
 #: plays/templates/plays/_tab_playmaker.html:24
 msgid "Trenerzy"
-msgstr "Coaches"
+msgstr "Тренери"
 
 #: plays/templates/plays/_tab_table.html:30
 #: plays/templates/plays/_tab_table.html:75
@@ -1230,39 +1236,39 @@ msgstr ""
 
 #: profiles/models.py:54
 msgid "1-2 treningi"
-msgstr "1-2 training sessions"
+msgstr "1-2 тренування"
 
 #: profiles/models.py:55
 msgid "3-4 treningi"
-msgstr "3-4 training sessions"
+msgstr "3-4 тренування"
 
 #: profiles/models.py:56
 msgid "5-6 treningi"
-msgstr "5-6 training sessions"
+msgstr "5-6 тренування"
 
 #: profiles/models.py:79 profiles/models.py:86 profiles/models.py:93
 msgid "Skrót meczu"
-msgstr "Match highlights"
+msgstr "Огляди матчу"
 
 #: profiles/models.py:80 profiles/models.py:87 profiles/models.py:94
 msgid "Cały mecz"
-msgstr "Full match"
+msgstr "Повний матч"
 
 #: profiles/models.py:81
 msgid "Bramka"
-msgstr "Goal"
+msgstr "Гол"
 
 #: profiles/models.py:88 profiles/models.py:95
 msgid "Analiza"
-msgstr "Analysis"
+msgstr "Аналіз"
 
 #: profiles/models.py:101
 msgid "Taktyka"
-msgstr "Tactics"
+msgstr "Тактика"
 
 #: profiles/models.py:102
 msgid "Stałe fragmenty"
-msgstr "Set pieces"
+msgstr "Стандартні ситуації"
 
 #: profiles/models.py:113
 msgid "Youtube url"
@@ -1298,87 +1304,87 @@ msgstr ""
 
 #: profiles/models.py:660 roles/definitions.py:140
 msgid "Bramkarz"
-msgstr "Goalkeeper"
+msgstr "Воротар"
 
 #: profiles/models.py:661
 msgid "Obrońca Lewy"
-msgstr "Left Back"
+msgstr "Лівий захисник"
 
 #: profiles/models.py:662
 msgid "Obrońca Prawy"
-msgstr "Right Back"
+msgstr "Правий захисник"
 
 #: profiles/models.py:663
 msgid "Obrońca Środkowy"
-msgstr "Centre Back"
+msgstr "Центральний захисник"
 
 #: profiles/models.py:664
 msgid "Pomocnik defensywny (6)"
-msgstr "Defensive Midfielder (6)"
+msgstr "Опорний півзахисник (6)"
 
 #: profiles/models.py:665
 msgid "Pomocnik środkowy (8)"
-msgstr "Central Midfielder (8)"
+msgstr "Центральний півзахисник (8)"
 
 #: profiles/models.py:666
 msgid "Pomocnik ofensywny (10)"
-msgstr "Attacking Midfielder (10)"
+msgstr "Атакувальний półзахисник (10)"
 
 #: profiles/models.py:667 roles/definitions.py:150
 msgid "Skrzydłowy"
-msgstr "Winger"
+msgstr "Крайній півзахисник"
 
 #: profiles/models.py:668 roles/definitions.py:149
 msgid "Napastnik"
-msgstr "Striker"
+msgstr "Нападник"
 
 #: profiles/models.py:689
 msgid "Lewa"
-msgstr "Left"
+msgstr "Ліва"
 
 #: profiles/models.py:690
 msgid "Prawa"
-msgstr "Right"
+msgstr "Права"
 
 #: profiles/models.py:695
 msgid "Rozważę wszelkie oferty"
-msgstr "Open to all offers"
+msgstr "Розгляну всі пропозиції"
 
 #: profiles/models.py:700
 msgid "Mam kartę na ręku"
-msgstr "I have my registration card"
+msgstr "Маю реєстраційну картку"
 
 #: profiles/models.py:701
 msgid "Nie wiem czy mam kartę na ręku"
-msgstr "I don't know if I have my card"
+msgstr "Не знаю, чи маю картку"
 
 #: profiles/models.py:702
 msgid "Nie mam karty na ręku"
-msgstr "I don't have my registration card"
+msgstr "Не маю реєстраційної картки"
 
 #: profiles/models.py:706
 msgid "Poziom profesjonalny"
-msgstr "Professional level"
+msgstr "Професійний рівень"
 
 #: profiles/models.py:707
 msgid "Poziom półprofesjonalny"
-msgstr "Semi-professional level"
+msgstr "Напівпрофесійний рівень"
 
 #: profiles/models.py:708
 msgid "Poziom regionalny"
-msgstr "Regional level"
+msgstr "Регіональний рівень"
 
 #: profiles/models.py:712
 msgid "Mam agenta"
-msgstr "I have an agent"
+msgstr "Маю агента"
 
 #: profiles/models.py:713
 msgid "Szukam agenta"
-msgstr "Looking for an agent"
+msgstr "Шукаю агента"
 
 #: profiles/models.py:714
 msgid "Nie szukam agenta"
-msgstr "Not looking for an agent"
+msgstr "Не шукаю агента"
 
 #: profiles/models.py:757 profiles/models.py:1392
 msgid "team_club_league_voivodeship_ver"
@@ -1434,11 +1440,11 @@ msgstr ""
 
 #: profiles/models.py:858
 msgid "Alternatywna formacja"
-msgstr "Alternative formation"
+msgstr ""
 
 #: profiles/models.py:865
 msgid "Noga"
-msgstr "Leg"
+msgstr ""
 
 #: profiles/models.py:871
 msgid "Karta na ręku"
@@ -1491,15 +1497,15 @@ msgstr ""
 
 #: profiles/models.py:934
 msgid "Czy posiadasz agenta"
-msgstr "Do you have an agent"
+msgstr "Чи маєте агента"
 
 #: profiles/models.py:940
 msgid "Nazwa agenta"
-msgstr "Agent name"
+msgstr "Ім'я агента"
 
 #: profiles/models.py:943
 msgid "Telefon do agenta"
-msgstr "Agent phone"
+msgstr "Телефон агента"
 
 #: profiles/models.py:946
 msgid "Otwarty na propozycje zagraniczne"
@@ -1543,36 +1549,36 @@ msgstr ""
 
 #: profiles/models.py:1495 roles/definitions.py:59
 msgid "Prezes"
-msgstr "President"
+msgstr "Президент"
 
 #: profiles/models.py:1496
 msgid "Kierownik"
-msgstr "Manager"
+msgstr "Менеджер"
 
 #: profiles/models.py:1497 roles/definitions.py:61
 msgid "Członek zarządu"
-msgstr "Board Member"
+msgstr "Член правління"
 
 #: profiles/models.py:1498
 msgid "Sztab szkoleniowy"
-msgstr "Coaching Staff"
+msgstr "Тренерський штаб"
 
 #: profiles/models.py:1499 profiles/models.py:1537 roles/definitions.py:12
 #: roles/definitions.py:64
 msgid "Inne"
-msgstr "Other"
+msgstr "Інше"
 
 #: profiles/models.py:1511 profiles/models.py:1948
 msgid "Profesjonalna kariera"
-msgstr "Professional career"
+msgstr "Професійна кар'єра"
 
 #: profiles/models.py:1512 profiles/models.py:1949
 msgid "Kariera regionalna"
-msgstr "Regional career"
+msgstr "Регіональна кар'єра"
 
 #: profiles/models.py:1513
 msgid "Trenerka jako hobby"
-msgstr "Coaching as a hobby"
+msgstr "Тренерство як хобі"
 
 #: profiles/models.py:1517
 msgid "UEFA PRO"
@@ -1616,27 +1622,27 @@ msgstr ""
 
 #: profiles/models.py:1527
 msgid "W trakcie kursu"
-msgstr "In progress"
+msgstr "В процесі"
 
 #: profiles/models.py:1531
 msgid "Pierwszy trener"
-msgstr "Head Coach"
+msgstr "Головний тренер"
 
 #: profiles/models.py:1533
 msgid "Trener bramkarzy"
-msgstr "Goalkeeper Coach"
+msgstr "Тренер воротарів"
 
 #: profiles/models.py:1534
 msgid "Trener motoryki"
-msgstr "Fitness Coach"
+msgstr "Фітнес-тренер"
 
 #: profiles/models.py:1535
 msgid "Trener mentalny"
-msgstr "Mental Coach"
+msgstr "Ментальний тренер"
 
 #: profiles/models.py:1536
 msgid "Analityk"
-msgstr "Analyst"
+msgstr "Аналітик"
 
 #: profiles/models.py:1597 profiles/models.py:1976
 msgid "Maksymalna odległość na trening"
@@ -1752,7 +1758,7 @@ msgstr ""
 
 #: profiles/models.py:1950
 msgid "Skauting jako hobby"
-msgstr "Scouting as a hobby"
+msgstr "Скаутинг як хобі"
 
 #: profiles/models.py:1987
 msgid "Deklarowany klub"
@@ -1764,11 +1770,11 @@ msgstr ""
 
 #: profiles/models.py:2078
 msgid "Sędzia główny"
-msgstr "Main Referee"
+msgstr "Головний суддя"
 
 #: profiles/models.py:2079
 msgid "Asystent"
-msgstr "Assistant Referee"
+msgstr "Асистент судді"
 
 #: profiles/models.py:2088
 msgid "Role"
@@ -1778,171 +1784,170 @@ msgstr ""
 msgid ""
 "Role of the contributor in the team. Role specified for club/coach profile"
 msgstr ""
-"Rola współpracownika w zespole. Rola określona dla profilu klubu / trenera"
 
 #: roles/definitions.py:8
 msgid "Działacz klubu"
-msgstr "Club Official"
+msgstr "Діяч клубу"
 
 #: roles/definitions.py:9
 msgid "Menadżer"
-msgstr "Manager"
+msgstr "Mенеджер"
 
 #: roles/definitions.py:60
 msgid "Dyrektor sportowy"
-msgstr "Sports Director"
+msgstr "Спортивний директор"
 
 #: roles/definitions.py:62
 msgid "Dyrektor skautingu"
-msgstr "Scouting Director"
+msgstr "Директор скаутингу"
 
 #: roles/definitions.py:63
 msgid "Kierownik drużyny"
-msgstr "Team Manager"
+msgstr "Менеджер команди"
 
 #: roles/definitions.py:96
 msgid "Rozważę propozycje"
-msgstr "Open to offers"
+msgstr "Розгляну пропозиції"
 
 #: roles/definitions.py:98
 msgid "Piłkarska emerytura"
-msgstr "Football Retirement"
+msgstr "Футбольна пенсія"
 
 #: roles/definitions.py:109
 msgid "Status nieznany"
-msgstr "Unknown Status"
+msgstr "Невідомий статус"
 
 #: roles/definitions.py:119
 msgid "Dostępny od zaraz"
-msgstr "Available immediately"
+msgstr "Доступний негайно"
 
 #: roles/definitions.py:120
 msgid "Wracam po kontuzji"
-msgstr "Coming back after injury"
+msgstr "Повертаюся після травми"
 
 #: roles/definitions.py:121
 msgid "Możliwe wypożyczenie"
-msgstr "Loan possible"
+msgstr "Можлива оренда"
 
 #: roles/definitions.py:122
 msgid "Po przeprowadzce"
-msgstr "After relocation"
+msgstr "Після переїзду"
 
 #: roles/definitions.py:123
 msgid "Studiuje zaoczne"
-msgstr "Part-time studies"
+msgstr "Навчаюся заочно"
 
 #: roles/definitions.py:124
 msgid "Pracuje w nieregularnym trybie pracy"
-msgstr "Working irregular hours"
+msgstr "Працюю в нерегулярному режимі"
 
 #: roles/definitions.py:141
 msgid "Środkowy Obrońca"
-msgstr "Centre Back"
+msgstr "Центральний захисник"
 
 #: roles/definitions.py:142
 msgid "Lewy Obrońca"
-msgstr "Left Back"
+msgstr "Лівий захисник"
 
 #: roles/definitions.py:143
 msgid "Prawy Obrońca"
-msgstr "Right Back"
+msgstr "Правий захисник"
 
 #: roles/definitions.py:144
 msgid "Defensywny Pomocnik #6"
-msgstr "Defensive Midfielder #6"
+msgstr "Опорний півзахисник #6"
 
 #: roles/definitions.py:145
 msgid "Środkowy Pomocnik #8"
-msgstr "Central Midfielder #8"
+msgstr "Центральний півзахисник #8"
 
 #: roles/definitions.py:146
 msgid "Ofensywny Pomocnik #10"
-msgstr "Attacking Midfielder #10"
+msgstr "Атакувальний півзахисник #10"
 
 #: roles/definitions.py:147
 msgid "Lewy Pomocnik"
-msgstr "Left Midfielder"
+msgstr "Лівий півзахисник"
 
 #: roles/definitions.py:148
 msgid "Prawy Pomocnik"
-msgstr "Right Midfielder"
+msgstr "Правий півзахисник"
 
 #: roles/definitions.py:205
 msgid "1-2 treningi tygodniowo"
-msgstr "1-2 training sessions per week"
+msgstr "1-2 тренування на тиждень"
 
 #: roles/definitions.py:206
 msgid "3-4 treningi tygodniowo"
-msgstr "3-4 training sessions per week"
+msgstr "3-4 тренування на тиждень"
 
 #: roles/definitions.py:207
 msgid "5+ treningów tygodniowo"
-msgstr "5+ training sessions per week"
+msgstr "5+ тренувань на тиждень"
 
 #: roles/definitions.py:221
 msgid "Zwrot lub organizacja transportu"
-msgstr "Transport reimbursement or organization"
+msgstr "Відшкодування або організація транспорту"
 
 #: roles/definitions.py:222
 msgid "Zwrot za buty lub rękawice"
-msgstr "Boots or gloves reimbursement"
+msgstr "Відшкодування за взуття або рукавички"
 
 #: roles/definitions.py:224
 msgid "Dobre zaplecze treningowe"
-msgstr "Good training facilities"
+msgstr "Хороша тренувальна база"
 
 #: roles/definitions.py:225
 msgid "Premie za wygrane"
-msgstr "Winning bonuses"
+msgstr "Премії за перемоги"
 
 #: roles/definitions.py:226
 msgid "Fizjoterapeuta w sztabie"
-msgstr "Physiotherapist in staff"
+msgstr "Фізіотерапевт у штабі"
 
 #: roles/definitions.py:227
 msgid "Siłownia do dyspozycji"
-msgstr "Gym available"
+msgstr "Спортзал у розпорядженні"
 
 #: roles/definitions.py:228
 msgid "Walka o awans"
-msgstr "Fight for promotion"
+msgstr "Боротьба за підвищення"
 
 #: roles/definitions.py:229
 msgid "Doświadczony trener"
-msgstr "Experienced coach"
+msgstr "Досвідчений тренер"
 
 #: roles/definitions.py:249
 msgid "0 - 499 zł"
-msgstr "0 - 499 PLN"
+msgstr "0 - 499 злотих"
 
 #: roles/definitions.py:250
 msgid "500 - 999 zł"
-msgstr "500 - 999 PLN"
+msgstr "500 - 999 злотих"
 
 #: roles/definitions.py:251
 msgid "1000 - 1999 zł"
-msgstr "1000 - 1999 PLN"
+msgstr "1000 - 1999 злотих"
 
 #: roles/definitions.py:252
 msgid "2000 - 3999 zł"
-msgstr "2000 - 3999 PLN"
+msgstr "2000 - 3999 злотих"
 
 #: roles/definitions.py:253
 msgid "4000+ zł"
-msgstr "4000+ PLN"
+msgstr "4000+ злотих"
 
 #: roles/definitions.py:269
 msgid "Nieznany"
-msgstr "Unknown"
+msgstr "Невідомий"
 
 #: roles/definitions.py:270
 msgid "Szukam piłkarzy"
-msgstr "Looking for players"
+msgstr "Шукаю гравців"
 
 #: roles/definitions.py:271
 msgid "Nie szukam piłkarzy"
-msgstr "Not looking for players"
+msgstr "Не шукаю гравців"
 
 #: roles/definitions.py:285
 msgid "Not Calculated"
@@ -1959,7 +1964,6 @@ msgstr ""
 #: transfers/models.py:32
 msgid "Benefits defines as integers with comma. Example: 1,2"
 msgstr ""
-"Benefity zdefiniowane jako liczby całkowite z przecinkiem. Przykład: 1,2"
 
 #: transfers/models.py:47
 msgid "If true, the transfer object will be anonymous."
@@ -1967,11 +1971,11 @@ msgstr ""
 
 #: transfers/models.py:135
 msgid "League name filled automatically from team.club.voivodeship_obj"
-msgstr "Nazwa ligi wypełniona automatycznie z team.club.voivodeship_obj"
+msgstr ""
 
 #: transfers/models.py:142
 msgid "Voivodeship name filled automatically from team.club.voivodeship_obj"
-msgstr "Nazwa województwa wypełniona automatycznie z team.club.voivodeship_obj"
+msgstr ""
 
 #: users/admin.py:170
 msgid "Personal info"
@@ -2047,11 +2051,11 @@ msgstr ""
 
 #: users/models.py:410
 msgid "Mężczyzna"
-msgstr "Male"
+msgstr "Чоловік"
 
 #: users/models.py:411
 msgid "Kobieta"
-msgstr "Female"
+msgstr "Жінка"
 
 #: users/models.py:416
 msgid "Localization"
@@ -2078,26 +2082,25 @@ msgid "It is not possible to register with this email address"
 msgstr ""
 
 msgid "seniorzy"
-msgstr "seniors"
+msgstr "дорослі"
 
 msgid "juniorzy"
-msgstr "juniors"
-
+msgstr "юніори"
 
 msgid "mężczyźni"
-msgstr "men"
+msgstr "чоловіки"
 
 msgid "kobiety"
-msgstr "women"
+msgstr "жінки"
 
 msgid "Jestem w trakcie kursu"
-msgstr "During the course"
+msgstr "під час курсу"
 
 msgid "3 zapytań"
-msgstr "3 inquiries"
+msgstr "3 запити"
 
 msgid "5 zapytań"
-msgstr "5 inquiries"
+msgstr "5 запитів"
 
 msgid "10 zapytań"
-msgstr "10 inquiries"
+msgstr "10 запитів"

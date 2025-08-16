@@ -9,6 +9,7 @@ from notifications.api.serializers import NotificationSerializer
 from notifications.models import Notification
 
 
+
 class NotificationsView(EndpointView):
     def get_notifications(self, request: Request) -> Response:
         """
@@ -18,10 +19,10 @@ class NotificationsView(EndpointView):
             notifications = request.user.profile.meta.notifications.filter(seen=False)
         else:
             notifications = request.user.profile.meta.notifications.all()
-
         serializer = NotificationSerializer(
             notifications.order_by("-created_at"),
             many=True,
+            context=self.get_serializer_context(),
         )
         return Response(
             data=serializer.data,
@@ -44,7 +45,9 @@ class NotificationsView(EndpointView):
                 "You do not have permission to mark this notification as read."
             )
 
-        serializer = NotificationSerializer(notification)
+        serializer = NotificationSerializer(
+            notification, context=self.get_serializer_context()
+        )
         serializer.mark_as_read()
         return Response(
             data=serializer.data,

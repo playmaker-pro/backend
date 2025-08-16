@@ -3,6 +3,7 @@ Service for sending notifications to users.
 """
 
 from django.db.models import QuerySet
+from django.utils.translation import gettext as _
 
 from notifications.tasks import create_notification
 from notifications.templates import NotificationBody, NotificationTemplate
@@ -54,7 +55,7 @@ class NotificationService:
 
             try:
                 if hide_profile:
-                    kwargs["profile"] = "Anonimowy profil"
+                    kwargs["profile"] = _("Anonimowy profil")
                 else:
                     role_short = profile.user.declared_role
                     gender_index = int(profile.user.userpreferences.gender == "K")
@@ -65,7 +66,7 @@ class NotificationService:
             except (KeyError, IndexError):
                 kwargs["profile"] = full_name
 
-        return NotificationBody(**template.value, kwargs=kwargs)
+        return NotificationBody(**template.value, template_name=template.name, kwargs=kwargs)
 
     @classmethod
     def bulk_notify_check_trial(cls) -> None:

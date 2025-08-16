@@ -1,15 +1,16 @@
 from dataclasses import dataclass
 from enum import Enum
 from typing import List
+from django.utils.translation import gettext_lazy as _
 
-PLAYER_SHORT, PLAYER_FULL = "P", "Piłkarz"
-COACH_SHORT, COACH_FULL = "T", "Trener"
-CLUB_SHORT, CLUB_FULL = "C", "Działacz klubu"
-MANAGER_SHORT, MANAGER_FULL = "M", "Menadżer"
-SCOUT_SHORT, SCOUT_FULL = "S", "Skaut"
-GUEST_SHORT, GUEST_FULL = "G", "Kibic"
-OTHER_SHORT, OTHER_FULL = "O", "Inne"
-REFEREE_SHORT, REFEREE_FULL = "A", "Sędzia"
+PLAYER_SHORT, PLAYER_FULL = "P", _("Piłkarz")
+COACH_SHORT, COACH_FULL = "T", _("Trener")
+CLUB_SHORT, CLUB_FULL = "C", _("Działacz klubu")
+MANAGER_SHORT, MANAGER_FULL = "M", _("Menadżer")
+SCOUT_SHORT, SCOUT_FULL = "S", _("Skaut")
+GUEST_SHORT, GUEST_FULL = "G", _("Kibic")
+OTHER_SHORT, OTHER_FULL = "O", _("Inne")
+REFEREE_SHORT, REFEREE_FULL = "A", _("Sędzia")
 
 
 PROFILE_TYPE_PLAYER = "player"
@@ -55,12 +56,12 @@ ACCOUNT_ROLES = (
     (REFEREE_SHORT, REFEREE_FULL),
 )
 
-CLUB_ROLE_PRESES = "Prezes"
-CLUB_ROLE_BOARD_MEMBER = "Dyrektor sportowy"
-CLUB_ROLE_SPORT_DIRECTOR = "Członek zarządu"
-CLUB_ROLE_SCOUT_DIRECTOR = "Dyrektor skautingu"
-CLUB_ROLE_TEAM_LEADER = "Kierownik drużyny"
-CLUB_ROLE_OTHERS = "Inne"
+CLUB_ROLE_PRESES = _("Prezes")
+CLUB_ROLE_BOARD_MEMBER = _("Dyrektor sportowy")
+CLUB_ROLE_SPORT_DIRECTOR = _("Członek zarządu")
+CLUB_ROLE_SCOUT_DIRECTOR = _("Dyrektor skautingu")
+CLUB_ROLE_TEAM_LEADER = _("Kierownik drużyny")
+CLUB_ROLE_OTHERS = _("Inne")
 
 CLUB_ROLES = (
     ("P", CLUB_ROLE_PRESES),
@@ -91,10 +92,10 @@ class ProfileDataScore(str, Enum):
 # Transfer status choices
 @dataclass
 class TransferStatusChoices:
-    LOOKING_FOR_CLUB = "Szukam klubu"
-    CONSIDER_OFFERS = "Rozważę propozycje"
-    NOT_LOOKING_FOR_CLUB = "Nie szukam klubu"
-    FOOTBALL_PENSION = "Piłkarska emerytura"
+    LOOKING_FOR_CLUB = _("Szukam klubu")
+    CONSIDER_OFFERS = _("Rozważę propozycje")
+    NOT_LOOKING_FOR_CLUB = _("Nie szukam klubu")
+    FOOTBALL_PENSION = _("Piłkarska emerytura")
 
 
 TRANSFER_STATUS_CHOICES = (
@@ -105,7 +106,7 @@ TRANSFER_STATUS_CHOICES = (
 )
 
 # UNDEFINED_STATUS for representing profiles without a defined transfer status
-UNDEFINED_STATUS = ("5", "Status nieznany")
+UNDEFINED_STATUS = ("5", _("Status nieznany"))
 
 # Extended status choices including 'undefined' for filtering purposes
 TRANSFER_STATUS_CHOICES_WITH_UNDEFINED = TRANSFER_STATUS_CHOICES + (UNDEFINED_STATUS,)
@@ -115,12 +116,12 @@ TRANSFER_STATUS_CHOICES_WITH_UNDEFINED = TRANSFER_STATUS_CHOICES + (UNDEFINED_ST
 class TransferStatusAdditionalInfo:
     """Enum for transfer request additional info field."""
 
-    AVAILABLE_RIGHT_NOW = "Dostępny od zaraz"
-    AFTER_CONTUSION = "Wracam po kontuzji"
-    RENT_AVAILABLE = "Możliwe wypożyczenie"
-    AFTER_RELOCATION = "Po przeprowadzce"
-    PARTY_TIME_STUDY = "Studiuje zaoczne"
-    IRREGULAR_WORKING_MODE = "Pracuje w nieregularnym trybie pracy"
+    AVAILABLE_RIGHT_NOW = _("Dostępny od zaraz")
+    AFTER_CONTUSION = _("Wracam po kontuzji")
+    RENT_AVAILABLE = _("Możliwe wypożyczenie")
+    AFTER_RELOCATION = _("Po przeprowadzce")
+    PARTY_TIME_STUDY = _("Studiuje zaoczne")
+    IRREGULAR_WORKING_MODE = _("Pracuje w nieregularnym trybie pracy")
 
 
 TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES = (
@@ -136,17 +137,17 @@ TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES = (
 class PlayerPositions(str, Enum):
     """Enum for transfer request positions field."""
 
-    GOALKEEPER = "Bramkarz"
-    CENTER_BACK = "Środkowy Obrońca"
-    LEFT_BACK = "Lewy Obrońca"
-    RIGHT_BACK = "Prawy Obrońca"
-    DEFENSIVE_MIDFIELDER = "Defensywny Pomocnik #6"
-    CENTRAL_MIDFIELDER = "Środkowy Pomocnik #8"
-    OFFENSIVE_MIDFIELDER = "Ofensywny Pomocnik #10"
-    LEFT_MIDFIELDER = "Lewy Pomocnik"
-    RIGHT_MIDFIELDER = "Prawy Pomocnik"
-    ATTACKER = "Napastnik"
-    WINGER = "Skrzydłowy"
+    GOALKEEPER = _("Bramkarz")
+    CENTER_BACK = _("Środkowy Obrońca")
+    LEFT_BACK = _("Lewy Obrońca")
+    RIGHT_BACK = _("Prawy Obrońca")
+    DEFENSIVE_MIDFIELDER = _("Defensywny Pomocnik #6")
+    CENTRAL_MIDFIELDER = _("Środkowy Pomocnik #8")
+    OFFENSIVE_MIDFIELDER = _("Ofensywny Pomocnik #10")
+    LEFT_MIDFIELDER = _("Lewy Pomocnik")
+    RIGHT_MIDFIELDER = _("Prawy Pomocnik")
+    ATTACKER = _("Napastnik")
+    WINGER = _("Skrzydłowy")
 
     @classmethod
     def values(cls) -> List[str]:
@@ -201,9 +202,9 @@ class PlayerPositionShortcutsPL(str, Enum):
 class TransferRequestTrainings:
     """Enum for transfer request trainings field."""
 
-    ONE_TWO = "1-2 treningi tygodniowo"
-    THREE_FOUR = "3-4 treningi tygodniowo"
-    FIVE_OR_MORE = "5+ treningów tygodniowo"
+    ONE_TWO = _("1-2 treningi tygodniowo")
+    THREE_FOUR = _("3-4 treningi tygodniowo")
+    FIVE_OR_MORE = _("5+ treningów tygodniowo")
 
 
 TRANSFER_TRAININGS_CHOICES = (
@@ -217,15 +218,15 @@ TRANSFER_TRAININGS_CHOICES = (
 class TransferRequestAdditionalInfo:
     """Enum for transfer request additional info field."""
 
-    TRANSPORT_REFUND = "Zwrot lub organizacja transportu"
-    SHOES_OR_GLOVES_REFUND = "Zwrot za buty lub rękawice"
-    TRAINING_EQUIPMENT = "Sprzęt treningowy"
-    TRAINING_FACILITIES = "Dobre zaplecze treningowe"
-    WINNING_BONUSES = "Premie za wygrane"
-    PHYSIOTHERAPIST = "Fizjoterapeuta w sztabie"
-    GYM = "Siłownia do dyspozycji"
-    PROMOTION_FIGHT = "Walka o awans"
-    EXPERIENCED_COACH = "Doświadczony trener"
+    TRANSPORT_REFUND = _("Zwrot lub organizacja transportu")
+    SHOES_OR_GLOVES_REFUND = _("Zwrot za buty lub rękawice")
+    TRAINING_EQUIPMENT = _("Sprzęt treningowy")
+    TRAINING_FACILITIES = _("Dobre zaplecze treningowe")
+    WINNING_BONUSES = _("Premie za wygrane")
+    PHYSIOTHERAPIST = _("Fizjoterapeuta w sztabie")
+    GYM = _("Siłownia do dyspozycji")
+    PROMOTION_FIGHT = _("Walka o awans")
+    EXPERIENCED_COACH = _("Doświadczony trener")
 
 
 TRANSFER_BENEFITS_CHOICES = (
@@ -245,11 +246,11 @@ TRANSFER_BENEFITS_CHOICES = (
 class TransferRequestSalary:
     """Enum for transfer request salary field."""
 
-    ONE = "0 - 499 zł"
-    TWO = "500 - 999 zł"
-    THREE = "1000 - 1999 zł"
-    FOUR = "2000 - 3999 zł"
-    FIVE = "4000+ zł"
+    ONE = _("0 - 499 zł")
+    TWO = _("500 - 999 zł")
+    THREE = _("1000 - 1999 zł")
+    FOUR = _("2000 - 3999 zł")
+    FIVE = _("4000+ zł")
 
 
 TRANSFER_SALARY_CHOICES = (
@@ -265,9 +266,9 @@ TRANSFER_SALARY_CHOICES = (
 class TransferRequestStatus:
     """Enum for transfer request status field."""
 
-    UNKNOWN = "Nieznany"
-    LOOKING_FOR_A_PLAYER = "Szukam piłkarzy"
-    NOT_LOOKING_FOR_A_PLAYER = "Nie szukam piłkarzy"
+    UNKNOWN = _("Nieznany")
+    LOOKING_FOR_A_PLAYER = _("Szukam piłkarzy")
+    NOT_LOOKING_FOR_A_PLAYER = _("Nie szukam piłkarzy")
 
 
 TRANSFER_REQUEST_STATUS_CHOICES = (
@@ -281,9 +282,9 @@ TRANSFER_REQUEST_STATUS_CHOICES = (
 class PmScoreState:
     """Enum for PlayMaker Score state."""
 
-    NOT_CALCULATED: str = "Not Calculated"
-    IN_PROGRESS: str = "In Progress"
-    CALCULATED: str = "Calculated"
+    NOT_CALCULATED: str = _("Not Calculated")
+    IN_PROGRESS: str = _("In Progress")
+    CALCULATED: str = _("Calculated")
 
 
 PM_SCORE_STATE_CHOICES = (

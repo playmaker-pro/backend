@@ -414,9 +414,9 @@ class UserPreferencesSerializerDetailed(serializers.ModelSerializer):
 
     def validate_citizenship(self, citizenship: List[str]) -> List[str]:
         """Validate citizenship field"""
-        if not isinstance(citizenship, list) or not all([
-            isinstance(el, str) for el in citizenship
-        ]):
+        if not isinstance(citizenship, list) or not all(
+            [isinstance(el, str) for el in citizenship]
+        ):
             raise InvalidCitizenshipListException(
                 details="Citizenship must be a list of countries codes"
             )
@@ -475,9 +475,9 @@ class UserPreferencesSerializerDetailed(serializers.ModelSerializer):
         if spoken_languages := validated_data.pop(  # noqa: 5999
             "spoken_languages", None
         ):
-            instance.spoken_languages.set([
-                language.pk for language in spoken_languages
-            ])
+            instance.spoken_languages.set(
+                [language.pk for language in spoken_languages]
+            )
         instance = super().update(instance, validated_data)
         if profile_type == "PlayerProfile":
             if "birth_date" in validated_data or citizenship_updated:

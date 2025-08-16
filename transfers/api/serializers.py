@@ -6,6 +6,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from api.consts import ChoicesTuple
+from api.i18n import I18nSerializerMixin
 from api.serializers import PhoneNumberField, ProfileEnumChoicesSerializer
 from clubs.api.serializers import LeagueSerializer
 from clubs.services import LeagueService
@@ -172,6 +173,7 @@ class SharedValidatorsMixin:
 
 
 class ProfileTransferRequestSerializer(
+    I18nSerializerMixin,
     serializers.ModelSerializer,
     SharedValidatorsMixin,
     PhoneNumberMixin,
@@ -242,16 +244,17 @@ class ProfileTransferRequestSerializer(
                 for transfer in TRANSFER_BENEFITS_CHOICES
                 if transfer[0] in str(instance.benefits)
             ]
-            info_serialized = serializer(info, many=True)
+            info_serialized = serializer(info, many=True, context=self.context)
             data["benefits"] = info_serialized.data
         if instance.position:
-            positions = PlayerPositionSerializer(instance=instance.position, many=True)
+            positions = PlayerPositionSerializer(instance=instance.position, many=True, context=self.context)
             data["player_position"] = positions.data
         if instance.number_of_trainings:
             num_of_training_serialized = serializer(
                 instance=instance.number_of_trainings,
                 source="number_of_trainings",
                 model=ProfileTransferRequest,
+                context=self.context,
             )
             data["number_of_trainings"] = num_of_training_serialized.data
         if instance.salary:
@@ -259,6 +262,7 @@ class ProfileTransferRequestSerializer(
                 instance=instance.salary,
                 source="salary",
                 model=ProfileTransferRequest,
+                context=self.context,
             )
             data["salary"] = salary_serialized.data
         user_preferences = instance.profile.user.userpreferences
@@ -346,6 +350,7 @@ class UpdateOrCreateProfileTransferSerializer(ProfileTransferRequestSerializer):
 
 
 class ProfileTransferStatusSerializer(
+    I18nSerializerMixin,
     serializers.ModelSerializer,
     SharedValidatorsMixin,
     PhoneNumberMixin,
@@ -408,15 +413,16 @@ class ProfileTransferStatusSerializer(
         Overrides to_representation method to return additional info
         as a list of strings.
         """
+        
         data = super().to_representation(instance)
-        data["league"] = LeagueSerializer(instance=instance.league, many=True).data
+        data["league"] = LeagueSerializer(instance=instance.league, many=True, context=self.context).data
         if instance.additional_info:
             info = [
                 ChoicesTuple(*transfer)
                 for transfer in TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES
                 if transfer[0] in str(instance.additional_info)
             ]
-            serializer = ProfileEnumChoicesSerializer(info, many=True)
+            serializer = ProfileEnumChoicesSerializer(info, many=True, context=self.context)
             data["additional_info"] = serializer.data
         if instance.benefits:
             benefits = [
@@ -424,7 +430,7 @@ class ProfileTransferStatusSerializer(
                 for transfer in TRANSFER_BENEFITS_CHOICES
                 if transfer[0] in str(instance.benefits)
             ]
-            serializer = ProfileEnumChoicesSerializer(benefits, many=True)
+            serializer = ProfileEnumChoicesSerializer(benefits, many=True, context=self.context)
             data["benefits"] = serializer.data
         if instance.salary:
             salary = [
@@ -432,7 +438,7 @@ class ProfileTransferStatusSerializer(
                 for transfer in TRANSFER_SALARY_CHOICES
                 if transfer[0] in str(instance.salary)
             ]
-            serializer = ProfileEnumChoicesSerializer(instance=salary[0])
+            serializer = ProfileEnumChoicesSerializer(instance=salary[0], context=self.context)
             data["salary"] = serializer.data
         if instance.number_of_trainings:
             number_of_trainings = [
@@ -440,7 +446,7 @@ class ProfileTransferStatusSerializer(
                 for transfer in TRANSFER_TRAININGS_CHOICES
                 if transfer[0] in str(instance.number_of_trainings)
             ]
-            serializer = ProfileEnumChoicesSerializer(number_of_trainings, many=True)
+            serializer = ProfileEnumChoicesSerializer(number_of_trainings, many=True, context=self.context)
             data["number_of_trainings"] = serializer.data
 
         # expose = self.context.get("expose", False)

@@ -1,13 +1,14 @@
 from .functions import *
+from django.utils.translation import gettext as _
 
 GENDER_BASED_ROLES = {
-    "P": ("Piłkarz", "Piłkarka"),
-    "T": ("Trener", "Trenerka"),
-    "C": ("Działacz klubowy", "Działaczka klubowa"),
-    "G": ("Kibic", "Kibic"),
-    "M": ("Manager", "Manager"),
-    "R": ("Sędzia", "Sędzia"),
-    "S": ("Skaut", "Skaut"),
+    "P": (_("Piłkarz"), _("Piłkarka")),
+    "T": (_("Trener"), _("Trenerka")),
+    "C": (_("Działacz klubowy"), _("Działaczka klubowa")),
+    "G": (_("Kibic"), _("Kibic")),
+    "M": (_("Manager"), _("Manager")),
+    "R": (_("Sędzia"), _("Sędzia")),
+    "S": (_("Skaut"), _("Skaut")),
     None: ("", ""),
 }
 OBJECTIVE_GENDER_BASED_ROLES = {
