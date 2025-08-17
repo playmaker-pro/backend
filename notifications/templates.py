@@ -6,7 +6,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, Optional
 from django.utils.translation import gettext_lazy as _
-from django.utils.translation import gettext
 
 
 @dataclass
@@ -162,7 +161,7 @@ class NotificationTemplate(Enum):
         "icon": "video",
     }
     ASSIGN_CLUB = {
-        "title": _("Dodaj aktulną drużynę"),
+        "title": _("Dodaj aktualną drużynę"),
         "description": _("Kliknij tutaj, aby przejść do profilu."),
         "href": "/profil#sekcja-kariera",
         "icon": "club",

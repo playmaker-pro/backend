@@ -1,7 +1,7 @@
 import json
 import uuid
 from datetime import datetime, timedelta
-
+from functools import cached_property
 import factory
 import pytest
 from django.db.models import signals
@@ -108,7 +108,7 @@ class TestGetProfileAPI(APITestCase):
 
         assert response.status_code == 200
 
-    @property
+    @cached_property
     def _profile_for_social_stats(self):
         """Create a profile for testing social stats"""
         profile = factories.PlayerProfileFactory.create()
@@ -249,8 +249,10 @@ class TestCreateProfileAPI(APITestCase):
     ])
     def test_successfully_create_profile_for_new_user(self, payload: dict) -> None:
         """Test creating profiles with correctly passed payload"""
+        from django.core.serializers.json import DjangoJSONEncoder
         self.manager.login(self.user_obj)
-        response = self.client.post(self.url, json.dumps(payload), **self.headers)
+        payload_json = json.dumps(payload, cls=DjangoJSONEncoder)
+        response = self.client.post(self.url, payload_json, **self.headers)
 
         assert response.status_code == 201
         assert response.data["user_id"] and response.data["role"]

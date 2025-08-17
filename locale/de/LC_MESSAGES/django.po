@@ -780,7 +780,7 @@ msgid "Dodaj video"
 msgstr "Video hinzufügen"
 
 #: notifications/templates.py:167
-msgid "Dodaj aktulną drużynę"
+msgid "Dodaj aktualną drużynę"
 msgstr "Aktuelles Team hinzufügen"
 
 #: notifications/templates.py:173

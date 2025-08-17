@@ -38,14 +38,12 @@ class LanguageDetectionMixin:
         try:
             x_language = request.headers.get('X-Language')
             if x_language and x_language.lower() in SUPPORTED_LANGUAGE_CODES:
-                logger.debug(f"Language detected from X-Language header: {x_language}")
                 return x_language.lower()
         except AttributeError:
             # Request doesn't have headers attribute
             logger.debug("Request has no headers attribute")
 
         # Default language
-        logger.debug(f"Using default language: {DEFAULT_LANGUAGE}")
         return DEFAULT_LANGUAGE
 
     def activate_language(self, language: str) -> str:
@@ -54,7 +52,6 @@ class LanguageDetectionMixin:
         """
         if language in SUPPORTED_LANGUAGE_CODES:
             translation.activate(language)
-            logger.debug(f"Activated language: {language}")
             return language
         else:
             logger.warning(f"Unsupported language '{language}', using default '{DEFAULT_LANGUAGE}'")
