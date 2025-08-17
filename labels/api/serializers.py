@@ -17,8 +17,6 @@ class LabelDefinitionSerializer(I18nSerializerMixin, serializers.ModelSerializer
         """
         Return translated label description.
         """
-        # Ensure language is activated for translation
-        self._activate_context_language()
         if obj.label_description:
             return translate_label_description(obj.label_description)
         return ""
@@ -27,8 +25,6 @@ class LabelDefinitionSerializer(I18nSerializerMixin, serializers.ModelSerializer
         """
         Return translated catalog name.
         """
-        # Ensure language is activated for translation  
-        self._activate_context_language()
         if obj.catalog_name:
             return translate_catalog_name(obj.catalog_name)
         return ""

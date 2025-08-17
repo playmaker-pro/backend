@@ -139,9 +139,7 @@ class ProfileEnumChoicesSerializer(I18nSerializerMixin, _serializers.CharField, 
     def to_representation(self, obj: typing.Union[ChoicesTuple, str]) -> dict:
         """Parse output with translation support"""
         from django.utils.translation import gettext as _
-        
-        # Language is already activated in __init__ via I18nSerializerMixin
-        
+
         parsed_obj = obj
         if not obj:
             return {}
@@ -167,6 +165,14 @@ class ProfileEnumChoicesSerializer(I18nSerializerMixin, _serializers.CharField, 
 
         value = choices[_id]
         return ChoicesTuple(_id, value)
+    
+    def to_internal_value(self, data):
+        """Convert input data to internal value"""
+        if isinstance(data, dict):
+            # Handle dict input like {"id": "some_value"}
+            return data.get("id", data)
+        # Handle direct string/value input
+        return data
 
 
 class PhoneNumberField(_serializers.Field):

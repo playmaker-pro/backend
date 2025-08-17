@@ -95,6 +95,10 @@ class I18nSerializerMixin(LanguageDetectionMixin):
     """
     Mixin for serializers that need internationalization support.
 
+    This mixin activates the language from the serializer context during
+    initialization, making Django's translation functions (gettext) work
+    correctly throughout the serializer's lifecycle.
+
     Usage:
         class MySerializer(I18nSerializerMixin, serializers.ModelSerializer):
             class Meta:
@@ -102,7 +106,9 @@ class I18nSerializerMixin(LanguageDetectionMixin):
                 fields = '__all__'
 
             def to_representation(self, instance):
-                # Translations are automatically activated
+                from django.utils.translation import gettext as _
+                # Language is already activated, use gettext for translations
+                translated_field = _(instance.some_field)
                 return super().to_representation(instance)
     """
 

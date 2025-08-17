@@ -225,9 +225,6 @@ class ProfileTransferRequestSerializer(
             TeamContributorSerializer,
         )
 
-        # Ensure language is activated for translation
-        self._activate_context_language()
-
         serializer = ProfileEnumChoicesSerializer
         try:
             data = super().to_representation(instance)
@@ -408,8 +405,6 @@ class ProfileTransferStatusSerializer(
         Overrides to_representation method to return additional info
         as a list of strings.
         """
-        # Ensure language is activated for translation
-        self._activate_context_language()
         
         data = super().to_representation(instance)
         data["league"] = LeagueSerializer(instance=instance.league, many=True, context=self.context).data

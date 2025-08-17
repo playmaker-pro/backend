@@ -51,10 +51,6 @@ class PlayerPositionSerializer(I18nSerializerMixin, serializers.ModelSerializer)
 
     def to_representation(self, instance):
         """Override to return translated position names and appropriate shortcuts"""
-
-        # Ensure language context is properly activated
-        self._activate_context_language()
-
         # Get the current language from context
         current_language = self.context.get("language", "pl")
 
@@ -161,8 +157,6 @@ class LicenceTypeSerializer(I18nSerializerMixin, serializers.ModelSerializer):
         """
         Return translated licence name.
         """
-        # Ensure language is activated for translation
-        self._activate_context_language()
         # Use Django's gettext to translate the licence name
         if obj.name:
             return _(obj.name)
@@ -1278,8 +1272,6 @@ class ProfileLabelsSerializer(I18nSerializerMixin, serializers.Serializer):
         """
         Return translated label description.
         """
-        # Ensure language is activated for translation
-        self._activate_context_language()
         if obj.label_definition and obj.label_definition.label_description:
             from labels.translations import translate_label_description
 
@@ -1526,7 +1518,6 @@ class GenericProfileSerializer(I18nSerializerMixin, serializers.Serializer):
             instance = instance.profile
 
         serializer = SerializersManager().get_serializer(type(instance).__name__)
-        print(serializer)
         if serializer:
             return serializer(instance, context=self.context).data
         else:

@@ -24,20 +24,15 @@ class ProfileViePlayerPositionSerializer(I18nSerializerMixin, serializers.ModelS
         
     def to_representation(self, instance):
         """Override to return translated position names and appropriate shortcuts"""
-        
-        self._activate_context_language()
+        # Language is already activated in __init__ via I18nSerializerMixin
+        data = super().to_representation(instance)
         
         # Get the current language from context
         current_language = self.context.get('language', 'pl')
         
-        # Activate translation before calling parent to ensure model field translations work
-        with translation.override(current_language):
-            data = super().to_representation(instance)
-            
-            # The database contains Polish position names, so we translate them directly
-            # This will use our existing translations from the .po files
-            data['name'] = str(_(instance.name))
-            
+        # Translate the position name (Polish names in DB)
+        data['name'] = str(_(instance.name))
+        
         # Return appropriate shortcut based on language
         if current_language == 'pl':
             data['shortcut'] = instance.shortcut_pl or instance.shortcut
