@@ -10,7 +10,6 @@ from typing import Optional
 
 from django.utils import translation
 from rest_framework.request import Request
-from rest_framework.response import Response
 
 from .i18n_config import SUPPORTED_LANGUAGE_CODES, DEFAULT_LANGUAGE
 
@@ -70,7 +69,7 @@ class I18nViewMixin(LanguageDetectionMixin):
                 return Response(self.get_localized_data())
     """
 
-    def dispatch(self, request: Request, *args, **kwargs) -> Response:
+    def dispatch(self, request: Request, *args, **kwargs):
         """
         Override dispatch to activate language before processing request.
         """

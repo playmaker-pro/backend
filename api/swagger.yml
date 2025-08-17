@@ -8077,7 +8077,7 @@ components:
         description: 'Language code for internationalization. Supported languages: pl (Polish), en (English), de (German), fr (French), es (Spanish), it (Italian). Defaults to Polish if not specified.'
         schema:
           type: string
-          enum: [ 'pl', 'en', 'de', 'fr', 'es', 'it' ]
+          enum: [ 'pl', 'en', 'de', 'uk']
           default: 'pl'
           example: 'en'
   securitySchemes:

@@ -133,16 +133,14 @@ class ProfileEnumChoicesSerializer(I18nSerializerMixin, _serializers.CharField, 
         """Create dictionary from tuple choices with translation support"""
         from django.utils.translation import gettext as _
         
-        # Ensure language is activated for translation
-        self._activate_context_language()
+        # Language is already activated in __init__ via I18nSerializerMixin
         return {str(val[0]): _(str(val[1])) for val in data}  # Explicitly translate each value
 
     def to_representation(self, obj: typing.Union[ChoicesTuple, str]) -> dict:
         """Parse output with translation support"""
         from django.utils.translation import gettext as _
         
-        # Activate language context before representation
-        self._activate_context_language()
+        # Language is already activated in __init__ via I18nSerializerMixin
         
         parsed_obj = obj
         if not obj:

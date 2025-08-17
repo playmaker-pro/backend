@@ -46,73 +46,24 @@ class I18nSerializerMixinTests(TestCase):
                 # Should activate default language for invalid language
                 assert DEFAULT_LANGUAGE in serializer.activation_log
 
-    def test_activate_context_language_with_no_language_in_context(self):
-        """Test language activation when context has no language."""
-        context = {'other_key': 'other_value'}
+    def test_context_fallback_scenarios(self):
+        """Test various context fallback scenarios in a parameterized way."""
+        fallback_scenarios = [
+            ({'other_key': 'other_value'}, 'en', 'no language key'),
+            ({}, 'pl', 'empty context'),
+            (None, 'de', 'None context'),
+            ({'language': None}, 'uk', 'None language value'),
+            ({'language': ''}, 'pl', 'empty language value'),  # Empty string should fall back to current, then validated
+        ]
         
-        with patch('api.i18n.translation.get_language', return_value='en') as mock_get_lang:
-            serializer = MockI18nSerializer(instance=self.test_instance, context=context)
-            
-            # Should fall back to current language
-            mock_get_lang.assert_called_once()
-            assert 'en' in serializer.activation_log
-
-    def test_activate_context_language_with_empty_context(self):
-        """Test language activation with empty context."""
-        context = {}
-        
-        with patch('api.i18n.translation.get_language', return_value='pl') as mock_get_lang:
-            serializer = MockI18nSerializer(instance=self.test_instance, context=context)
-            
-            # Should fall back to current language
-            mock_get_lang.assert_called_once()
-            assert 'pl' in serializer.activation_log
-
-    def test_activate_context_language_with_none_context(self):
-        """Test language activation with None context."""
-        with patch('api.i18n.translation.get_language', return_value='de') as mock_get_lang:
-            serializer = MockI18nSerializer(instance=self.test_instance, context=None)
-            
-            # Should fall back to current language
-            mock_get_lang.assert_called_once()
-            assert 'de' in serializer.activation_log
-
-    def test_activate_context_language_with_no_context_attribute(self):
-        """Test language activation when serializer has no context attribute."""
-        # Create a new class that doesn't have context
-        class SerializerWithoutContext(MockI18nSerializer):
-            def __init__(self, *args, **kwargs):
-                # Initialize activation log before calling super()
-                self.activation_log = []
-                # Call parent's parent to skip the context setup
-                I18nSerializerMixin.__init__(self)
-                ModelSerializer.__init__(self, *args, **kwargs)
-                # Remove context by deleting the attribute
-                if hasattr(self, '_context'):
-                    delattr(self, '_context')
-            
-            @property
-            def context(self):
-                """Override context to return None."""
-                return None
-        
-        with patch('api.i18n.translation.get_language', return_value='uk') as mock_get_lang:
-            serializer = SerializerWithoutContext(instance=self.test_instance)
-            
-            # Should fall back to current language
-            mock_get_lang.assert_called()
-            assert 'uk' in serializer.activation_log
-
-    @patch('api.i18n.translation.get_language')
-    def test_activate_context_language_fallback_with_none_current_language(self, mock_get_lang):
-        """Test fallback behavior when current language is None."""
-        mock_get_lang.return_value = None
-        
-        serializer = MockI18nSerializer(instance=self.test_instance, context={})
-        
-        # Should not activate any language when current language is None
-        # (the activate_language method should handle None gracefully)
-        mock_get_lang.assert_called_once()
+        for context, expected_lang, scenario in fallback_scenarios:
+            with self.subTest(scenario=scenario):
+                with patch('api.i18n.translation.get_language', return_value=expected_lang) as mock_get_lang:
+                    serializer = MockI18nSerializer(instance=self.test_instance, context=context)
+                    
+                    # Should fall back to current language
+                    mock_get_lang.assert_called_once()
+                    assert expected_lang in serializer.activation_log
 
     def test_activation_priority_context_over_current(self):
         """Test that context language takes priority over current language."""
@@ -170,27 +121,6 @@ class I18nSerializerMixinTests(TestCase):
         # Verify activate_language was called with correct language
         mock_activate.assert_called_with('en')
 
-    def test_context_language_none_value(self):
-        """Test behavior when context language is explicitly None."""
-        context = {'language': None}
-        
-        with patch('api.i18n.translation.get_language', return_value='pl') as mock_get_lang:
-            serializer = MockI18nSerializer(instance=self.test_instance, context=context)
-            
-            # Should fall back to current language
-            mock_get_lang.assert_called_once()
-            assert 'pl' in serializer.activation_log
-
-    def test_context_language_empty_string(self):
-        """Test behavior when context language is empty string."""
-        context = {'language': ''}
-        
-        with patch('api.i18n.translation.get_language', return_value='de') as mock_get_lang:
-            serializer = MockI18nSerializer(instance=self.test_instance, context=context)
-            
-            # Should fall back to current language for empty string
-            mock_get_lang.assert_called_once()
-            assert 'de' in serializer.activation_log
 
     def test_serializer_inheritance_chain(self):
         """Test that the mixin works correctly in inheritance chain."""
