@@ -1,7 +1,6 @@
 import typing
 
 from rest_framework import serializers
-from django.utils import translation
 from django.utils.translation import gettext as _
 
 from api.consts import ChoicesTuple
@@ -24,7 +23,6 @@ class ProfileViePlayerPositionSerializer(I18nSerializerMixin, serializers.ModelS
         
     def to_representation(self, instance):
         """Override to return translated position names and appropriate shortcuts"""
-        # Language is already activated in __init__ via I18nSerializerMixin
         data = super().to_representation(instance)
         
         # Get the current language from context

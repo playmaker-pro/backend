@@ -6,6 +6,7 @@ import pytest
 from django.db.models import signals
 from django.urls import reverse
 from django.utils import timezone
+from django.core.serializers.json import DjangoJSONEncoder
 from parameterized import parameterized
 from rest_framework.test import APIClient, APITestCase
 
@@ -248,7 +249,6 @@ class TestCreateProfileAPI(APITestCase):
     ])
     def test_successfully_create_profile_for_new_user(self, payload: dict) -> None:
         """Test creating profiles with correctly passed payload"""
-        from django.core.serializers.json import DjangoJSONEncoder
         self.manager.login(self.user_obj)
         payload_json = json.dumps(payload, cls=DjangoJSONEncoder)
         response = self.client.post(self.url, payload_json, **self.headers)
