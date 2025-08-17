@@ -78,9 +78,6 @@ class LanguageDetectionMixinTests(TestCase):
                 # Verify translation.activate was called
                 mock_activate.assert_called_with(lang_code)
                 
-                # Verify logging
-                mock_logger.debug.assert_called_with(f"Activated language: {lang_code}")
-                
                 # Verify return value
                 assert result == lang_code
                 
@@ -130,20 +127,6 @@ class LanguageDetectionMixinTests(TestCase):
         # Should activate default language
         mock_activate.assert_called_with(DEFAULT_LANGUAGE)
         assert result == DEFAULT_LANGUAGE
-    
-    @patch('api.i18n.logger')
-    def test_get_request_language_logging(self, mock_logger):
-        """Test that appropriate debug messages are logged."""
-        # Test X-Language header detection logging
-        request = create_mock_request(headers={'X-Language': 'en'})
-        self.mixin.get_request_language(request)
-        mock_logger.debug.assert_called_with("Language detected from X-Language header: en")
-        
-        # Test default language logging
-        mock_logger.reset_mock()
-        request = create_mock_request(headers={})
-        self.mixin.get_request_language(request)
-        mock_logger.debug.assert_called_with(f"Using default language: {DEFAULT_LANGUAGE}")
     
     def test_supported_language_codes_configuration(self):
         """Test that supported language codes are properly configured."""

@@ -1,7 +1,6 @@
 import json
 import uuid
 from datetime import datetime, timedelta
-from functools import cached_property
 import factory
 import pytest
 from django.db.models import signals
@@ -108,7 +107,7 @@ class TestGetProfileAPI(APITestCase):
 
         assert response.status_code == 200
 
-    @cached_property
+    @property
     def _profile_for_social_stats(self):
         """Create a profile for testing social stats"""
         profile = factories.PlayerProfileFactory.create()

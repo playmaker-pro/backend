@@ -42,7 +42,8 @@ class ProfileRetrieveMixin:
             "request": request,
             "label_context": "profile",
             "premium_viewer": request.user.is_authenticated
-            and request.user.profile,
+            and request.user.profile
+            and request.user.profile.is_premium,
             "is_anonymous": is_anonymous,
         })
         serializer = serializer_class(

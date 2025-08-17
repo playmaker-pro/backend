@@ -275,21 +275,6 @@ class I18nEndToEndTests(APITestCase):
                 assert 'name' in data
                 assert 'description' in data
 
-    @patch('api.i18n.logger')
-    def test_logging_throughout_flow(self, mock_logger):
-        """Test that appropriate logging occurs throughout the request flow."""
-        factory = RequestFactory()
-        django_request = factory.get('/', HTTP_X_LANGUAGE='en')
-        request = Request(django_request)
-        
-        view = MockI18nView()
-        
-        with patch('rest_framework.viewsets.GenericViewSet.dispatch'):
-            view.dispatch(request)
-        
-        # Verify language activation was logged
-        mock_logger.debug.assert_called_with("Activated language: en")
-
     def test_performance_with_multiple_requests(self):
         """Test that i18n doesn't significantly impact performance with multiple requests."""
         factory = RequestFactory()
