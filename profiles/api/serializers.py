@@ -50,20 +50,22 @@ class PlayerPositionSerializer(I18nSerializerMixin, serializers.ModelSerializer)
         fields = ["id", "name", "shortcut", "shortcut_pl"]
 
     def to_representation(self, instance):
-        """Override to return translated position names and appropriate shortcuts"""
+        """Override to return translated position names and appropriate shortcuts."""
+        data = super().to_representation(instance)
+
         # Get the current language from context
-        current_language = self.context.get("language", "pl")
-
-        # Activate translation before calling parent to ensure model field translations work
-        with translation.override(current_language):
-            data = super().to_representation(instance)
-
-            # The database contains Polish position names, so we translate them directly
-            # This will use our existing translations from the .po files
-            translated_name = _(instance.name)
-            data["name"] = str(translated_name)
+        current_language = self.context.get('language', 'pl')
+        
+        # Translate the position name (Polish names in DB)
+        data['name'] = str(_(instance.name))
+        
+        # Return appropriate shortcut based on language
+        if current_language == 'pl':
+            data['shortcut'] = instance.shortcut_pl or instance.shortcut
+        else:
+            data['shortcut'] = instance.shortcut
+        
         return data
-
 
 class PlayerProfilePositionSerializer(serializers.ModelSerializer):
     player_position = PlayerPositionSerializer()

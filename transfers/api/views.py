@@ -421,8 +421,8 @@ class TransferRequestCatalogueAPIView(EndpointViewWithFilter):
             cache_key=f"{cfg.redis.key_prefix.transfer_requests}:{request.get_full_path()}",
             request=request,
         ) as cache:
-            # if cached_data := cache.data:
-            #     return Response(cached_data)
+            if cached_data := cache.data:
+                 return Response(cached_data)
 
             queryset = self.get_queryset()
             queryset = self.filter_queryset(queryset)
