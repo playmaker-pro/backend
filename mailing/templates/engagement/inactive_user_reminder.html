@@ -1,0 +1,32 @@
+{% extends "email_base.html" %}
+
+{% block content %}
+<p style="font-size: 16px; color: #555; line-height: 1.6; margin-bottom: 20px;">
+  Cześć {{user.first_name}}!
+</p>
+
+<p style="font-size: 16px; color: #555; line-height: 1.6; margin-bottom: 20px;">
+  Od {{days_inactive}} dni nie widzieliśmy Cię na platformie. Nowe profile, nowe oferty, nowe szanse czekają.
+</p>
+
+<p>
+  <a href="https://www.playmaker.pro/dolacz"
+    style="display: inline-block; padding: 15px 30px; background-color: #ED1C24; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 18px;">
+    Wróć do platformy
+  </a>
+</p>
+
+<p style="font-size: 14px; color: #777; line-height: 1.4; margin-top: 30px;">
+  Jeżeli po kliknięciu link się nie otworzy, skopiuj go, wklej w pole adresu przeglądarki i przejdź do wskazanej
+  strony:
+</p>
+<p>
+  <a href="https://www.playmaker.pro/dolacz" style="font-size:13px">https://www.playmaker.pro/dolacz</a>
+</p>
+
+<p style="font-size: 16px; color: #555; line-height: 1.6; margin-top: 40px;">
+  Widzimy się na boisku!<br>
+  Zespół PlayMaker.pro
+</p>
+
+{% endblock %}

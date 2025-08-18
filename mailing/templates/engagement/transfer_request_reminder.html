@@ -1,0 +1,30 @@
+{% extends "email_base.html" %}
+
+{% block content %}
+<p style="font-size: 16px; color: #555; line-height: 1.6; margin-bottom: 20px;">
+  Cześć {{user.first_name}}!
+</p>
+
+<p style="font-size: 16px; color: #555; line-height: 1.6; margin-bottom: 30px;">
+  Pomóż zawodnikom i agentom lepiej dopasować się do Twoich potrzeb. Ustaw zapotrzebowanie transferowe i znajdź szybciej to, czego szukasz.
+</p>
+
+<p>
+  <a href="https://www.playmaker.pro/profil"
+    style="display: inline-block; padding: 15px 30px; background-color: #ED1C24; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 18px;">
+    Dodaj zapotrzebowanie
+  </a>
+</p>
+
+<p style="font-size: 14px; color: #777; line-height: 1.4; margin-top: 30px;">
+  Jeżeli po kliknięciu link się nie otworzy, skopiuj go, wklej w pole adresu przeglądarki i przejdź do wskazanej
+  strony:
+</p>
+<p>
+  <a href="https://www.playmaker.pro/profil" style="font-size:13px">https://www.playmaker.pro/profil</a>
+</p>
+
+<p style="font-size: 16px; color: #555; line-height: 1.6; margin-top: 40px;">
+  Zespół PlayMaker.pro
+</p>
+{% endblock %}

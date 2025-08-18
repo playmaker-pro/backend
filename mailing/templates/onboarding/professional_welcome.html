@@ -1,0 +1,36 @@
+{% extends "email_base.html" %}
+
+{% block content %}
+<p style="font-size: 16px; color: #555; line-height: 1.6; margin-bottom: 20px;">
+  Cześć {{user.first_name}}!
+</p>
+
+<p style="font-size: 16px; color: #555; line-height: 1.6; margin-bottom: 20px;">
+  Dzięki za rejestrację. Zobacz, jak przeszukiwać bazę zawodników i budować relacje z potencjałem.
+</p>
+
+<p style="font-size: 16px; color: #555; line-height: 1.6; margin-bottom: 30px;">
+  🎥 Sprawdź krótkie wideo: jak działa platforma
+</p>
+
+<p>
+  <a href="{{youtube_link|default:'#'}}"
+    style="display: inline-block; padding: 15px 30px; background-color: #ED1C24; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 18px;">
+    Sprawdź instrukcję
+  </a>
+</p>
+
+
+<p style="font-size: 14px; color: #777; line-height: 1.4; margin-top: 30px;">
+  Jeżeli po kliknięciu link się nie otworzy, skopiuj go, wklej w pole adresu przeglądarki i przejdź do wskazanej
+  strony:
+</p>
+<p>
+  <a href="{{youtube_link|default:'#'}}" style="font-size:13px">{{youtube_link|default:'Instrukcja zostanie dodana wkrótce'}}</a>
+</p>
+
+<p style="font-size: 16px; color: #555; line-height: 1.6; margin-top: 40px;">
+    Pozdrawiamy,<br>
+    Zespół PlayMaker.pro
+</p>
+{% endblock %}
