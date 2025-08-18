@@ -273,6 +273,11 @@ class ProfileTransferRequestSerializer(
             data["requesting_team"]["team"]["team_contributor_id"] = 0
             data["requesting_team"]["team"]["picture_url"] = None
             data["profile_uuid"] = instance.anonymous_uuid
+            data["phone_number"] = {
+                "dial_code": None,
+                "number": None,
+            }
+            data["contact_email"] = None
         return data
 
     def validate_requesting_team(

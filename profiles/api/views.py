@@ -101,6 +101,9 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
         except ObjectDoesNotExist:
             raise api_errors.ProfileDoesNotExist
 
+        if is_anonymous and not isinstance(profile_object, models.PlayerProfile):
+            raise api_errors.ProfileDoesNotExist
+
         return self.retrieve_profile_and_respond(request, profile_object)
 
     def get_profile_by_slug(self, request: Request, profile_slug: str) -> Response:
@@ -114,6 +117,9 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
                 profile = profile_service.get_profile_by_slug(profile_slug)
         except ObjectDoesNotExist:
             raise api_errors.ProfileDoesNotExistBySlug
+
+        if is_anonymous and not isinstance(profile, models.PlayerProfile):
+            raise api_errors.ProfileDoesNotExist
 
         return self.retrieve_profile_and_respond(request, profile, is_anonymous)
 
