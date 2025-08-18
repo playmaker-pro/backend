@@ -422,7 +422,7 @@ class TransferRequestCatalogueAPIView(EndpointViewWithFilter):
             request=request,
         ) as cache:
             if cached_data := cache.data:
-                 return Response(cached_data)
+                return Response(cached_data)
 
             queryset = self.get_queryset()
             queryset = self.filter_queryset(queryset)

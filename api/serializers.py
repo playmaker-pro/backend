@@ -4,6 +4,7 @@ from functools import cached_property
 from cities_light.models import City
 from django.db.models import Model
 from django.utils import translation
+from django.utils.translation import gettext as _
 from django_countries import CountryTuple
 from rest_framework import serializers as _serializers
 from rest_framework.fields import empty
@@ -131,14 +132,10 @@ class ProfileEnumChoicesSerializer(I18nSerializerMixin, _serializers.CharField, 
         self, data: (typing.Union[int, str], typing.Union[int, str])
     ) -> dict:
         """Create dictionary from tuple choices with translation support"""
-        from django.utils.translation import gettext as _
-
-        return {str(val[0]): _(str(val[1])) for val in data}  # Explicitly translate each value
+        return {str(val[0]): _(str(val[1])) for val in data}
 
     def to_representation(self, obj: typing.Union[ChoicesTuple, str]) -> dict:
         """Parse output with translation support"""
-        from django.utils.translation import gettext as _
-
         parsed_obj = obj
         if not obj:
             return {}

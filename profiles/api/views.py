@@ -400,6 +400,9 @@ class PopularProfilesAPIView(MixinProfilesFilter, EndpointView):
             cache_key=f"{cfg.redis.key_prefix.popular_profiles}:{request.get_full_path()}",
             request=request,
         ) as cache:
+            if cached_data := cache.data:
+                return Response(cached_data)
+
             qs = self.get_queryset()
             qs = self.paginate_queryset(qs)
             qs = [obj.profile for obj in qs]
