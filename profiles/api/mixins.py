@@ -34,7 +34,6 @@ class ProfileRetrieveMixin:
         serializer_class = self.get_serializer_class(
             model_name=profile_object.__class__.__name__
         )
-        print(serializer_class)
         if not serializer_class:
             return Response(status=status.HTTP_204_NO_CONTENT)
 
