@@ -421,16 +421,14 @@ class TransferRequestCatalogueAPIView(EndpointViewWithFilter):
             cache_key=f"{cfg.redis.key_prefix.transfer_requests}:{request.get_full_path()}",
             request=request,
         ) as cache:
-            if cached_data := cache.data:
-                return Response(cached_data)
+            # if cached_data := cache.data:
+            #     return Response(cached_data)
 
             queryset = self.get_queryset()
             queryset = self.filter_queryset(queryset)
             paginated = self.get_paginated_queryset(queryset)
             # Get language from the request for proper translation context
-            language = getattr(request, "_language", None) or self.get_request_language(
-                request
-            )
+            language = self.get_request_language(request)
             context = {"request": request, "language": language}
             serializer = self.serializer_class(paginated, many=True, context=context)
             paginated_response = self.get_paginated_response(serializer.data)
