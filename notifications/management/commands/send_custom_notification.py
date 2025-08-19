@@ -132,6 +132,7 @@ class Command(BaseCommand):
                 title=arguments["title"],
                 description=arguments["description"],
                 href=arguments["href"],
+                icon=arguments["icon"],
             ),
             players=arguments["players"],
             coaches=arguments["coaches"],

@@ -1,11 +1,16 @@
+import os
+from tempfile import NamedTemporaryFile
 from unittest.mock import patch
 
 import pytest
+from django.conf import settings
 from django.utils import timezone
 
 from followers.services import FollowService
 from inquiries.models import InquiryRequest
 from notifications.models import Notification
+from notifications.services import NotificationService
+from notifications.templates import NotificationBody
 from premium.models import PremiumType
 from profiles.models import ProfileVisitation
 from profiles.services import NotificationService
@@ -515,3 +520,32 @@ class TestNotifications:
             href="/profil",
             icon="success",
         ).exists()
+
+    def test_notification_with_picture(self, player_profile):
+        """
+        Test that notification with picture is created correctly.
+        """
+        with NamedTemporaryFile(dir=settings.MEDIA_ROOT, suffix=".jpg") as temp_file:
+            temp_file.write(b"fake image data")
+            temp_file.flush()
+            picture_filename = os.path.basename(temp_file.name)
+            body = {
+                "title": "Test Notification",
+                "description": "This is a test notification with a picture.",
+                "href": "/test",
+                "icon": "test-icon",
+                "picture": picture_filename,
+                "picture_profile_role": "P",
+            }
+            NotificationService(player_profile.meta).create_notification(
+                NotificationBody(**body)
+            )
+
+            notification = Notification.objects.filter(
+                title=body["title"],
+            ).first()
+
+            assert notification is not None
+            assert notification.icon == "test-icon"
+            assert notification.picture == picture_filename
+            assert notification.picture_profile_role == "P"
