@@ -2,21 +2,13 @@
 Service for sending notifications to users.
 """
 
+from django.db.models import QuerySet
+
 from notifications.tasks import create_notification
 from notifications.templates import NotificationBody, NotificationTemplate
-from profiles.models import PROFILE_MODELS, ProfileMeta
+from profiles.models import BaseProfile, ProfileMeta
 from users.models import User
-
-GENDER_BASED_ROLES = {
-    "P": ("Piłkarz", "Piłkarka"),
-    "T": ("Trener", "Trenerka"),
-    "C": ("Działacz klubowy", "Działaczka klubowa"),
-    "G": ("Kibic", "Kibic"),
-    "M": ("Manager", "Manager"),
-    "R": ("Sędzia", "Sędzia"),
-    "S": ("Skaut", "Skaut"),
-    None: ("", ""),
-}
+from utils import GENDER_BASED_ROLES
 
 
 class NotificationService:
@@ -25,14 +17,14 @@ class NotificationService:
     It uses the NotificationTemplate class to create notifications.
     """
 
-    def __init__(self, meta: "profiles.models.ProfileMeta") -> None:  # type: ignore
+    def __init__(self, meta: ProfileMeta) -> None:  # type: ignore
         if meta is None:
             raise ValueError("Meta cannot be None")
 
         self._meta = meta
 
     @staticmethod
-    def get_queryset() -> "QuerySet[ProfileMeta]":
+    def get_queryset() -> QuerySet[ProfileMeta]:
         """
         Get the queryset of ProfileMeta objects.
         """
@@ -211,7 +203,7 @@ class NotificationService:
         )
         self.create_notification(body)
 
-    def notify_inquiry_accepted(self, who: PROFILE_MODELS) -> None:
+    def notify_inquiry_accepted(self, who: BaseProfile) -> None:
         """
         Send notifications for accepted inquiries.
         """
@@ -222,7 +214,7 @@ class NotificationService:
         self.create_notification(body)
 
     def notify_inquiry_rejected(
-        self, who: PROFILE_MODELS, hide_profile: bool = False
+        self, who: BaseProfile, hide_profile: bool = False
     ) -> None:
         """
         Send notifications for rejected inquiries.
@@ -234,9 +226,7 @@ class NotificationService:
         )
         self.create_notification(body)
 
-    def notify_inquiry_read(
-        self, who: PROFILE_MODELS, hide_profile: bool = False
-    ) -> None:
+    def notify_inquiry_read(self, who: BaseProfile, hide_profile: bool = False) -> None:
         """
         Send notifications for read inquiries.
         """
@@ -380,7 +370,7 @@ class NotificationService:
         body = self.parse_body(NotificationTemplate.ASSIGN_CLUB)
         self.create_notification(body)
 
-    def notify_new_inquiry(self, who: PROFILE_MODELS) -> None:
+    def notify_new_inquiry(self, who: BaseProfile) -> None:
         """
         Send notifications for new inquiries.
         """

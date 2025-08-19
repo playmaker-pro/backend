@@ -13,6 +13,7 @@ from notifications.services import NotificationService
 from notifications.templates import NotificationBody
 from premium.models import PremiumType
 from profiles.models import ProfileVisitation
+from profiles.services import NotificationService
 from utils import factories
 
 pytestmark = pytest.mark.django_db

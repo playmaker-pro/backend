@@ -7,13 +7,13 @@ from datetime import datetime
 import django.db.utils
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
+from django.template.loader import get_template
 from django.urls import reverse
 from django.utils import timezone, translation
-from django.utils.html import format_html
+from django.utils.html import format_html, strip_tags
 
 from backend.settings import cfg
 from backend.settings.config import Environment
-
 
 def translate_league_name(code, name):
     return settings.LEAGUES_CODES_MAP.get(code, name)
@@ -146,6 +146,14 @@ def generate_fe_url_path(path: str) -> str:
     Generates a full URL by concatenating the front-end base URL with a given path.
     """
     return cfg.webapp.parse_url(path)
+
+
+def render_email_template(template_name: str, context: dict) -> typing.Tuple[str, str]:
+    """Render an email template with the given context."""
+    template = get_template(template_name)
+    html_content = template.render(context)
+    plain_text = strip_tags(html_content)
+    return html_content, plain_text
 
 
 def generate_uuid():

@@ -3,7 +3,6 @@
 from django.db import migrations, models
 
 from mailing.default_templates import PREMIUM_PROFILE_EXPIRED
-from mailing.models import EmailTemplate as _EmailTemplate
 
 
 def create_template_for_premium_expired(apps, schema_editor):
@@ -12,7 +11,7 @@ def create_template_for_premium_expired(apps, schema_editor):
     EmailTemplate.objects.get_or_create(
         subject="⚠️ Twoje Premium wygasło – odnów je teraz!",
         body=PREMIUM_PROFILE_EXPIRED,
-        email_type=_EmailTemplate.EmailType.PREMIUM_EXPIRED,
+        email_type="PREMIUM_EXPIRED",
     )
 
 

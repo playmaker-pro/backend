@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('inquiries', '0019_auto_20250110_2311'),
+        ("inquiries", "0019_auto_20250110_2311"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='inquiryrequest',
-            name='anonymous_recipient',
+            model_name="inquiryrequest",
+            name="anonymous_recipient",
             field=models.BooleanField(default=False),
         ),
     ]

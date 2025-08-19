@@ -104,7 +104,6 @@ def clear_cache_for_key(cache_key_pattern: str) -> None:
 
     try:
         if backend_type == "redis":
-            # Redis backend - możemy użyć keys() i delete()
             from django_redis import get_redis_connection
 
             client = get_redis_connection("default")
@@ -121,8 +120,6 @@ def clear_cache_for_key(cache_key_pattern: str) -> None:
                 )
 
         elif backend_type in ["locmem", "memcached"]:
-            # LocMemCache i Memcached - nie można listować kluczy
-            # Możemy tylko wyczyścić cały cache lub konkretne klucze
             logger.warning(
                 f"Cache backend '{backend_type}' doesn't support pattern-based deletion."
             )

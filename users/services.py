@@ -12,15 +12,7 @@ from django.utils.http import urlsafe_base64_decode
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from features.models import AccessPermission, Feature, FeatureElement
-from mailing.default_templates import (
-    GIFT_FOR_1_REFERRAL_REFERRED,
-    GIFT_FOR_1_REFERRAL_REFERRER,
-    GIFT_FOR_3_REFERRALS,
-    GIFT_FOR_5_REFERRALS,
-    GIFT_FOR_15_REFERRALS,
-)
-from mailing.models import EmailTemplate as _EmailTemplate
-from mailing.schemas import EmailSchema
+from mailing.schemas import EmailTemplateRegistry
 from mailing.services import MailingService
 from premium.models import PremiumType
 from users.errors import CityDoesNotExistException, InvalidUIDServiceException
@@ -200,10 +192,11 @@ class UserService:
     @staticmethod
     def send_email_to_confirm_new_user(user: User) -> None:
         """Sends an email to a newly registered user to confirm their email address."""
-        email_template = _EmailTemplate.objects.new_user_template()
         verification_url = UserTokenManager.create_email_verification_url(user)
-        schema = email_template.create_email_schema(user=user, url=verification_url)
-        email_template.send_email(schema)
+
+        MailingService(
+            EmailTemplateRegistry.NEW_USER(context={"url": verification_url})
+        ).send_mail(user)
 
     @staticmethod
     def change_email_verify_flag(user: User) -> None:
@@ -227,8 +220,6 @@ class UserService:
 
 
 class PasswordResetService:
-    PASSWORD_RESET_EMAIL_TXT_TEMPLATE = "account/email/password_reset_key_message.txt"
-
     @staticmethod
     def get_user_by_email(email: str) -> Optional[User]:
         """
@@ -256,9 +247,12 @@ class PasswordResetService:
         )
 
         # Actual email sending logic
-        email_template = _EmailTemplate.objects.password_reset_template()
-        schema = email_template.create_email_schema(user=user, url=reset_url)
-        email_template.send_email(schema)
+        verification_url = UserTokenManager.create_email_verification_url(user)
+        MailingService(
+            EmailTemplateRegistry.PASSWORD_CHANGE(
+                context={"url": verification_url, "user": user}
+            )
+        ).send_mail(user)
 
     @staticmethod
     def reset_user_password(user: User, new_password: str) -> None:
@@ -295,18 +289,19 @@ class ReferralRewardService:
         """
         Reward the user for their first referral.
         """
-        email_referral_schema = EmailSchema(
-            subject="Gratulacje! Otrzymujesz nagrodę za polecenie nowego użytkownika",
-            body=GIFT_FOR_1_REFERRAL_REFERRER,
-            recipients=[self._user.email],
-        )
-        email_referred_schema = EmailSchema(
-            subject="Witaj w PlayMaker.pro! Odbierz swój prezent powitalny",
-            body=GIFT_FOR_1_REFERRAL_REFERRED,
-            recipients=[referred.email],
-        )
-        MailingService(email_referral_schema).send_mail()
-        MailingService(email_referred_schema).send_mail()
+        # Send email to referrer
+        MailingService(
+            EmailTemplateRegistry.REFERRAL_REWARD_REFERRER_1(
+                context={"referred": referred}
+            )
+        ).send_mail(self._user)
+
+        # Send welcome gift email to referred user
+        MailingService(
+            EmailTemplateRegistry.REFERRAL_REWARD_REFERRED(
+                context={"referrer": self._user}
+            )
+        ).send_mail(referred)
 
     def reward_3_referrals(self) -> None:
         """
@@ -315,24 +310,22 @@ class ReferralRewardService:
         self._user.profile.setup_premium_profile(
             premium_type=PremiumType.CUSTOM, period=14
         )
-        schema = EmailSchema(
-            subject="Gratulacje! Nagroda za 3 skuteczne polecenia PlayMaker.pro",
-            body=GIFT_FOR_3_REFERRALS,
-            recipients=[self._user.email],
-        )
-        MailingService(schema).send_mail()
+        MailingService(
+            EmailTemplateRegistry.REFERRAL_REWARD_REFERRER_3(
+                context={"referrer": self._user}
+            )
+        ).send_mail(self._user)
 
     def reward_5_referrals(self) -> None:
         """
         Reward the user for their fifth referral.
         """
         self._user.profile.setup_premium_profile(premium_type=PremiumType.MONTH)
-        schema = EmailSchema(
-            subject="Gratulacje! Otrzymujesz miesiąc Premium i treningi za 5 poleceń PlayMaker.pro",
-            body=GIFT_FOR_5_REFERRALS,
-            recipients=[self._user.email],
-        )
-        MailingService(schema).send_mail()
+        MailingService(
+            EmailTemplateRegistry.REFERRAL_REWARD_REFERRER_5(
+                context={"referrer": self._user}
+            )
+        ).send_mail(self._user)
 
     def reward_15_referrals(self) -> None:
         """
@@ -341,12 +334,11 @@ class ReferralRewardService:
         self._user.profile.setup_premium_profile(
             premium_type=PremiumType.CUSTOM, period=180
         )
-        schema = EmailSchema(
-            subject="Gratulacje! 6 miesięcy Premium za 15 poleceń PlayMaker.pro",
-            body=GIFT_FOR_15_REFERRALS,
-            recipients=[self._user.email],
-        )
-        MailingService(schema).send_mail()
+        MailingService(
+            EmailTemplateRegistry.REFERRAL_REWARD_REFERRER_15(
+                context={"referrer": self._user}
+            )
+        ).send_mail(self._user)
 
     def check_and_reward(self) -> None:
         """
