@@ -8,6 +8,8 @@ from pydantic import BaseModel
 from backend.settings import cfg
 from mailing.tasks import notify_admins, send
 
+MAIL_TEMPLATES_DIR = cfg.smtp.templates_dir
+
 
 class MailContent(BaseModel):
     subject: str = ""
@@ -91,65 +93,65 @@ class Envelope(BaseModel):
 class EmailTemplateRegistry:
     INQUIRY_LIMIT = MailContent(
         subject_format="Rozbuduj swoje transferowe możliwości – Rozszerz limit zapytań!",
-        template_path=cfg.mail.templates_dir + "/inquiry_limit.html",
+        template_path=MAIL_TEMPLATES_DIR + "/inquiry_limit.html",
     )
     NEW_USER = MailContent(
         subject_format="Witaj na PlayMaker.pro. Potwierdź rejestrację konta.",
-        template_path=cfg.mail.templates_dir + "/new_user.html",
+        template_path=MAIL_TEMPLATES_DIR + "/new_user.html",
     )
     PASSWORD_CHANGE = MailContent(
         subject_format="Zmiana hasła do Twojego konta.",
-        template_path=cfg.mail.templates_dir + "/password_change.html",
+        template_path=MAIL_TEMPLATES_DIR + "/password_change.html",
     )
     PREMIUM_EXPIRED = MailContent(
         subject_format="⚠️ Twoje Premium wygasło – odnów je teraz!",
-        template_path=cfg.mail.templates_dir + "/premium_expired.html",
+        template_path=MAIL_TEMPLATES_DIR + "/premium_expired.html",
     )
     REFERRAL_REWARD_REFERRED = MailContent(
         subject_format="Witaj w PlayMaker.pro! Odbierz swój prezent powitalny",
-        template_path=cfg.mail.templates_dir + "/referral_reward_referred.html",
+        template_path=MAIL_TEMPLATES_DIR + "/referral_reward_referred.html",
     )
     REFERRAL_REWARD_REFERRER_1 = MailContent(
         subject_format="Gratulacje! Otrzymujesz nagrodę za polecenie nowego użytkownika",
-        template_path=cfg.mail.templates_dir + "/1_referral_reward_referrer.html",
+        template_path=MAIL_TEMPLATES_DIR + "/1_referral_reward_referrer.html",
     )
     REFERRAL_REWARD_REFERRER_3 = MailContent(
         subject_format="Gratulacje! Nagroda za 3 skuteczne polecenia PlayMaker.pro",
-        template_path=cfg.mail.templates_dir + "/3_referral_reward_referrer.html",
+        template_path=MAIL_TEMPLATES_DIR + "/3_referral_reward_referrer.html",
     )
     REFERRAL_REWARD_REFERRER_5 = MailContent(
         subject_format="Gratulacje! Otrzymujesz miesiąc Premium i treningi za 5 poleceń PlayMaker.pro",
-        template_path=cfg.mail.templates_dir + "/5_referral_reward_referrer.html",
+        template_path=MAIL_TEMPLATES_DIR + "/5_referral_reward_referrer.html",
     )
     REFERRAL_REWARD_REFERRER_15 = MailContent(
         subject_format="Gratulacje! 6 miesięcy Premium za 15 poleceń PlayMaker.pro",
-        template_path=cfg.mail.templates_dir + "/15_referral_reward_referrer.html",
+        template_path=MAIL_TEMPLATES_DIR + "/15_referral_reward_referrer.html",
     )
     ACCEPTED_INQUIRY = MailContent(
         subject_format="{related_role} {related_full_name} {verb} Twoje zapytanie o piłkarski kontakt!",
-        template_path=cfg.mail.templates_dir + "/inquiries/accepted_inquiry.html",
+        template_path=MAIL_TEMPLATES_DIR + "/inquiries/accepted_inquiry.html",
     )
     REJECTED_INQUIRY = MailContent(
         subject_format="{related_role} {related_full_name} {verb} Twoje zapytanie o piłkarski kontakt!",
-        template_path=cfg.mail.templates_dir + "/inquiries/rejected_inquiry.html",
+        template_path=MAIL_TEMPLATES_DIR + "/inquiries/rejected_inquiry.html",
     )
     NEW_INQUIRY = MailContent(
         subject_format="Masz nowe zapytanie o piłkarski kontakt!",
-        template_path=cfg.mail.templates_dir + "/inquiries/new_inquiry.html",
+        template_path=MAIL_TEMPLATES_DIR + "/inquiries/new_inquiry.html",
     )
     OUTDATED_INQUIRY = MailContent(
         subject_format="Zwiększamy Twoją pulę zapytań o piłkarski kontakt!",
-        template_path=cfg.mail.templates_dir + "/inquiries/outdated_inquiry.html",
+        template_path=MAIL_TEMPLATES_DIR + "/inquiries/outdated_inquiry.html",
     )
     OUTDATED_REMINDER = MailContent(
         subject_format="Masz zapytanie o piłkarski kontakt czekające na decyzję.",
-        template_path=cfg.mail.templates_dir + "/inquiries/outdated_reminder.html",
+        template_path=MAIL_TEMPLATES_DIR + "/inquiries/outdated_reminder.html",
     )
     SYSTEM_ERROR = MailContent(
         subject_format="{subject}",
-        template_path=cfg.mail.templates_dir + "/system_error.html",
+        template_path=MAIL_TEMPLATES_DIR + "/system_error.html",
     )
     TEST = MailContent(
         subject_format="Testowy email",
-        template_path=cfg.mail.templates_dir + "/test.html",
+        template_path=MAIL_TEMPLATES_DIR + "/test.html",
     )

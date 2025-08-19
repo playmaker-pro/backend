@@ -117,7 +117,7 @@ class Config(BaseSettings):
     redis: RedisConfig
     postgres: DatabaseConfig
     webapp: WebappConfig
-    mail: MailingConfig
+    smtp: MailingConfig
 
     # add the rest of settings that should fit here
     class Config:

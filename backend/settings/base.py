@@ -640,11 +640,11 @@ CACHES = {
     }
 }
 
-EMAIL_USE_TLS = cfg.mail.use_tls
-EMAIL_HOST = cfg.mail.host
-EMAIL_PORT = cfg.mail.port
-EMAIL_HOST_USER = DEFAULT_FROM_EMAIL = SERVER_EMAIL = cfg.mail.outgoing_address
-EMAIL_HOST_PASSWORD = cfg.mail.password.get_secret_value()
+EMAIL_USE_TLS = cfg.smtp.use_tls
+EMAIL_HOST = cfg.smtp.host
+EMAIL_PORT = cfg.smtp.port
+EMAIL_HOST_USER = DEFAULT_FROM_EMAIL = SERVER_EMAIL = cfg.smtp.outgoing_address
+EMAIL_HOST_PASSWORD = cfg.smtp.password.get_secret_value()
 
 
 try:
