@@ -124,3 +124,14 @@ def test_get_my_sent_inquiries_with_anonymous_one_different_status(
         assert recipient["last_name"] == "profil"
         assert recipient["picture"] is None
         assert recipient["team_history_object"] is None
+
+
+def test_forbid_to_send_inquiry_to_self_anonymous_profile(api_client, anonymous_status):
+    """Test that a user cannot send an inquiry to themselves."""
+    recipient_user = anonymous_status.meta.user
+    recipient_uuid = anonymous_status.meta.transfer_object.anonymous_uuid
+    api_client.force_authenticate(user=recipient_user)
+    response = api_client.post(URL_SEND(recipient_uuid), {"anonymous_recipient": True})
+
+    assert response.status_code == 400
+    assert response.json() == {"error": "You can't send inquiry to yourself"}

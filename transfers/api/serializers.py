@@ -269,7 +269,7 @@ class ProfileTransferRequestSerializer(
         if user_preferences.contact_email:
             data["contact_email"] = user_preferences.contact_email
 
-        if instance.is_anonymous:
+        if instance.is_anonymous and not self.context.get("expose", False):
             data["requesting_team"]["id"] = 0
             data["requesting_team"]["team"]["team_name"] = "Anonimowa drużyna"
             data["requesting_team"]["team"]["id"] = 0
@@ -370,15 +370,11 @@ class ProfileTransferStatusSerializer(
     contact_email = serializers.EmailField(
         required=False, allow_null=True, write_only=True
     )
-    contact_email = serializers.EmailField(
-        required=False, allow_null=True, write_only=True
-    )
     status = ProfileEnumChoicesSerializer(model=ProfileTransferStatus)
     additional_info = serializers.ListField(required=False, allow_null=True)
     league = serializers.PrimaryKeyRelatedField(
         queryset=LeagueService().get_leagues(), many=True
     )
-    phone_number = PhoneNumberField(source="*", required=False, write_only=True)
     phone_number = PhoneNumberField(source="*", required=False, write_only=True)
     benefits = serializers.ListField(required=False, allow_null=True)
 
@@ -447,8 +443,9 @@ class ProfileTransferStatusSerializer(
             serializer = ProfileEnumChoicesSerializer(number_of_trainings, many=True)
             data["number_of_trainings"] = serializer.data
 
-        if self.context.get("is_anonymous", False):
-            data["profile_uuid"] = instance.anonymous_uuid
+        # expose = self.context.get("expose", False)
+        # if instance.is_anonymous and not expose:
+        #     data["profile_uuid"] = instance.anonymous_uuid
 
         return data
 

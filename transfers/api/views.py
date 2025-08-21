@@ -5,6 +5,7 @@ from django.db.models import (
     QuerySet,
 )
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -71,6 +72,7 @@ class TransferStatusAPIView(EndpointView):
     ) -> Response:
         """Retrieve and display transfer status for the user."""
         is_anonymous = request.query_params.get("is_anonymous", False)
+        expose = request.query_params.get("expose", False)
         transfer_status = None
         try:
             transfer_object = request.user.profile.meta.transfer_object
@@ -95,8 +97,21 @@ class TransferStatusAPIView(EndpointView):
             ):
                 raise TransferStatusDoesNotExistHTTPException
 
+        if (
+            expose
+            and transfer_status.is_anonymous
+            and request.user != transfer_status.meta.user
+        ):
+            raise ValidationError(
+                "Must be owner of the profile to expose anonymous transfer status"
+            )
+
         serializer = ProfileTransferStatusSerializer(
-            transfer_status, context={"request": request, "is_anonymous": is_anonymous}
+            transfer_status,
+            context={
+                "request": request,
+                "expose": expose,
+            },
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -261,6 +276,7 @@ class TransferRequestAPIView(EndpointView):
     ) -> Response:
         """Retrieve and display transfer request for the user."""
         is_anonymous = request.query_params.get("is_anonymous", False)
+        expose = request.query_params.get("expose", False)
         transfer_request = None
         try:
             transfer_object = request.user.profile.meta.transfer_object
@@ -286,8 +302,16 @@ class TransferRequestAPIView(EndpointView):
             ):
                 raise TransferRequestDoesNotExistHTTPException
 
+        if (
+            expose
+            and transfer_request.is_anonymous
+            and request.user != transfer_request.meta.user
+        ):
+            raise ValidationError({
+                "error": "Must be owner of the profile to expose anonymous transfer request"
+            })
         serializer = ProfileTransferRequestSerializer(
-            transfer_request, context={"request": request}
+            transfer_request, context={"request": request, "expose": expose}
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 

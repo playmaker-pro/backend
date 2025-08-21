@@ -56,14 +56,19 @@ class InquiresAPIView(EndpointView):
             if is_anonymous:
                 recipient = ProfileService.get_anonymous_profile_by_uuid(
                     recipient_profile_uuid
-                )
+                ).user
             else:
                 recipient = ProfileService.get_user_by_uuid(recipient_profile_uuid)
 
+            if recipient is request.user:
+                raise ValidationError({"error": "You can't send inquiry to yourself"})
+
         except ObjectDoesNotExist:
             raise NotFound("Recipient does not exist")
+
         if sender == recipient:
-            raise ValidationError("You can't send inquiry to yourself")
+            raise ValidationError({"error": "You can't send inquiry to yourself"})
+
         body = {
             "anonymous_recipient": is_anonymous,
             "sender": sender.pk,
