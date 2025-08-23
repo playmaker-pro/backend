@@ -118,12 +118,15 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
     def to_representation(self, instance: _models.InquiryRequest) -> None:
         """Custom representation for InquiryRequest, handling recipient data."""
         data = super().to_representation(instance)
+        transfer_object = getattr(
+            instance.recipient.profile.meta, "transfer_object", None
+        )
         if (
             instance.anonymous_recipient
             and instance.status != _models.InquiryRequest.STATUS_ACCEPTED
+            and transfer_object
         ):
             recipient = data.get("recipient_object", {})
-            transfer_object = instance.recipient.profile.meta.transfer_object
             recipient["slug"] = transfer_object.anonymous_slug
             recipient["uuid"] = transfer_object.anonymous_uuid
             recipient["id"] = 0

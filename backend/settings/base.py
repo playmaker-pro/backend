@@ -135,7 +135,7 @@ ROOT_URLCONF = "backend.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, ".custom_email_templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -243,7 +243,7 @@ STATICFILES_DIRS = [
 # ManifestStaticFilesStorage is recommended in production, to prevent outdated
 # Javascript / CSS assets being served from cache (e.g. after a Wagtail upgrade).
 # See https://docs.djangoproject.com/en/3.1/ref/contrib/staticfiles/#manifeststaticfilesstorage  # noqa
-STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
+# STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 STATIC_URL = "/static/"
@@ -646,11 +646,11 @@ CACHES = {
     }
 }
 
-EMAIL_USE_TLS = cfg.mail.use_tls
-EMAIL_HOST = cfg.mail.host
-EMAIL_PORT = cfg.mail.port
-EMAIL_HOST_USER = DEFAULT_FROM_EMAIL = SERVER_EMAIL = cfg.mail.outgoing_address
-EMAIL_HOST_PASSWORD = cfg.mail.password.get_secret_value()
+EMAIL_USE_TLS = cfg.smtp.use_tls
+EMAIL_HOST = cfg.smtp.host
+EMAIL_PORT = cfg.smtp.port
+EMAIL_HOST_USER = DEFAULT_FROM_EMAIL = SERVER_EMAIL = cfg.smtp.outgoing_address
+EMAIL_HOST_PASSWORD = cfg.smtp.password.get_secret_value()
 
 
 try:

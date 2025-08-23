@@ -93,9 +93,15 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
         self, request: Request, profile_uuid: uuid.UUID
     ) -> Response:
         """GET single profile by uuid."""
+        is_anonymous = request.query_params.get("is_anonymous", False)
         try:
-            profile_object = profile_service.get_profile_by_uuid(profile_uuid)
+            profile_object = profile_service.get_profile_by_uuid(
+                profile_uuid, is_anonymous
+            )
         except ObjectDoesNotExist:
+            raise api_errors.ProfileDoesNotExist
+
+        if is_anonymous and not isinstance(profile_object, models.PlayerProfile):
             raise api_errors.ProfileDoesNotExist
 
         return self.retrieve_profile_and_respond(request, profile_object)
@@ -111,6 +117,9 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
                 profile = profile_service.get_profile_by_slug(profile_slug)
         except ObjectDoesNotExist:
             raise api_errors.ProfileDoesNotExistBySlug
+
+        if is_anonymous and not isinstance(profile, models.PlayerProfile):
+            raise api_errors.ProfileDoesNotExist
 
         return self.retrieve_profile_and_respond(request, profile, is_anonymous)
 

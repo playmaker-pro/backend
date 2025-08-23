@@ -110,14 +110,16 @@ class PlayerProfileViewSerializer(BaseProfileSerializer):
         return licenses.data if licenses.is_valid() else None
 
     def to_representation(self, instance):
-        """Factory method to return appropriate serializer"""
         data = super().to_representation(instance)
-        if (
-            self.context.get("transfer_status")
-            and instance.meta
+        has_anonymous_transfer_status = (
+            instance.meta
             and instance.meta.transfer_object
             and instance.meta.transfer_status.is_anonymous
-        ) or self.context.get("is_anonymous", False):
+        )
+        if has_anonymous_transfer_status and (
+            self.context.get("transfer_status")
+            or self.context.get("is_anonymous", False)
+        ):
             uuid = instance.meta.transfer_status.anonymous_uuid
             data["slug"] = f"anonymous-{uuid}"
             data["uuid"] = uuid
@@ -133,7 +135,8 @@ class PlayerProfileViewSerializer(BaseProfileSerializer):
                 "number": None,
             }
             data["team_history_object"] = None
-
+        elif has_anonymous_transfer_status:
+            data["transfer_status"] = None
         return data
 
 

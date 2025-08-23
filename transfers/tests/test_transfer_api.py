@@ -43,6 +43,15 @@ transfer_request_service = TransferRequestService()
 
 pytestmark = pytest.mark.django_db
 
+GET_TRANSFER_STATUS_URL = lambda profile_uuid: reverse(
+    "api:transfers:profile_transfer_status",
+    kwargs={"profile_uuid": str(profile_uuid)},
+)
+GET_TRANSFER_REQUEST_URL = lambda profile_uuid: reverse(
+    "api:transfers:profile_transfer_request",
+    kwargs={"profile_uuid": str(profile_uuid)},
+)
+
 
 class TestTransferStatusAPI(APITestCase, MethodsNotAllowedTestsMixin):
     """Test transfer status API endpoints."""
@@ -56,10 +65,7 @@ class TestTransferStatusAPI(APITestCase, MethodsNotAllowedTestsMixin):
         self.url = reverse(
             "api:transfers:manage_transfer_status",
         )
-        self.get_url = lambda profile_uuid: reverse(
-            "api:transfers:profile_transfer_status",
-            kwargs={"profile_uuid": str(profile_uuid)},
-        )
+        self.get_url = GET_TRANSFER_STATUS_URL
         self.user_manager = UserManager(self.client)
         self.headers = self.user_manager.custom_user_headers(
             email=user.email, password="test_password"
@@ -232,10 +238,7 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
         self.url = reverse(
             "api:transfers:manage_transfer_request",
         )
-        self.get_url = lambda profile_uuid: reverse(
-            "api:transfers:profile_transfer_request",
-            kwargs={"profile_uuid": profile_uuid},
-        )
+        self.get_url = GET_TRANSFER_REQUEST_URL
         self.user_manager = UserManager(self.client)
         self.headers = self.user_manager.custom_user_headers(
             email=user.email, password="test_password"
@@ -765,6 +768,20 @@ class TestAnonymousTransferStatus:
         assert response.status_code == 400
         assert not ProfileTransferStatus.objects.filter().exists()
 
+    # def test_expose_anonymous_transfer_status(self, profile, api_client, payload):
+    #     profile.setup_premium_profile()
+    #     transfer_status = TransferStatusFactory.create(
+    #         status="1", meta=profile.meta, is_anonymous=True
+    #     )
+    #     api_client.force_authenticate(profile.user)
+    #     response = api_client.get(
+    #         GET_URL(transfer_status.anonymous_uuid),
+    #         {"is_anonymous": True, "expose": True},
+    #         format="json",
+    #     )
+
+    #     assert response.status_code == 200
+
 
 class TestAnonymousTransferRequest:
     url_path = "api:transfers:manage_transfer_request"
@@ -812,3 +829,51 @@ class TestAnonymousTransferRequest:
         assert data["requesting_team"]["team"]["team_contributor_id"] == 0
         assert data["requesting_team"]["team"]["picture_url"] is None
         # TODO: FINISH
+
+    def test_expose_anonymous_transfer_request(self, coach_profile, api_client):
+        """
+        Test that anonymous transfer request can be exposed.
+        Expected status code 200.
+        """
+        coach_profile.setup_premium_profile()
+        transfer_request = TransferRequestFactory.create(
+            meta=coach_profile.meta, is_anonymous=True
+        )
+        api_client.force_authenticate(coach_profile.user)
+        response = api_client.get(
+            GET_TRANSFER_REQUEST_URL(transfer_request.anonymous_uuid),
+            {"is_anonymous": True, "expose": True},
+            format="json",
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["requesting_team"]["id"] != 0
+        assert data["requesting_team"]["team"]["team_name"] != "Anonimowa drużyna"
+        assert data["requesting_team"]["team"]["id"] != 0
+        assert data["profile_uuid"] == str(coach_profile.uuid)
+        assert data["phone_number"]["number"] is not None
+        assert data["phone_number"]["dial_code"] is not None
+
+    def test_expose_anonymous_transfer_request_error_not_owner(
+        self, coach_profile, player_profile, api_client
+    ):
+        """
+        Test that anonymous transfer request can be exposed.
+        Expected status code 200.
+        """
+        coach_profile.setup_premium_profile()
+        transfer_request = TransferRequestFactory.create(
+            meta=coach_profile.meta, is_anonymous=True
+        )
+        api_client.force_authenticate(player_profile.user)
+        response = api_client.get(
+            GET_TRANSFER_REQUEST_URL(transfer_request.anonymous_uuid),
+            {"is_anonymous": True, "expose": True},
+            format="json",
+        )
+
+        assert response.status_code == 400
+        assert response.json() == {
+            "error": "Must be owner of the profile to expose anonymous transfer request"
+        }
