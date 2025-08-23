@@ -8,8 +8,6 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
-from mailing.schemas import EmailTemplateRegistry
-from mailing.services import MailingService
 from payments.models import Transaction
 from premium.tasks import premium_expired
 from premium.utils import get_date_days_after
@@ -61,10 +59,6 @@ class PremiumProfile(models.Model):
     @property
     def subscription_lifespan(self) -> timedelta:
         return self.valid_until.date() - self.valid_since.date()
-
-    def sent_email_that_premium_expired(self) -> None:
-        mail_content = EmailTemplateRegistry.PREMIUM_EXPIRED()
-        MailingService(mail_content).send_mail(self.product.user)
 
     def _fresh_init(self) -> None:
         """Initialize the premium profile."""

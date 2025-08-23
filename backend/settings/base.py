@@ -2,6 +2,7 @@ import os
 from datetime import timedelta
 
 import sentry_sdk
+from celery.schedules import crontab
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
@@ -522,7 +523,12 @@ CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_TASK_TIME_LIMIT = 60 * 60
 CELERY_TIMEZONE = TIME_ZONE
-
+CELERY_BEAT_SCHEDULE = {
+    "daily-supervisor": {
+        "task": "app.celery.tasks.run_daily_supervisor",
+        "schedule": crontab(hour=10, minute=0),  # Codziennie o 10:00
+    },
+}
 
 # Redis & stream activity
 STREAM_REDIS_CONFIG = {

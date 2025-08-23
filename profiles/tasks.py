@@ -4,6 +4,9 @@ from celery import shared_task
 from django.utils import timezone
 from django_celery_beat.models import ClockedSchedule, PeriodicTask
 
+from mailing.schemas import EmailTemplateRegistry
+from mailing.services import MailingService
+from mailing.utils import build_email_context
 from profiles import models as profile_models
 from profiles.services import NotificationService
 
@@ -32,6 +35,9 @@ def setup_premium_profile(
     if not pp_object.trial_tested:
         pp_object.trial_tested = True
         pp_object.save(update_fields=["trial_tested"])
+
+    if premium_type == profile_models.PremiumType.TRIAL:
+        
 
     if premium.is_trial and premium_type != profile_models.PremiumType.TRIAL:
         pp_object.inquiries.reset_counter(reset_plan=False)
@@ -188,3 +194,27 @@ def create_post_create_profile__periodic_tasks(
             clocked_time=timezone.now() + timezone.timedelta(days=4)
         ),
     )
+
+
+def post_create_player_profile(pk: int) -> None:
+    """
+    Post-save signal handler for PlayerProfile to ensure metrics exist.
+    """
+    profile = profile_models.PlayerProfile.objects.get(pk=pk)
+
+    content = build_email_context(user=profile.user)
+    MailingService(EmailTemplateRegistry.TEST(context=content)).send_mail(profile.user)
+
+
+def post_create_other_profile(pk: int, profile_class_name: str) -> None:
+    """
+    Post-save signal handler for ScoutProfile, CoachProfile, and ClubProfile.
+    """
+    if profile_class_name not in ["CoachProfile", "ClubProfile", "ScoutProfile"]:
+        return
+
+    profile_model = getattr(profile_models, profile_class_name)
+
+    if profile := profile_model.objects.filter(pk=pk).first():
+        content = build_email_context(user=profile.user)
+        MailingService(EmailTemplateRegistry.TEST(content)).send_mail(profile.user)
