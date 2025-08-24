@@ -93,7 +93,9 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
         self, request: Request, profile_uuid: uuid.UUID
     ) -> Response:
         """GET single profile by uuid."""
-        is_anonymous = request.query_params.get("is_anonymous", False)
+        is_anonymous = api_utils.convert_bool(
+            "is_anonymous", request.query_params.get("is_anonymous", "false")
+        )
         try:
             profile_object = profile_service.get_profile_by_uuid(
                 profile_uuid, is_anonymous
@@ -825,7 +827,9 @@ class ProfileTeamsApi(EndpointView):
         Retrieve a list of team contributors associated
         with a given user profile.
         """
-        is_anonymous = request.query_params.get("is_anonymous", False)
+        is_anonymous = api_utils.convert_bool(
+            "is_anonymous", request.query_params.get("is_anonymous", "false")
+        )
 
         # Retrieve the profile associated with the given UUID
         try:
