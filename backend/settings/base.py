@@ -502,6 +502,14 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
                 "handlers": ["celery_file", "console"],
                 "level": "ERROR",
             },
+            "celery.beat": {
+                "handlers": ["celery_file", "console"],
+                "level": "DEBUG",
+            },
+            "django_celery_beat": {
+                "handlers": ["celery_file", "console"],
+                "level": "DEBUG",
+            },
         },
     }
 
