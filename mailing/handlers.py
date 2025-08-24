@@ -10,6 +10,6 @@ class AsyncAdminEmailHandler(AdminEmailHandler):
         try:
             subject = self.format(record)
             message = str(record.__dict__)
-            notify_admins.delay(subject, message)
+            notify_admins.delay(subject=subject, message=message)  # Wywołaj Celery task
         except Exception:
-            super().emit(record)
+            self.handleError(record)  # W razie błędu logujemy go standardowo
