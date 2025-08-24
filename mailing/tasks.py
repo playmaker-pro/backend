@@ -12,13 +12,21 @@ logger: logging.Logger = logging.getLogger("mailing")
 @shared_task
 def notify_admins(**data):
     """Send notification to admins with error tracking."""
+    subject = data.get("subject")
+
+    if subject is None:
+        raise ValueError("Subject is required for admin notification")
+
+    if cache.get(subject):
+        logger.info(f"Skipping duplicate admin notification: {subject}")
+        return
+
     try:
         mail_admins(**data)
         logger.info(f"Admin notification sent: {data.get('subject', 'No subject')}")
     except Exception as err:
         logger.error(f"Admin notification failed: {err}")
-        # Track admin notification failures
-        cache.set("admin_notification_last_error", str(err), 3600)
+        cache.set(subject, True, 3600)
         raise
 
 

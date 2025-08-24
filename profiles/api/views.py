@@ -426,6 +426,7 @@ class SuggestedProfilesAPIView(EndpointView):
         profile = user.profile
         params = {"user__last_activity__gte": timezone.now() - timedelta(days=30)}
 
+        ordering = None
         if loc := user.userpreferences.localization:
             cities_nearby = profile_service.get_cities_nearby(loc)
             params["user__userpreferences__localization__in"] = cities_nearby
@@ -447,14 +448,16 @@ class SuggestedProfilesAPIView(EndpointView):
         else:
             qs_model = models.PlayerProfile
 
-        qs = (
-            qs_model.objects.to_list_by_api(
-                **params,
+        qs = qs_model.objects.to_list_by_api(
+            **params,
+        ).exclude(user__pk=user.pk)
+
+        if ordering:
+            qs = qs.annotate(city_order=ordering).order_by(
+                "city_order", "-user__last_activity"
             )
-            .annotate(city_order=ordering)
-            .exclude(user__pk=user.pk)
-            .order_by("city_order", "-user__last_activity")[:10]
-        )
+        else:
+            qs = qs.order_by("-user__last_activity")
 
         serializer = serializers.SuggestedProfileSerializer(qs[:10], many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
