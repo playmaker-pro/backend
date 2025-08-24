@@ -48,7 +48,7 @@ class MailContent(BaseModel):
 
     @validator("template_file")
     def validate_template_file(cls, v):
-        if not v or not os.path.exists(os.path.join(cfg.mail.templates_dir, v)):
+        if not v or not os.path.exists(os.path.join(cfg.smtp.templates_dir, v)):
             raise ValueError(f"Template file {v} does not exist.")
         return v
 
@@ -69,7 +69,7 @@ class MailContent(BaseModel):
         """
         Returns the template path for the email content.
         """
-        return os.path.join(cfg.mail.templates_dir, self.template_file)
+        return os.path.join(cfg.smtp.templates_dir, self.template_file)
 
     @property
     def ready(self) -> bool:
@@ -188,3 +188,11 @@ class EmailTemplateRegistry:
         subject_format="Testowy email",
         template_file=EmailTemplateFileNames.TEST.value,
     )
+    BLANK_PROFILE = TEST
+    INACTIVE_30_DAYS = TEST
+    INACTIVE_90_DAYS = TEST
+    GO_PREMIUM = TEST
+    VIEWS_MONTHLY = TEST
+    PLAYER_WITHOUT_TRANSFER_STATUS = TEST
+    PROFILE_WITHOUT_TRANSFER_REQUEST = TEST
+    INVITE_FRIENDS = TEST

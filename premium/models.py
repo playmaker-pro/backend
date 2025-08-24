@@ -8,9 +8,11 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
+from app.celery.utils import get_task
 from payments.models import Transaction
-from premium.tasks import premium_expired
 from premium.utils import get_date_days_after
+
+premium_expired_task = get_task("premium.tasks.premium_expired")
 
 
 class PremiumType(Enum):

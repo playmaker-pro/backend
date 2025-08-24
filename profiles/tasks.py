@@ -36,9 +36,6 @@ def setup_premium_profile(
         pp_object.trial_tested = True
         pp_object.save(update_fields=["trial_tested"])
 
-    if premium_type == profile_models.PremiumType.TRIAL:
-        
-
     if premium.is_trial and premium_type != profile_models.PremiumType.TRIAL:
         pp_object.inquiries.reset_counter(reset_plan=False)
 

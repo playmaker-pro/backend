@@ -33,7 +33,6 @@ class Command(BaseCommand):
             self.inactive_for_30_days()
             self.inactive_for_90_days()
             self.go_premium()
-            self.day_after_trial_end()
             self.invite_friends()
             self.views_monthly()
             self.player_without_transfer_status()
@@ -54,29 +53,29 @@ class Command(BaseCommand):
             PlayerProfile.objects.filter(user__declared_role="P")
             .filter(
                 Q(team_object__isnull=True)
-                | Q(profile_video__isnull=True)
-                | Q(display_status=User.DisplayStatus.NOT_SHOWN)
+                | Q(user__user_video__isnull=True)
+                | Q(user__display_status=User.DisplayStatus.NOT_SHOWN)
             )
             .exclude(
-                user__mailing__outbox__sent_at__gt=month_ago,
-                user__mailing__outbox__mail_template=mail_schema.template_file,
+                user__mailing__mailbox__sent_at__gt=month_ago,
+                user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
         ):
             MailingService(mail_schema).send_mail(player.user)
 
         for coach in CoachProfile.objects.filter(
-            user__declared_role="T", display_status=User.DisplayStatus.NOT_SHOWN
+            user__declared_role="T", user__display_status=User.DisplayStatus.NOT_SHOWN
         ).exclude(
-            user__mailing__outbox__sent_at__gt=month_ago,
-            user__mailing__outbox__mail_template=mail_schema.template_file,
+            user__mailing__mailbox__sent_at__gt=month_ago,
+            user__mailing__mailbox__mail_template=mail_schema.template_file,
         ):
             MailingService(mail_schema).send_mail(coach.user)
 
         for club in ClubProfile.objects.filter(
-            user__declared_role="C", display_status=User.DisplayStatus.NOT_SHOWN
+            user__declared_role="C", user__display_status=User.DisplayStatus.NOT_SHOWN
         ).exclude(
-            user__mailing__outbox__sent_at__gt=month_ago,
-            user__mailing__outbox__mail_template=mail_schema.template_file,
+            user__mailing__mailbox__sent_at__gt=month_ago,
+            user__mailing__mailbox__mail_template=mail_schema.template_file,
         ):
             MailingService(mail_schema).send_mail(club.user)
 
@@ -91,12 +90,12 @@ class Command(BaseCommand):
                 last_activity__lt=thirty_days_ago,
             )
             .exclude(
-                mailing__outbox__sent_at__gt=thirty_days_ago,
-                mailing__outbox__mail_template=mail_schema.template_file,
+                mailing__mailbox__sent_at__gt=thirty_days_ago,
+                mailing__mailbox__mail_template=mail_schema.template_file,
             )
             .exclude(
-                mailing__outbox__sent_at__gt=F("last_activity"),
-                mailing__outbox__mail_template=mail_schema.template_file,
+                mailing__mailbox__sent_at__gt=F("last_activity"),
+                mailing__mailbox__mail_template=mail_schema.template_file,
             )
         ):
             MailingService(mail_schema).send_mail(user)
@@ -112,12 +111,12 @@ class Command(BaseCommand):
                 last_activity__lt=ninety_days_ago,
             )
             .exclude(
-                mailing__outbox__sent_at__gt=ninety_days_ago,
-                mailing__outbox__mail_template=mail_schema.template_file,
+                mailing__mailbox__sent_at__gt=ninety_days_ago,
+                mailing__mailbox__mail_template=mail_schema.template_file,
             )
             .exclude(
-                mailing__outbox__sent_at__gt=F("last_activity"),
-                mailing__outbox__mail_template=mail_schema.template_file,
+                mailing__mailbox__sent_at__gt=F("last_activity"),
+                mailing__mailbox__mail_template=mail_schema.template_file,
             )
         ):
             MailingService(mail_schema).send_mail(user)
@@ -132,8 +131,8 @@ class Command(BaseCommand):
             PremiumProduct.objects.filter(premium__valid_until__isnull=True)
             .exclude(user__isnull=True)
             .exclude(
-                mailing__outbox__sent_at__gt=thirty_days_ago,
-                mailing__outbox__mail_template=mail_schema.template_file,
+                user__mailing__mailbox__sent_at__gt=thirty_days_ago,
+                user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
             .select_related("user")
         ):
@@ -171,8 +170,8 @@ class Command(BaseCommand):
                 user__declared_role="P",
             )
             .exclude(
-                user__mailing__outbox__sent_at__gt=sixty_days_ago,
-                user__mailing__outbox__mail_template=mail_schema.template_file,
+                user__mailing__mailbox__sent_at__gt=sixty_days_ago,
+                user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
             .select_related("user")
         ):
@@ -190,8 +189,8 @@ class Command(BaseCommand):
                 user__declared_role__in=["C", "T"],
             )
             .exclude(
-                user__mailing__outbox__sent_at__gt=sixty_days_ago,
-                user__mailing__outbox__mail_template=mail_schema.template_file,
+                user__mailing__mailbox__sent_at__gt=sixty_days_ago,
+                user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
             .select_related("user")
         ):
@@ -204,7 +203,7 @@ class Command(BaseCommand):
         mail_schema = EmailTemplateRegistry.INVITE_FRIENDS()
 
         for user in User.objects.exclude(
-            mailing__outbox__sent_at__gt=sixty_days_ago,
-            mailing__outbox__mail_template=mail_schema.template_file,
+            mailing__mailbox__sent_at__gt=sixty_days_ago,
+            mailing__mailbox__mail_template=mail_schema.template_file,
         ):
             MailingService(mail_schema).send_mail(user)
