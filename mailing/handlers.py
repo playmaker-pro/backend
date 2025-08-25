@@ -9,6 +9,11 @@ class AsyncAdminEmailHandler(AdminEmailHandler):
 
         try:
             subject = self.format(record)
+            if "Traceback (most recent call last)" in subject:
+                subject = subject.split("Traceback (most recent call last)")[0].strip()
+            else:
+                subject = subject.strip()[:255]
+
             message = str(record.__dict__)
             notify_admins.delay(subject=subject, message=message)  # Wywołaj Celery task
         except Exception:

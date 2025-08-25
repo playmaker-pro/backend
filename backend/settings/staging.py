@@ -11,8 +11,6 @@ ADMINS = MANAGERS = [
     ("Biuro", "biuro@playmaker.pro"),
 ]
 
-MIDDLEWARE = ["django.middleware.common.BrokenLinkEmailsMiddleware"] + MIDDLEWARE
-
 STATIC_ROOT = os.path.join(BASE_DIR, "public", "static")
 
 

@@ -12,8 +12,6 @@ logger: logging.Logger = logging.getLogger("mailing")
 @shared_task
 def notify_admins(subject: str, message: str, **kwargs: Any):
     """Send notification to admins with error tracking."""
-    subject = subject.replace("\n", " ").strip()[:100]
-    message = subject + "<br/><br/>" + message
     if cache.get(subject):
         logger.info(f"Skipping duplicate admin notification: {subject}")
         return
