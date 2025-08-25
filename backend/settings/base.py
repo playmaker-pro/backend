@@ -356,6 +356,16 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
     return {
         "version": 1,
         "disable_existing_loggers": False,
+        "filters": {
+            "skip_404": {
+                "()": "django.utils.log.CallbackFilter",
+                "callback": lambda record: not (
+                    record.status_code == 404
+                    or "Broken link" in record.getMessage()
+                    or "Not Found" in record.getMessage()
+                ),
+            },
+        },
         "formatters": {
             "verbose": {
                 "format": "[%(asctime)s] %(levelname)s [%(pathname)s:%(lineno)s] %(message)s",  # noqa
@@ -367,6 +377,7 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
             "mail_admins": {
                 "level": "ERROR",
                 "class": "mailing.handlers.AsyncAdminEmailHandler",
+                "filters": ["skip_404"],
             },
             "profiles_file": {
                 "level": "DEBUG",
@@ -461,6 +472,11 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
                 "handlers": ["django_log_file", "console", "mail_admins"],
                 "propagate": True,
                 "level": "ERROR",
+            },
+            "django.request": {
+                "handlers": ["django_log_file", "console"],
+                "level": "ERROR",
+                "propagate": False,
             },
             "adapters": {
                 "handlers": ["adapters", "console"],
