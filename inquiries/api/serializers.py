@@ -118,13 +118,16 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
     def to_representation(self, instance: _models.InquiryRequest) -> None:
         """Custom representation for InquiryRequest, handling recipient data."""
         data = super().to_representation(instance)
+        anonymous_transfer_object = instance.recipient.profile.meta.transfer_object
+
         if (
             instance.anonymous_recipient
             and instance.status != _models.InquiryRequest.STATUS_ACCEPTED
+            and anonymous_transfer_object
         ):
             recipient = data.get("recipient_object", {})
-            recipient["slug"] = instance.anonymous_slug
-            recipient["uuid"] = instance.anonymous_uuid
+            recipient["slug"] = anonymous_transfer_object.anonymous_slug
+            recipient["uuid"] = anonymous_transfer_object.anonymous_uuid
             recipient["id"] = 0
             recipient["first_name"] = "Anonimowy"
             recipient["last_name"] = "profil"
@@ -135,7 +138,7 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
                 "phone_number": {"dial_code": None, "number": None},
             }
             data["recipient_object"] = recipient
-            data["recipient_profile_uuid"] = instance.anonymous_uuid
+            data["recipient_profile_uuid"] = anonymous_transfer_object.anonymous_uuid
 
         return data
 
