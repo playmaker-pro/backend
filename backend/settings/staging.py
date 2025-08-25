@@ -7,7 +7,7 @@ BASE_URL = "https://staging.playmakerpro.usermd.net"
 COMPRESS_ENABLED = True
 
 ADMINS = MANAGERS = [
-    ("Jakub", "jakub@bartnyk.pl"),
+    ("Jakub", "jakub@playmaker.pro"),
     ("Biuro", "biuro@playmaker.pro"),
 ]
 
