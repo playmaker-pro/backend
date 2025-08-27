@@ -25,7 +25,7 @@ line-length = 88
 name = "backend"
 version = "2.3.3"
 description = ""
-authors = ["rkesik <rafal.kesik@gmail.com>", "bartnyk <jakub@bartnyk.pl>"]
+authors = ["rkesik <rafal.kesik@gmail.com>", "bartnyk <jakub@playmaker.pro>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]

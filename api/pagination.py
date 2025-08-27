@@ -14,21 +14,21 @@ class PagePagination(pagination.PageNumberPagination):
     max_page_size: int = 100
 
 
-class TransferRequestCataloguePagePagination(pagination.PageNumberPagination):
+class TransferRequestCataloguePagePagination(PagePagination):
     """
     Custom pagination class for transfer request catalogue page.
     """
 
-    page_size: int = 10
-    page_size_query_param: str = "page_size"
-    max_page_size: int = 100
 
-
-class ClubTeamsPagination(pagination.PageNumberPagination):
+class ClubTeamsPagination(PagePagination):
     """
     Custom pagination class for club teams page.
     """
 
-    page_size: int = 10
-    page_size_query_param: str = "page_size"
-    max_page_size: int = 100
+
+class ProfileSearchPagination(PagePagination):
+    """
+    Custom pagination class for profile search page.
+    """
+
+    page_size: int = 5

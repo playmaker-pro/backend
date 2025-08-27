@@ -1,4 +1,5 @@
 import logging
+import sys
 from unittest.mock import patch
 
 import pytest
@@ -6,6 +7,20 @@ from django.core import mail
 from django.test import TestCase, override_settings
 
 from mailing.handlers import AsyncAdminEmailHandler
+
+
+@pytest.fixture
+def mock_notify_admins():
+    """Mock for notify_admins Celery task."""
+    with patch("mailing.tasks.notify_admins.delay") as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_mail_admins():
+    """Mock for mail_admins function."""
+    with patch("mailing.tasks.mail_admins") as mock:
+        yield mock
 
 
 @pytest.fixture
@@ -37,7 +52,7 @@ def exception_log_record():
             lineno=42,
             msg="Error with exception",
             args=(),
-            exc_info=True,
+            exc_info=sys.exc_info(),  # Use actual exception info tuple
         )
         record.getMessage = lambda: "Error with exception"
         return record
@@ -56,67 +71,64 @@ class TestAsyncAdminEmailHandler:
         assert isinstance(self.handler, AsyncAdminEmailHandler)
         assert self.handler.level == logging.ERROR
 
-    def test_emit_calls_celery_task(self, error_log_record):
+    def test_emit_calls_celery_task(self, mock_notify_admins, error_log_record):
         """Test that emit method calls Celery task with correct parameters."""
-        with patch("mailing.tasks.notify_admins.delay") as mock_notify_admins:
-            self.handler.emit(error_log_record)
+        self.handler.emit(error_log_record)
 
-            mock_notify_admins.assert_called_once()
-            call_args = mock_notify_admins.call_args[0]
-            assert "Test error message" in str(call_args)
+        mock_notify_admins.assert_called_once()
+        call_args = mock_notify_admins.call_args[1]
+        assert "Test error message" in str(call_args)
 
-    def test_emit_with_exception_info(self, exception_log_record):
+    def test_emit_with_exception_info(self, mock_notify_admins, exception_log_record):
         """Test emit with exception information."""
-        with patch("mailing.tasks.notify_admins.delay") as mock_notify_admins:
-            self.handler.emit(exception_log_record)
-            mock_notify_admins.assert_called_once()
+        self.handler.emit(exception_log_record)
+        mock_notify_admins.assert_called_once()
 
-    def test_emit_handles_celery_task_exception(self, error_log_record):
+    def test_emit_handles_celery_task_exception(
+        self, mock_notify_admins, error_log_record
+    ):
         """Test that handler gracefully handles Celery task failures."""
-        with patch("mailing.tasks.notify_admins.delay") as mock_notify_admins:
-            mock_notify_admins.side_effect = Exception("Celery task failed")
+        mock_notify_admins.side_effect = Exception("Celery task failed")
 
-            with patch.object(self.handler, "handleError") as mock_handle_error:
-                self.handler.emit(error_log_record)
-                mock_handle_error.assert_called_once_with(error_log_record)
+        with patch.object(self.handler, "handleError") as mock_handle_error:
+            self.handler.emit(error_log_record)
+            mock_handle_error.assert_called_once_with(error_log_record)
 
-    def test_emit_warning_level_not_sent(self):
+    def test_emit_warning_level_not_sent(self, mock_notify_admins):
         """Test that WARNING level messages are not sent to admins."""
         self.handler.setLevel(logging.WARNING)
 
-        with patch("mailing.tasks.notify_admins.delay"):
-            record = logging.LogRecord(
-                name="test_logger",
-                level=logging.WARNING,
-                pathname="/test/path.py",
-                lineno=42,
-                msg="Warning message",
-                args=(),
-                exc_info=None,
-            )
-            record.getMessage = lambda: "Warning message"
+        record = logging.LogRecord(
+            name="test_logger",
+            level=logging.WARNING,
+            pathname="/test/path.py",
+            lineno=42,
+            msg="Warning message",
+            args=(),
+            exc_info=None,
+        )
+        record.getMessage = lambda: "Warning message"
 
-            self.handler.emit(record)
+        self.handler.emit(record)
 
-    def test_format_and_message_content(self):
+    def test_format_and_message_content(self, mock_notify_admins):
         """Test that the handler properly formats the subject and message."""
-        with patch("mailing.tasks.notify_admins.delay") as mock_notify_admins:
-            record = logging.LogRecord(
-                name="test_logger",
-                level=logging.ERROR,
-                pathname="/test/path.py",
-                lineno=42,
-                msg="Formatted error: %s",
-                args=("critical issue",),
-                exc_info=None,
-            )
-            record.getMessage = lambda: "Formatted error: critical issue"
+        record = logging.LogRecord(
+            name="test_logger",
+            level=logging.ERROR,
+            pathname="/test/path.py",
+            lineno=42,
+            msg="Formatted error: %s",
+            args=("critical issue",),
+            exc_info=None,
+        )
+        record.getMessage = lambda: "Formatted error: critical issue"
 
-            self.handler.emit(record)
+        self.handler.emit(record)
 
-            mock_notify_admins.assert_called_once()
-            call_args = mock_notify_admins.call_args[0]
-            assert "critical issue" in str(call_args)
+        mock_notify_admins.assert_called_once()
+        call_args = mock_notify_admins.call_args[1]
+        assert "critical issue" in str(call_args)
 
 
 @override_settings(ADMINS=[("Test Admin", "admin@test.com")])
@@ -153,18 +165,17 @@ class TestAsyncAdminEmailHandlerIntegration(TestCase):
 class TestEmailHandlerEndToEnd:
     """End-to-end tests for email handler functionality."""
 
-    def test_full_email_flow(self):
+    def test_full_email_flow(self, mock_mail_admins):
         """Test the complete flow from error to email sending."""
-        with patch("mailing.tasks.mail_admins") as mock_mail_admins:
-            from mailing.tasks import notify_admins
+        from mailing.tasks import notify_admins
 
-            test_data = {
-                "subject": "Test Error Subject",
-                "message": "Test error message content",
-            }
+        test_data = {
+            "subject": "Test Error Subject",
+            "message": "Test error message content",
+        }
 
-            notify_admins(**test_data)
-            mock_mail_admins.assert_called_once_with(**test_data)
+        notify_admins(**test_data)
+        mock_mail_admins.assert_called_once_with(**test_data)
 
     @override_settings(
         ADMINS=[("Test Admin", "admin@test.com")],
@@ -196,8 +207,6 @@ class TestEmailHandlerEndToEnd:
         mail.outbox.clear()
 
         handler = AsyncAdminEmailHandler()
-        handler.setLevel(logging.ERROR)
-        
         record = logging.LogRecord(
             name="django",
             level=logging.ERROR,
@@ -206,15 +215,6 @@ class TestEmailHandlerEndToEnd:
             msg="Integration test error: %s",
             args=("database connection failed",),
             exc_info=None,
-            created=1000000000,
-            msecs=0,
-            relativeCreated=0,
-            thread=12345,
-            threadName="MainThread",
-            processName="MainProcess",
-            module="integration",
-            funcName="test_func",
-            filename="integration.py"
         )
         record.getMessage = lambda: "Integration test error: database connection failed"
 

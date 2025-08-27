@@ -14,6 +14,7 @@ from api.base_view import EndpointViewWithFilter
 from api.consts import ChoicesTuple
 from api.pagination import TransferRequestCataloguePagePagination
 from api.serializers import ProfileEnumChoicesSerializer
+from api.utils import convert_bool
 from api.views import EndpointView
 from backend.settings import cfg
 from clubs.services import LeagueService
@@ -71,8 +72,10 @@ class TransferStatusAPIView(EndpointView):
         profile_uuid: uuid.UUID,  # noqa
     ) -> Response:
         """Retrieve and display transfer status for the user."""
-        is_anonymous = request.query_params.get("is_anonymous", False)
-        expose = request.query_params.get("expose", False)
+        is_anonymous = convert_bool(
+            "is_anonymous", request.query_params.get("is_anonymous", "false")
+        )
+        expose = convert_bool("expose", request.query_params.get("expose", "false"))
         transfer_status = None
         try:
             transfer_object = request.user.profile.meta.transfer_object
@@ -242,7 +245,9 @@ class TransferRequestAPIView(EndpointView):
         with a given user profile and are actual ones. This endpoint is just
         for transfer request, so should be only visible for specific profile.
         """
-        is_anonymous = request.query_params.get("is_anonymous", False)
+        is_anonymous = convert_bool(
+            "is_anonymous", request.query_params.get("is_anonymous", "false")
+        )
         try:
             profile = profile_service.get_profile_by_uuid(profile_uuid, is_anonymous)
         except ObjectDoesNotExist as exc:
@@ -275,8 +280,10 @@ class TransferRequestAPIView(EndpointView):
         profile_uuid: uuid.UUID,  # noqa
     ) -> Response:
         """Retrieve and display transfer request for the user."""
-        is_anonymous = request.query_params.get("is_anonymous", False)
-        expose = request.query_params.get("expose", False)
+        is_anonymous = convert_bool(
+            "is_anonymous", request.query_params.get("is_anonymous", "false")
+        )
+        expose = convert_bool("expose", request.query_params.get("expose", "false"))
         transfer_request = None
         try:
             transfer_object = request.user.profile.meta.transfer_object
