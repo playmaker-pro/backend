@@ -46,7 +46,7 @@ class Command(BaseCommand):
 
         content = MailContent(
             subject_format=self.args.title,
-            template_path=self.args.template_path,
+            template_file=self.args.template_path,
         )
         envelope = Envelope(mail=content(), recipients=list(recipients))
         envelope.send(separate=True)

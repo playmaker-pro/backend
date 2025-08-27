@@ -4,8 +4,6 @@ from celery import shared_task
 from django.utils import timezone
 from django_celery_beat.models import ClockedSchedule, PeriodicTask
 
-from premium.models import PremiumProduct
-
 logger = logging.getLogger("celery")
 
 
@@ -14,6 +12,7 @@ def premium_expired(premium_products_id: int):
     from mailing.schemas import EmailTemplateRegistry
     from mailing.services import MailingService
     from notifications.services import NotificationService
+    from premium.models import PremiumProduct
 
     try:
         pp_object = PremiumProduct.objects.get(pk=premium_products_id)
@@ -51,6 +50,7 @@ def encourage_to_try_premium(premium_products_id: int):
     """Send email to user one day after trial expiration to encourage checking premium options."""
     from mailing.schemas import EmailTemplateRegistry
     from mailing.services import MailingService
+    from premium.models import PremiumProduct
 
     try:
         pp_object = PremiumProduct.objects.get(pk=premium_products_id)

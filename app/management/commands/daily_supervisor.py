@@ -14,10 +14,6 @@ logger = logging.getLogger("commands")
 
 User = get_user_model()
 
-thirty_days_ago = timezone.now() - timezone.timedelta(days=30)
-sixty_days_ago = timezone.now() - timezone.timedelta(days=60)
-ninety_days_ago = timezone.now() - timezone.timedelta(days=90)
-
 
 class Command(BaseCommand):
     help = "Run daily supervisor tasks"
@@ -46,10 +42,10 @@ class Command(BaseCommand):
         """
         Check for profiles that are not filled out and notify the user.
         """
-        month_ago = timezone.now() - timezone.timedelta(days=30)
+        thirty_days_ago = timezone.now() - timezone.timedelta(days=30)
         mail_schema = EmailTemplateRegistry.BLANK_PROFILE()
 
-        for player in (
+        for profile in (
             PlayerProfile.objects.filter(user__declared_role="P")
             .filter(
                 Q(team_object__isnull=True)
@@ -57,34 +53,44 @@ class Command(BaseCommand):
                 | Q(user__display_status=User.DisplayStatus.NOT_SHOWN)
             )
             .exclude(
-                user__mailing__mailbox__sent_at__gt=month_ago,
+                user__mailing__mailbox__sent_at__gt=thirty_days_ago,
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
-        ):
-            MailingService(mail_schema).send_mail(player.user)
+        ).select_related("user"):
+            MailingService(mail_schema).send_mail(profile.user)
 
-        for coach in CoachProfile.objects.filter(
-            user__declared_role="T", user__display_status=User.DisplayStatus.NOT_SHOWN
-        ).exclude(
-            user__mailing__mailbox__sent_at__gt=month_ago,
-            user__mailing__mailbox__mail_template=mail_schema.template_file,
+        for profile in (
+            CoachProfile.objects.filter(
+                user__declared_role="T",
+                user__display_status=User.DisplayStatus.NOT_SHOWN,
+            )
+            .exclude(
+                user__mailing__mailbox__sent_at__gt=thirty_days_ago,
+                user__mailing__mailbox__mail_template=mail_schema.template_file,
+            )
+            .select_related("user")
         ):
-            MailingService(mail_schema).send_mail(coach.user)
+            MailingService(mail_schema).send_mail(profile.user)
 
-        for club in ClubProfile.objects.filter(
-            user__declared_role="C", user__display_status=User.DisplayStatus.NOT_SHOWN
-        ).exclude(
-            user__mailing__mailbox__sent_at__gt=month_ago,
-            user__mailing__mailbox__mail_template=mail_schema.template_file,
+        for profile in (
+            ClubProfile.objects.filter(
+                user__declared_role="C",
+                user__display_status=User.DisplayStatus.NOT_SHOWN,
+            )
+            .exclude(
+                user__mailing__mailbox__sent_at__gt=thirty_days_ago,
+                user__mailing__mailbox__mail_template=mail_schema.template_file,
+            )
+            .select_related("user")
         ):
-            MailingService(mail_schema).send_mail(club.user)
+            MailingService(mail_schema).send_mail(profile.user)
 
     def inactive_for_30_days(self):
         """
         Check for profiles that have been inactive for 30 days and notify the user.
         """
         mail_schema = EmailTemplateRegistry.INACTIVE_30_DAYS()
-
+        thirty_days_ago = timezone.now() - timezone.timedelta(days=30)
         for user in (
             User.objects.filter(
                 last_activity__lt=thirty_days_ago,
@@ -105,6 +111,7 @@ class Command(BaseCommand):
         Check for profiles that have been inactive for 90 days and notify the user.
         """
         mail_schema = EmailTemplateRegistry.INACTIVE_90_DAYS()
+        ninety_days_ago = timezone.now() - timezone.timedelta(days=90)
 
         for user in (
             User.objects.filter(
@@ -131,7 +138,8 @@ class Command(BaseCommand):
             PremiumProduct.objects.filter(premium__valid_until__isnull=True)
             .exclude(user__isnull=True)
             .exclude(
-                user__mailing__mailbox__sent_at__gt=thirty_days_ago,
+                user__mailing__mailbox__sent_at__gt=timezone.now()
+                - timezone.timedelta(days=30),
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
             .select_related("user")
@@ -150,7 +158,10 @@ class Command(BaseCommand):
             ProfileMeta.objects.annotate(
                 visits_count=Count(
                     "visited_objects",
-                    filter=Q(visited_objects__timestamp__gte=thirty_days_ago),
+                    filter=Q(
+                        visited_objects__timestamp__gte=timezone.now()
+                        - timezone.timedelta(days=30)
+                    ),
                 )
             )
             .filter(visits_count__gt=5)
@@ -170,7 +181,8 @@ class Command(BaseCommand):
                 user__declared_role="P",
             )
             .exclude(
-                user__mailing__mailbox__sent_at__gt=sixty_days_ago,
+                user__mailing__mailbox__sent_at__gt=timezone.now()
+                - timezone.timedelta(days=60),
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
             .select_related("user")
@@ -189,7 +201,8 @@ class Command(BaseCommand):
                 user__declared_role__in=["C", "T"],
             )
             .exclude(
-                user__mailing__mailbox__sent_at__gt=sixty_days_ago,
+                user__mailing__mailbox__sent_at__gt=timezone.now()
+                - timezone.timedelta(days=60),
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
             .select_related("user")
@@ -203,7 +216,7 @@ class Command(BaseCommand):
         mail_schema = EmailTemplateRegistry.INVITE_FRIENDS()
 
         for user in User.objects.exclude(
-            mailing__mailbox__sent_at__gt=sixty_days_ago,
+            mailing__mailbox__sent_at__gt=timezone.now() - timezone.timedelta(days=60),
             mailing__mailbox__mail_template=mail_schema.template_file,
         ):
             MailingService(mail_schema).send_mail(user)

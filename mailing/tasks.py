@@ -35,6 +35,7 @@ def send(self, separate: bool = False, track_metrics: bool = True, **data):
     subject = data.get("subject", "No subject")
     start_time = time.time()
     operation_id = uuid.uuid4()
+    template_file = data.pop("template_file", None)
     logger.info(f"[{operation_id}] Sending email to {len(recipients)} recipients")
 
     # Input validation
@@ -49,7 +50,7 @@ def send(self, separate: bool = False, track_metrics: bool = True, **data):
     for user in users:
         MailLog.objects.create(
             mailing=user.mailing,
-            mail_template=self._schema.template_file,
+            mail_template=template_file,
             operation_id=operation_id,
             subject=subject,
         )
@@ -82,7 +83,6 @@ def send(self, separate: bool = False, track_metrics: bool = True, **data):
                             "error": str(err),
                             "recipients_count": len(recipients),
                             "duration_seconds": round(time.time() - start_time, 3),
-                            "subject": subject,
                         },
                         MailLog.MailStatus.FAILED,
                     )

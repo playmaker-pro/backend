@@ -1,5 +1,3 @@
-import logging
-
 from django.utils.log import AdminEmailHandler
 
 
@@ -10,15 +8,14 @@ class AsyncAdminEmailHandler(AdminEmailHandler):
         from mailing.tasks import notify_admins
 
         try:
-            print(f"Handler emit called with level: {record.levelno}, ERROR: {logging.ERROR}")
-            # Wywołaj original emit tylko jeśli handler spełnia warunki
-            if record.levelno >= logging.ERROR:
-                print("Condition met, calling notify_admins")
-                subject = self.format(record)
-                message = str(record.__dict__)
-                notify_admins.delay(subject, message)
+            subject = self.format(record)
+            if "Traceback (most recent call last)" in subject:
+                subject = subject.split("Traceback (most recent call last)")[0].strip()
             else:
-                print("Condition NOT met")
-        except Exception as e:
-            print(f"Exception in emit: {e}")
-            self.handleError(record)
+                subject = subject.strip()[:255]
+
+            message = str(record.__dict__)
+            notify_admins.delay(subject=subject, message=message)  # Wywołaj Celery task
+        except Exception:
+            raise
+            self.handleError(record)  # W razie błędu logujemy go standardowo

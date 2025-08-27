@@ -34,6 +34,9 @@ class UserFactory(CustomObjectFactory):
     )
     ref = factory.RelatedFactory("utils.factories.user_factories.RefFactory", "user")
     display_status = User.DisplayStatus.VERIFIED
+    mailing = factory.RelatedFactory(
+        "utils.factories.mailing_factories.MailingFactory", "user"
+    )
 
     @classmethod
     def create_admin_user(

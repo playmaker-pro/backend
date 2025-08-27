@@ -6,7 +6,7 @@ import django.db.models.deletion
 from django.conf import settings
 from django.db import migrations, models
 
-import mailing.schemas
+import mailing
 
 
 def create_mailing_for_existing_users(apps, schema_editor):
@@ -72,6 +72,7 @@ class Migration(migrations.Migration):
                         serialize=False,
                     ),
                 ),
+                ("subject", models.CharField(blank=True, max_length=255, null=True)),
                 ("operation_id", models.UUIDField(blank=True, null=True)),
                 ("sent_at", models.DateTimeField(auto_now_add=True)),
                 (

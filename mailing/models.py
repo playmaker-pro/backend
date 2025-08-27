@@ -22,9 +22,6 @@ class Mailing(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
 
-    def __str__(self):
-        return self.subject
-
 
 class MailLog(models.Model):
     """
@@ -42,6 +39,7 @@ class MailLog(models.Model):
     mailing = models.ForeignKey(
         Mailing, on_delete=models.CASCADE, related_name="mailbox"
     )
+    subject = models.CharField(max_length=255, null=True, blank=True)
     sent_at = models.DateTimeField(auto_now_add=True)
     mail_template = models.CharField(
         max_length=255,
@@ -57,7 +55,10 @@ class MailLog(models.Model):
     metadata = models.JSONField(default=dict, blank=True, null=True)
 
     def __str__(self):
-        return f"MailLog: {self.subject} at {self.sent_at}"
+        title = f"{self.subject if self.subject else ''}"
+        if self.mail_template:
+            title += f"[{self.mail_template}]"
+        return f"MailLog: {title} at {self.sent_at}"
 
     def update_metadata(self, data: Dict[str, Any], status: str) -> None:
         """

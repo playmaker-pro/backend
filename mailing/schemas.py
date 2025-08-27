@@ -90,6 +90,7 @@ class MailContent(BaseModel):
             "html_message": self.html_content,
             "message": self.text_content,
             "subject": self.subject,
+            "template_file": self.template_file,
         }
 
 
@@ -196,3 +197,4 @@ class EmailTemplateRegistry:
     PLAYER_WITHOUT_TRANSFER_STATUS = TEST
     PROFILE_WITHOUT_TRANSFER_REQUEST = TEST
     INVITE_FRIENDS = TEST
+    NEW_TRANSFER_REQUEST = TEST

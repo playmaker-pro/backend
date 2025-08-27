@@ -193,6 +193,7 @@ def create_post_create_profile__periodic_tasks(
     )
 
 
+@shared_task
 def post_create_player_profile(pk: int) -> None:
     """
     Post-save signal handler for PlayerProfile to ensure metrics exist.
@@ -203,6 +204,7 @@ def post_create_player_profile(pk: int) -> None:
     MailingService(EmailTemplateRegistry.TEST(context=content)).send_mail(profile.user)
 
 
+@shared_task
 def post_create_other_profile(pk: int, profile_class_name: str) -> None:
     """
     Post-save signal handler for ScoutProfile, CoachProfile, and ClubProfile.
