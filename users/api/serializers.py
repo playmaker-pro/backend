@@ -139,16 +139,9 @@ class MainProfileDataSerializer(serializers.ModelSerializer):
         """
         Determines if there are any unread inquiries associated with the user.
         """
-        unread_sent = InquiryRequest.objects.filter(
-            sender=self, is_read_by_sender=False
+        return obj.inquiry_request_recipient.filter(
+            status__in=InquiryRequest.UNSEEN_STATES
         ).exists()
-
-        # Check for any received inquiries that have not been read by the recipient
-        unread_received = InquiryRequest.objects.filter(
-            recipient=self, is_read_by_recipient=False
-        ).exists()
-
-        return unread_sent or unread_received
 
 
 class UserPreferencesSerializer(serializers.ModelSerializer):
@@ -594,7 +587,7 @@ class MainUserDataSerializer(serializers.ModelSerializer):
         instance.save()
 
         # Explicitly save the profile to trigger slug regeneration
-        if hasattr(instance, 'profile') and instance.profile:
+        if hasattr(instance, "profile") and instance.profile:
             instance.profile.save()
 
         return instance

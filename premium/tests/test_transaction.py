@@ -311,7 +311,7 @@ def test_player_custom_period(player_profile, period, mck_timezone_now, outbox):
 def test_custom_period(coach_profile, period, mck_timezone_now, outbox):
     coach_profile.setup_premium_profile(PremiumType.CUSTOM, period=period)
     coach_profile.refresh_from_db()
-
+    breakpoint()
     assert coach_profile.products.trial_tested
     assert coach_profile.premium.subscription_lifespan.days == period
     assert coach_profile.promotion.subscription_lifespan.days == period

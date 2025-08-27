@@ -3,7 +3,7 @@ import logging
 from celery import shared_task
 
 from inquiries.constants import INQUIRY_EMAIL_TEMPLATE, InquiryLogType
-from inquiries.models import UserInquiry, UserInquiryLog
+from inquiries.models import InquiryRequest, UserInquiry, UserInquiryLog
 from mailing.schemas import EmailTemplateRegistry, Envelope
 from mailing.services import MailingService
 from mailing.utils import build_email_context
@@ -57,3 +57,20 @@ def send_inquiry_update_email(user_inquiry_log_id: int):
 
     envelope = Envelope(mail=template(context), recipients=[user.email])
     envelope.send()
+
+
+@shared_task
+def check_inquiry_response(inquiry_request_id: int):
+    """
+    Check if an inquiry request has been responded to within 7 days.
+    This task can be scheduled to run periodically to check for responses.
+    """
+    inquiry_request = InquiryRequest.objects.get(pk=inquiry_request_id)
+
+    if inquiry_request.status not in InquiryRequest.RESOLVED_STATES:
+        mail_schema = EmailTemplateRegistry.OUTDATED_REMINDER
+        context = build_email_context(
+            user=inquiry_request.sender.user,
+            user2=inquiry_request.recipient.user,
+        )
+        MailingService(mail_schema(context)).send_mail(inquiry_request.sender)

@@ -6,6 +6,8 @@ from django.utils import timezone
 
 from profiles.services import NotificationService
 from profiles.tasks import (
+    post_create_other_profile,
+    post_create_player_profile,
     post_create_profile_tasks,
 )
 from users.models import User
@@ -30,7 +32,7 @@ def enforce_visitation_limit(sender, instance, created, **kwargs):
 
 
 @receiver(post_save, sender=models.PlayerProfile)
-def ensure_metrics_exist(sender, instance, created, **kwargs):
+def post_save_player_profile(sender, instance, created, **kwargs):
     """
     Create metrics for a player profile if they don't exist.
     """
@@ -56,7 +58,13 @@ def post_create_profile(sender, instance, created, **kwargs):
     Create a profile for the user if it doesn't exist.
     """
     if created:
-        post_create_profile_tasks.delay(instance.__class__.__name__, instance.pk)
+        profile_class_name = instance.__class__.__name__
+        post_create_profile_tasks.delay(profile_class_name, instance.pk)
+
+        if profile_class_name in ["CoachProfile", "ClubProfile", "ScoutProfile"]:
+            post_create_other_profile.delay(instance.pk, profile_class_name)
+        elif profile_class_name == "PlayerProfile":
+            post_create_player_profile.delay(instance.pk)
 
 
 @receiver(post_save, sender=models.ProfileVisitation)

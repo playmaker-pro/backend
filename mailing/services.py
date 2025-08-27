@@ -1,6 +1,5 @@
-from django.conf import settings
-
 from mailing.schemas import Envelope, MailContent
+from users.models import User
 
 
 class MailingService:
@@ -17,7 +16,7 @@ class MailingService:
             raise ValueError("Schema cannot be None")
         self._schema = schema
 
-    def send_mail(self, recipient: settings.AUTH_USER_MODEL) -> None:
+    def send_mail(self, recipient: User) -> None:
         """
         Send the email using the provided schema and recipient.
         """

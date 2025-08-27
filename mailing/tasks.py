@@ -1,24 +1,29 @@
 import logging
 import time
-from typing import Any, Dict, List
+import uuid
 
 from celery import shared_task
 from django.core.cache import cache
 from django.core.mail import mail_admins, send_mail
 
+from users.models import User
+
 logger: logging.Logger = logging.getLogger("mailing")
 
 
 @shared_task
-def notify_admins(**data):
+def notify_admins(subject: str, message: str, **kwargs: Any):
     """Send notification to admins with error tracking."""
+    if cache.get(subject):
+        logger.info(f"Skipping duplicate admin notification: {subject}")
+        return
+
     try:
-        mail_admins(**data)
-        logger.info(f"Admin notification sent: {data.get('subject', 'No subject')}")
+        mail_admins(subject=subject, message=message, **kwargs)
+        logger.info(f"Admin notification sent: {subject}")
+        cache.set(subject, message, 3600)
     except Exception as err:
         logger.error(f"Admin notification failed: {err}")
-        # Track admin notification failures
-        cache.set("admin_notification_last_error", str(err), 3600)
         raise
 
 
@@ -27,35 +32,78 @@ def send(self, separate: bool = False, track_metrics: bool = True, **data):
     """
     Enhanced email sending with metrics and better error handling.
     """
+    from mailing.models import MailLog
+
     recipients = data.get("recipient_list", [])
     subject = data.get("subject", "No subject")
     start_time = time.time()
+    operation_id = uuid.uuid4()
+    template_file = data.pop("template_file", None)
+    logger.info(f"[{operation_id}] Sending email to {len(recipients)} recipients")
 
     # Input validation
     if not recipients:
-        logger.warning("No recipients provided")
+        logger.warning(f"[{operation_id}] No recipients provided")
         return {"status": "skipped", "reason": "no_recipients"}
 
     if not subject or subject == "No subject":
-        logger.warning("No subject provided")
+        logger.warning(f"[{operation_id}] No subject provided")
+
+    users = User.objects.filter(email__in=recipients)
+    for user in users:
+        MailLog.objects.create(
+            mailing=user.mailing,
+            mail_template=template_file,
+            operation_id=operation_id,
+            subject=subject,
+        )
+
+    mail_logs = MailLog.objects.filter(operation_id=operation_id)
 
     try:
         if separate:
-            results = _send_separate_emails(recipients, data)
-            _log_separate_results(results, subject)
-            return results
+            for recipient in recipients:
+                try:
+                    individual_data = data.copy()
+                    individual_data["recipient_list"] = [recipient]
+                    send_mail(**individual_data)
+                    metadata, status = (
+                        {
+                            "recipients_count": len(recipients),
+                            "duration_seconds": round(time.time() - start_time, 3),
+                            "subject": subject,
+                        },
+                        MailLog.MailStatus.SENT,
+                    )
+                    logger.info(f"[{operation_id}] Email sent to {recipient}")
+
+                except Exception as err:
+                    logger.error(
+                        f"[{operation_id}] Failed to send email to {recipient}: {err}"
+                    )
+                    metadata, status = (
+                        {
+                            "error": str(err),
+                            "recipients_count": len(recipients),
+                            "duration_seconds": round(time.time() - start_time, 3),
+                        },
+                        MailLog.MailStatus.FAILED,
+                    )
+                if log := mail_logs.filter(
+                    mailing__user__email=recipient, operation_id=operation_id
+                ).first():
+                    log.update_metadata(metadata, status)
         else:
             send_mail(**data)
-            duration = time.time() - start_time
-
             result = {
-                "status": "success",
                 "recipients_count": len(recipients),
-                "duration_seconds": round(duration, 2),
+                "duration_seconds": round(time.time() - start_time, 3),
                 "subject": subject,
             }
 
-            logger.info(f"✓ Bulk email sent: {result}")
+            for log in mail_logs:
+                log.update_metadata(result, MailLog.MailStatus.SENT)
+            logger.info(f"[{operation_id}] Email sent to {len(recipients)} recipients")
 
             if track_metrics:
                 _update_email_metrics("bulk_success", len(recipients))
@@ -86,48 +134,6 @@ def send(self, separate: bool = False, track_metrics: bool = True, **data):
             raise self.retry(countdown=countdown)
 
         return error_result
-
-
-def _send_separate_emails(
-    recipients: List[str], data: Dict[str, Any]
-) -> Dict[str, Any]:
-    """Send individual emails to each recipient."""
-    successful = []
-    failed = []
-
-    for recipient in recipients:
-        try:
-            individual_data = data.copy()
-            individual_data["recipient_list"] = [recipient]
-            send_mail(**individual_data)
-            successful.append(recipient)
-        except Exception as err:
-            failed.append({"recipient": recipient, "error": str(err)})
-
-    return {
-        "status": "completed",
-        "successful": successful,
-        "failed": failed,
-        "success_count": len(successful),
-        "failure_count": len(failed),
-        "total_count": len(recipients),
-    }
-
-
-def _log_separate_results(results: Dict[str, Any], subject: str):
-    """Log results of separate email sending."""
-    success_count = results["success_count"]
-    failure_count = results["failure_count"]
-    total = results["total_count"]
-
-    if failure_count == 0:
-        logger.info(f"✓ All {total} individual emails sent successfully: {subject}")
-    else:
-        logger.warning(
-            f"⚠ Mixed results: {success_count}/{total} successful: {subject}"
-        )
-        for failed in results["failed"]:
-            logger.error(f"  ✗ {failed['recipient']}: {failed['error']}")
 
 
 def _update_email_metrics(metric_type: str, count: int):

@@ -1,13 +1,13 @@
 import logging as _logging
 
-from mailing.schemas import EmailTemplateRegistry, Envelope
-
 
 class EmailOnErrorHandler(_logging.Handler):
     def __init__(self):
         super().__init__()
 
     def emit(self, record):
+        from mailing.schemas import EmailTemplateRegistry, Envelope
+
         if record.levelno >= _logging.ERROR:
             try:
                 context = {

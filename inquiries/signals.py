@@ -1,5 +1,7 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
+from django_celery_beat.models import ClockedSchedule, PeriodicTask
 
 from inquiries.constants import InquiryLogType
 from inquiries.models import InquiryRequest, UserInquiry, UserInquiryLog
@@ -34,3 +36,12 @@ def post_save_inquiry_request(sender, instance, created, **kwargs):
     if created:
         instance.sender.userinquiry.increment()
         instance.create_log_for_recipient(InquiryLogType.NEW)
+        PeriodicTask.objects.create(
+            name=f"Check if recipient responded for inquiry request [ inquiry_request_id={instance.pk} ]",
+            task="inquiries.tasks.check_inquiry_response",
+            args=[instance.pk],
+            one_off=True,
+            clocked=ClockedSchedule.objects.create(
+                clocked_time=timezone.now() + timezone.timedelta(days=7)
+            ),
+        )

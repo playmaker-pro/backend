@@ -2,6 +2,7 @@ import os
 from datetime import timedelta
 
 import sentry_sdk
+from celery.schedules import crontab
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
@@ -356,6 +357,16 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
     return {
         "version": 1,
         "disable_existing_loggers": False,
+        "filters": {
+            "skip_404": {
+                "()": "django.utils.log.CallbackFilter",
+                "callback": lambda record: not (
+                    getattr(record, "status_code", None) == 404
+                    or "Broken link" in record.getMessage()
+                    or "Not Found" in record.getMessage()
+                ),
+            },
+        },
         "formatters": {
             "verbose": {
                 "format": "[%(asctime)s] %(levelname)s [%(pathname)s:%(lineno)s] %(message)s",  # noqa
@@ -367,6 +378,7 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
             "mail_admins": {
                 "level": "ERROR",
                 "class": "mailing.handlers.AsyncAdminEmailHandler",
+                "filters": ["skip_404"],
             },
             "profiles_file": {
                 "level": "DEBUG",
@@ -462,6 +474,11 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
                 "propagate": True,
                 "level": "ERROR",
             },
+            "django.request": {
+                "handlers": ["django_log_file", "console"],
+                "level": "ERROR",
+                "propagate": False,
+            },
             "adapters": {
                 "handlers": ["adapters", "console"],
                 "level": "ERROR",
@@ -502,6 +519,14 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
                 "handlers": ["celery_file", "console"],
                 "level": "ERROR",
             },
+            "celery.beat": {
+                "handlers": ["celery_file", "console"],
+                "level": "DEBUG",
+            },
+            "django_celery_beat": {
+                "handlers": ["celery_file", "console"],
+                "level": "DEBUG",
+            },
         },
     }
 
@@ -522,7 +547,12 @@ CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_TASK_TIME_LIMIT = 60 * 60
 CELERY_TIMEZONE = TIME_ZONE
-
+CELERY_BEAT_SCHEDULE = {
+    "daily-supervisor": {
+        "task": "app.celery.tasks.run_daily_supervisor",
+        "schedule": crontab(hour=10, minute=0),  # Codziennie o 10:00
+    },
+}
 
 # Redis & stream activity
 STREAM_REDIS_CONFIG = {
