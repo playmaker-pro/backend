@@ -732,6 +732,29 @@ class TestAnonymousTransferStatus:
         assert obj_data["user"]["picture"] is None
         assert obj_data["team_history_object"] is None
 
+        response = api_client.patch(
+            reverse(self.url_path),
+            {
+                "is_anonymous": False,
+            },
+            format="json",
+        )
+        profile.refresh_from_db()
+
+        assert response.json()["is_anonymous"] is False
+        assert profile.meta.transfer_object.is_anonymous is False
+
+        response = api_client.patch(
+            reverse(self.url_path),
+            {
+                "is_anonymous": True,
+            },
+            format="json",
+        )
+        profile.refresh_from_db()
+
+        assert profile.meta.transfer_object.is_anonymous is True
+
         # Simulate premium expired
         premium = profile.premium
         premium.valid_until = timezone.now() - timedelta(days=1)
@@ -775,7 +798,7 @@ class TestAnonymousTransferStatus:
     #     )
     #     api_client.force_authenticate(profile.user)
     #     response = api_client.get(
-    #         GET_URL(transfer_status.anonymous_uuid),
+    #         GET_TRANSFER_STATUS_URL(transfer_status.anonymous_uuid),
     #         {"is_anonymous": True, "expose": True},
     #         format="json",
     #     )
@@ -822,13 +845,42 @@ class TestAnonymousTransferRequest:
         assert response.status_code == 201
 
         data = response.json()
+        transfer_request = coach_profile.meta.transfer_object
 
+        assert transfer_request.is_anonymous is True
         assert data["requesting_team"]["id"] == 0
         assert data["requesting_team"]["team"]["team_name"] == "Anonimowa drużyna"
         assert data["requesting_team"]["team"]["id"] == 0
         assert data["requesting_team"]["team"]["team_contributor_id"] == 0
         assert data["requesting_team"]["team"]["picture_url"] is None
-        # TODO: FINISH
+        assert data["profile_uuid"] == str(transfer_request.anonymous_uuid)
+        assert data["phone_number"] == {
+            "dial_code": None,
+            "number": None,
+        }
+        assert data["contact_email"] is None
+        assert data["is_anonymous"] is True
+
+        api_client.patch(
+            reverse(self.url_path),
+            {
+                "is_anonymous": False,
+            },
+            format="json",
+        )
+        transfer_request.refresh_from_db()
+
+        assert transfer_request.is_anonymous is False
+
+        response = api_client.get(
+            GET_TRANSFER_REQUEST_URL(transfer_request.anonymous_uuid),
+            format="json",
+        )
+        data = response.json()
+
+        assert data["requesting_team"]["team"]["team_name"] != "Anonimowa drużyna"
+        assert data["requesting_team"]["id"] == transfer_request.requesting_team.pk
+        assert data["is_anonymous"] is False
 
     def test_expose_anonymous_transfer_request(self, coach_profile, api_client):
         """

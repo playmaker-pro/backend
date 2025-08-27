@@ -360,7 +360,7 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
             "skip_404": {
                 "()": "django.utils.log.CallbackFilter",
                 "callback": lambda record: not (
-                    record.status_code == 404
+                    getattr(record, "status_code", None) == 404
                     or "Broken link" in record.getMessage()
                     or "Not Found" in record.getMessage()
                 ),

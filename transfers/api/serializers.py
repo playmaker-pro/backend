@@ -269,7 +269,7 @@ class ProfileTransferRequestSerializer(
         if user_preferences.contact_email:
             data["contact_email"] = user_preferences.contact_email
 
-        if instance.is_anonymous and not self.context.get("expose", False):
+        if data["is_anonymous"] and not self.context.get("expose", False):
             data["requesting_team"]["id"] = 0
             data["requesting_team"]["team"]["team_name"] = "Anonimowa drużyna"
             data["requesting_team"]["team"]["id"] = 0
@@ -444,7 +444,7 @@ class ProfileTransferStatusSerializer(
             data["number_of_trainings"] = serializer.data
 
         # expose = self.context.get("expose", False)
-        # if instance.is_anonymous and not expose:
+        # if data["is_anonymous"] and not expose:
         #     data["profile_uuid"] = instance.anonymous_uuid
 
         return data

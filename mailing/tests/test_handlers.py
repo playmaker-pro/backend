@@ -1,4 +1,5 @@
 import logging
+import sys
 from unittest.mock import patch
 
 import pytest
@@ -51,7 +52,7 @@ def exception_log_record():
             lineno=42,
             msg="Error with exception",
             args=(),
-            exc_info=True,
+            exc_info=sys.exc_info(),  # Use actual exception info tuple
         )
         record.getMessage = lambda: "Error with exception"
         return record
@@ -193,7 +194,7 @@ class TestEmailHandlerEndToEnd:
 
         assert len(mail.outbox) == 1
         email = mail.outbox[0]
-        assert email.subject == "Test Error from Handler"
+        assert email.subject == "[Django] Test Error from Handler"
         assert "This is a test error message" in email.body
         assert "admin@test.com" in email.to
 

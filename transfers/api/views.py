@@ -92,7 +92,6 @@ class TransferStatusAPIView(EndpointView):
                     profile_uuid, is_anonymous
                 )
             except ObjectDoesNotExist as exc:
-                print("XDD", is_anonymous)
                 raise api_errors.ProfileDoesNotExist from exc
 
             transfer_status = profile.meta.transfer_object
