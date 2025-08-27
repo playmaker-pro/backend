@@ -25,7 +25,7 @@ from rest_framework.views import PermissionDenied
 from api import utils as api_utils
 from api.consts import ChoicesTuple
 from api.errors import NotOwnerOfAnObject
-from api.pagination import PagePagination
+from api.pagination import PagePagination, ProfileSearchPagination
 from api.serializers import ProfileEnumChoicesSerializer
 from api.views import EndpointView
 from backend.settings import cfg
@@ -525,11 +525,7 @@ class ProfilesNearbyAPIView(MixinProfilesFilter, EndpointView):
 class ProfileSearchView(EndpointView):
     permission_classes = [IsAuthenticatedOrReadOnly]
     allowed_methods = ["get"]
-
-    def get_paginated_queryset(self, qs: QuerySet = None) -> QuerySet:
-        """Paginate queryset with custom page size"""
-        self.pagination_class.page_size = 5
-        return super().get_paginated_queryset(qs)
+    pagination_class = ProfileSearchPagination
 
     def search_profiles(self, request: Request) -> Response:
         """
