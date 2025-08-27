@@ -1,0 +1,35 @@
+{% extends "email_base.html" %}
+
+{% block content %}
+<p style="font-size: 16px; color: #555; line-height: 1.6; margin-bottom: 20px;">
+  Cześć {{user.first_name}}!
+</p>
+
+<p style="font-size: 16px; color: #555; line-height: 1.6; margin-bottom: 20px;">
+  Dzięki, że dołączyłeś. Czas zbudować profil, dodać wideo, linki i pokazać się klubom.
+</p>
+
+<p style="font-size: 16px; color: #555; line-height: 1.6; margin-bottom: 30px;">
+  🎥 Zobacz, jak działa platforma i zacznij grać o swoje.
+</p>
+
+<p>
+  <a href="{{youtube_link|default:'#'}}"
+    style="display: inline-block; padding: 15px 30px; background-color: #ED1C24; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 18px;">
+    Zobacz, jak zacząć
+  </a>
+</p>
+
+<p style="font-size: 14px; color: #777; line-height: 1.4; margin-top: 30px;">
+  Jeżeli po kliknięciu link się nie otworzy, skopiuj go, wklej w pole adresu przeglądarki i przejdź do wskazanej
+  strony:
+</p>
+<p>
+  <a href="{{youtube_link|default:'#'}}" style="font-size:13px">{{youtube_link|default:'Link zostanie dodany wkrótce'}}</a>
+</p>
+
+<p style="font-size: 16px; color: #555; line-height: 1.6; margin-top: 40px;">
+  Powodzenia na boisku!<br>
+  Zespół PlayMaker.pro
+</p>
+{% endblock %}
