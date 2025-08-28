@@ -1,20 +1,178 @@
 version: '3.8'
-name: pm-webapp
+name: playmaker-api
+
 services:
-  pmdb:
-    container_name: pm-webapp-db
-    image: postgres:14.1-alpine
-    restart: always
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
-    ports:
-      - '${POSTGRES_PORT}:5432'
-    expose:
-      - '${POSTGRES_PORT}'
-    volumes: 
-      - db:/var/lib/postgresql/data
-volumes:
   db:
+    container_name: playmaker-db
+    image: postgres:14-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES__USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES__PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES__DB:-pm}
+    ports:
+      - '${POSTGRES__PORT:-5432}:5432'
+    volumes: 
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES__USER:-postgres} -d ${POSTGRES__DB:-pm}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    container_name: playmaker-redis
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - '${REDIS__PORT:-6379}:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    container_name: playmaker-backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app 
+      - ./media:/app/media
+      - ./_logs:/app/_logs
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - POSTGRES__HOST=db
+      - POSTGRES__PORT=5432
+      - POSTGRES__USER=${POSTGRES__USER:-postgres}
+      - POSTGRES__PASSWORD=${POSTGRES__PASSWORD:-postgres}
+      - POSTGRES__DB=${POSTGRES__DB:-pm}
+      - REDIS__HOST=redis
+      - REDIS__PORT=6379
+      - REDIS__DB=${REDIS__DB:-0}
+      - REDIS__USERNAME=${REDIS__USERNAME:-}
+      - REDIS__PASSWORD=${REDIS__PASSWORD:-}
+      - WEBAPP__BASE_URL=${WEBAPP__BASE_URL:-http://localhost:8000/}
+      - ENABLE_SENTRY=${ENABLE_SENTRY:-False}
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      - SMTP__HOST=${SMTP__HOST:-}
+      - SMTP__PORT=${SMTP__PORT:-}
+      - SMTP__OUTGOING_ADDRESS=${SMTP__OUTGOING_ADDRESS:-}
+      - SMTP__PASSWORD=${SMTP__PASSWORD:-}
+      - SMTP__USE_TLS=${SMTP__USE_TLS:-True}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: python manage.py runserver 0.0.0.0:8000
+
+  # Celery Worker
+  celery:
+    container_name: playmaker-celery
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    restart: unless-stopped
+    volumes:
+      - .:/app 
+      - ./_logs:/app/_logs
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - POSTGRES__HOST=db
+      - POSTGRES__PORT=5432
+      - POSTGRES__USER=${POSTGRES__USER:-postgres}
+      - POSTGRES__PASSWORD=${POSTGRES__PASSWORD:-postgres}
+      - POSTGRES__DB=${POSTGRES__DB:-local_pm}
+      - REDIS__HOST=redis
+      - REDIS__PORT=6379
+      - REDIS__DB=${REDIS__DB:-0}
+      - REDIS__USERNAME=${REDIS__USERNAME:-}
+      - REDIS__PASSWORD=${REDIS__PASSWORD:-}
+      - WEBAPP__BASE_URL=${WEBAPP__BASE_URL:-http://localhost:8000/}
+      - ENABLE_SENTRY=${ENABLE_SENTRY:-False}
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      - SMTP__HOST=${SMTP__HOST:-}
+      - SMTP__PORT=${SMTP__PORT:-}
+      - SMTP__OUTGOING_ADDRESS=${SMTP__OUTGOING_ADDRESS:-}
+      - SMTP__PASSWORD=${SMTP__PASSWORD:-}
+      - SMTP__USE_TLS=${SMTP__USE_TLS:-True}
+    command: make start-celery
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Celery Beat (Periodic Tasks Scheduler)
+  celery-beat:
+    container_name: playmaker-celery-beat
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    restart: unless-stopped
+    volumes:
+      - .:/app  # Mount source code for development
+      - ./_logs:/app/_logs
+      - celery_beat_data:/app/celerybeat-schedule
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - POSTGRES__HOST=db
+      - POSTGRES__PORT=5432
+      - POSTGRES__USER=${POSTGRES__USER:-postgres}
+      - POSTGRES__PASSWORD=${POSTGRES__PASSWORD:-postgres}
+      - POSTGRES__DB=${POSTGRES__DB:-local_pm}
+      - REDIS__HOST=redis
+      - REDIS__PORT=6379
+      - REDIS__DB=${REDIS__DB:-0}
+      - REDIS__USERNAME=${REDIS__USERNAME:-}
+      - REDIS__PASSWORD=${REDIS__PASSWORD:-}
+      - WEBAPP__BASE_URL=${WEBAPP__BASE_URL:-http://localhost:8000/}
+      - ENABLE_SENTRY=${ENABLE_SENTRY:-False}
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      - SMTP__HOST=${SMTP__HOST:-}
+      - SMTP__PORT=${SMTP__PORT:-}
+      - SMTP__OUTGOING_ADDRESS=${SMTP__OUTGOING_ADDRESS:-}
+      - SMTP__PASSWORD=${SMTP__PASSWORD:-}
+      - SMTP__USE_TLS=${SMTP__USE_TLS:-True}
+    command: make start-celery-beat
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Celery Flower (Monitoring)
+  flower:
+    container_name: playmaker-flower
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    restart: unless-stopped
+    ports:
+      - "5555:5555"
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - REDIS__HOST=redis
+      - REDIS__PORT=6379
+      - REDIS__DB=${REDIS__DB:-0}
+      - REDIS__USERNAME=${REDIS__USERNAME:-}
+      - REDIS__PASSWORD=${REDIS__PASSWORD:-}
+    command: celery -A app.celery flower --port=5555
+    depends_on:
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  celery_beat_data:
     driver: local

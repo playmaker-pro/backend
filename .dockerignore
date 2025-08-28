@@ -37,3 +37,34 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+
+# Docker specific
+Dockerfile*
+docker-compose*.yml
+.git
+.gitignore
+*.md
+README*
+
+# Environment files
+.env*
+
+# Logs
+*.log
+_logs/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Celery
+celerybeat.pid
+celerybeat-schedule
+
+# OS
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
