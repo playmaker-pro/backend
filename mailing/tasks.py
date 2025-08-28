@@ -5,7 +5,8 @@ import uuid
 from celery import shared_task
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from django.core.mail import mail_admins, send_mail
+from django.core.mail import mail_admins
+
 
 User = get_user_model()
 logger: logging.Logger = logging.getLogger("mailing")
@@ -66,7 +67,13 @@ def send(self, separate: bool = False, track_metrics: bool = True, **data):
                 try:
                     individual_data = data.copy()
                     individual_data["recipient_list"] = [recipient]
-                    send_mail(**individual_data)
+
+                    # Create email with CID images for recipient
+                    from mailing.services import EmailCIDService
+
+                    email = EmailCIDService.create_email_with_cid_images(**individual_data)
+                    email.send()
+
                     metadata, status = (
                         {
                             "recipients_count": len(recipients),
@@ -94,7 +101,12 @@ def send(self, separate: bool = False, track_metrics: bool = True, **data):
                 ).first():
                     log.update_metadata(metadata, status)
         else:
-            send_mail(**data)
+            # Create email with CID images for recipient
+            from mailing.services import EmailCIDService
+
+            email = EmailCIDService.create_email_with_cid_images(**data)
+            email.send()
+
             result = {
                 "recipients_count": len(recipients),
                 "duration_seconds": round(time.time() - start_time, 3),
