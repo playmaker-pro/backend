@@ -85,8 +85,6 @@ paths:
         - premium_products
       security:
         - jwtAuth: [ ]
-      parameters:
-        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           description: "Premium profile products info."
@@ -112,7 +110,6 @@ paths:
             type: integer
           required: true
           description: "Product ID"
-        - $ref: '#/components/parameters/X-Language'
       responses:
         '201':
           description: "Transaction has been created"
@@ -137,8 +134,6 @@ paths:
         - premium_products
       security:
         - jwtAuth: [ ]
-      parameters:
-        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           description: "Trial premium profile has been activated"
@@ -424,7 +419,6 @@ paths:
           schema:
             type: integer
           description: "Count of objects by page"
-        - $ref: '#/components/parameters/X-Language'
       tags:
         - locale
       responses:
@@ -785,7 +779,6 @@ paths:
           schema:
             type: string
           description: 'Team name query, LIKE'
-        - $ref: '#/components/parameters/X-Language'
       tags:
         - clubs
       security:
@@ -1837,8 +1830,6 @@ paths:
       security:
         - jwtAuth: [ ]
         - { }
-      parameters:
-        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           description: 'List of profiles owned by user'
@@ -2265,8 +2256,6 @@ paths:
         - profiles
       security:
         - jwtAuth: [ ]
-      parameters:
-        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           content:
@@ -2406,7 +2395,6 @@ paths:
           schema:
             type: integer
           required: true
-        - $ref: '#/components/parameters/X-Language'
       requestBody:
         content:
           application/json:
@@ -2464,8 +2452,6 @@ paths:
         - profiles
       security:
         - jwtAuth: [ ]
-      parameters:
-        - $ref: '#/components/parameters/X-Language'
       requestBody:
         content:
           application/json:
@@ -3759,8 +3745,6 @@ paths:
         - transfer requests
       security:
         - { }
-      parameters:
-        - $ref: '#/components/parameters/X-Language'
       responses:
         "200":
           description: "Get profile transfer request salary objects."
@@ -4032,8 +4016,6 @@ paths:
         - users
       security:
         - jwtAuth: [ ]
-      parameters:
-        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           content:
@@ -4107,8 +4089,6 @@ paths:
         - users
       security:
         - jwtAuth: [ ]
-      parameters:
-        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           content:
@@ -4132,8 +4112,6 @@ paths:
         - users
       security:
         - jwtAuth: [ ]
-      parameters:
-        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           content:
@@ -4155,8 +4133,6 @@ paths:
       security:
         - jwtAuth: [ ]
         - { }
-      parameters:
-        - $ref: '#/components/parameters/X-Language'
       responses:
         '201':
           description: "Feature notifications saved successfully."
@@ -4225,6 +4201,8 @@ paths:
         - users
       security:
         - jwtAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       requestBody:
         content:
           image/jpeg:
@@ -4806,7 +4784,6 @@ paths:
             type: string
             format: int
           required: true
-        - $ref: '#/components/parameters/X-Language'
       tags:
         - events
       security:
@@ -4831,7 +4808,6 @@ paths:
             type: string
             format: int
           required: true
-        - $ref: '#/components/parameters/X-Language'
       tags:
         - events
       security:
@@ -8077,17 +8053,17 @@ components:
           type: integer
         views:
           type: integer
-    parameters:
-      X-Language:
-        name: X-Language
-        in: header
-        required: false
-        description: 'Language code for internationalization. Supported languages: pl (Polish), en (English), de (German), fr (French), es (Spanish), it (Italian). Defaults to Polish if not specified.'
-        schema:
-          type: string
-          enum: [ 'pl', 'en', 'de', 'uk' ]
-          default: 'pl'
-          example: 'en'
+  parameters:
+    X-Language:
+      name: X-Language
+      in: header
+      required: false
+      description: 'Language code for internationalization. Supported languages: pl (Polish), en (English), de (German), fr (French), es (Spanish), it (Italian). Defaults to Polish if not specified.'
+      schema:
+        type: string
+        enum: [ 'pl', 'en', 'de', 'uk' ]
+        default: 'pl'
+        example: 'en'
   securitySchemes:
     jwtAuth:
       type: http
