@@ -54,7 +54,7 @@ def post_create_profile_tasks(class_name: str, profile_id: int) -> None:
     profile.ensure_visitation_exist(commit=False)
     profile.ensure_meta_exist(commit=False)
     profile.save()
-    create_post_create_profile__periodic_tasks(class_name, profile_id)
+    create_post_create_profile__periodic_tasks.delay(class_name, profile_id)
     NotificationService(profile.meta).notify_welcome()
 
     if profile.user.display_status == profile_models.User.DisplayStatus.NOT_SHOWN:
@@ -199,9 +199,10 @@ def post_create_player_profile(pk: int) -> None:
     Post-save signal handler for PlayerProfile to ensure metrics exist.
     """
     profile = profile_models.PlayerProfile.objects.get(pk=pk)
-
-    content = build_email_context(user=profile.user)
-    MailingService(EmailTemplateRegistry.TEST(context=content)).send_mail(profile.user)
+    context = build_email_context(profile.user)
+    MailingService(EmailTemplateRegistry.PLAYER_WELCOME(context)).send_mail(
+        profile.user
+    )
 
 
 @shared_task
@@ -215,5 +216,7 @@ def post_create_other_profile(pk: int, profile_class_name: str) -> None:
     profile_model = getattr(profile_models, profile_class_name)
 
     if profile := profile_model.objects.filter(pk=pk).first():
-        content = build_email_context(user=profile.user)
-        MailingService(EmailTemplateRegistry.TEST(content)).send_mail(profile.user)
+        context = build_email_context(profile.user)
+        MailingService(EmailTemplateRegistry.PROFESSIONAL_WELCOME(context)).send_mail(
+            profile.user
+        )

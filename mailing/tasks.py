@@ -3,16 +3,16 @@ import time
 import uuid
 
 from celery import shared_task
+from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.mail import mail_admins, send_mail
 
-from users.models import User
-
+User = get_user_model()
 logger: logging.Logger = logging.getLogger("mailing")
 
 
 @shared_task
-def notify_admins(subject: str, message: str, **kwargs: Any):
+def notify_admins(subject: str, message: str, **kwargs):
     """Send notification to admins with error tracking."""
     if cache.get(subject):
         logger.info(f"Skipping duplicate admin notification: {subject}")

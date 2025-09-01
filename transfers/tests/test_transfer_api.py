@@ -624,19 +624,13 @@ class TestTransferRequestCatalogue:
         profile_a = factories.ClubProfileFactory()
         profile_b = factories.ClubProfileFactory()
         profile_c = factories.ClubProfileFactory()
-        tc_a = TeamContributorFactory.create(profile_uuid=profile_a.uuid)
-        tc_b = TeamContributorFactory.create(profile_uuid=profile_b.uuid)
-        tc_c = TeamContributorFactory.create(profile_uuid=profile_c.uuid)
         t1 = TransferRequestFactory.create(
-            requesting_team=tc_a,
             meta=profile_a.meta,
         )
         t2 = TransferRequestFactory.create(
-            requesting_team=tc_b,
             meta=profile_b.meta,
         )
         t3 = TransferRequestFactory.create(
-            requesting_team=tc_c,
             meta=profile_c.meta,
         )
         # Set latitude and longitude for each team's stadion address
@@ -649,6 +643,7 @@ class TestTransferRequestCatalogue:
             self.url,
             {"latitude": start_latitude, "longitude": start_longitude, "radius": 2},
         )
+
         assert len(response.data["results"]) == 1
 
         # Test with radius = 10 km

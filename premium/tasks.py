@@ -11,6 +11,7 @@ logger = logging.getLogger("celery")
 def premium_expired(premium_products_id: int):
     from mailing.schemas import EmailTemplateRegistry
     from mailing.services import MailingService
+    from mailing.utils import build_email_context
     from notifications.services import NotificationService
     from premium.models import PremiumProduct
 
@@ -32,6 +33,9 @@ def premium_expired(premium_products_id: int):
                 clocked_time=timezone.now() + timezone.timedelta(days=1)
             ),
         )
+        mail_content = EmailTemplateRegistry.TRIAL_END
+    else:
+        mail_content = EmailTemplateRegistry.PREMIUM_EXPIRED
 
     if (
         pp_object.profile
@@ -40,8 +44,8 @@ def premium_expired(premium_products_id: int):
     ):
         pp_object.profile.meta.transfer_object.delete()
 
-    mail_content = EmailTemplateRegistry.PREMIUM_EXPIRED()
-    MailingService(mail_content).send_mail(pp_object.profile.user)
+    context = build_email_context(pp_object.profile.user)
+    MailingService(mail_content(context)).send_mail(pp_object.profile.user)
     NotificationService(pp_object.profile.meta).notify_premium_just_expired()
 
 
@@ -67,7 +71,8 @@ def encourage_to_try_premium(premium_products_id: int):
         return
 
     if user := pp_object.user:
-        mail_content = EmailTemplateRegistry.GO_PREMIUM_AFTER_TRIAL()
+        context = build_email_context(user)
+        mail_content = EmailTemplateRegistry.GO_PREMIUM_AFTER_TRIAL(context)
         MailingService(mail_content).send_mail(user)
     else:
         logger.error(

@@ -10,6 +10,7 @@ class TestSendEmailCommand:
         self, test_template, outbox, player_profile, coach_profile, scout_profile
     ):
         """Test sending emails to players only."""
+        outbox.clear()
         call_command(
             "send_email",
             "--players",
@@ -26,6 +27,7 @@ class TestSendEmailCommand:
         self, test_template, outbox, player_profile, coach_profile, scout_profile
     ):
         """Test sending emails to multiple recipient types."""
+        outbox.clear()
         call_command(
             "send_email",
             "--players",
@@ -44,6 +46,7 @@ class TestSendEmailCommand:
 
     def test_command_with_others(self, test_template, outbox):
         """Test sending emails to additional recipients."""
+        outbox.clear()
         call_command(
             "send_email",
             "--others",

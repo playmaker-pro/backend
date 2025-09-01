@@ -28,6 +28,18 @@ class EmailTemplateFileNames(Enum):
     OUTDATED_REMINDER = "outdated_reminder.html"
     SYSTEM_ERROR = "system_error.html"
     TEST = "test.html"
+    NO_RESPONSE_REMINDER = "no_response_reminder.html"
+    PLAYER_WELCOME = "player_welcome.html"
+    PROFESSIONAL_WELCOME = "professional_welcome.html"
+    INCOMPLETE_PROFILE_REMINDER = "incomplete_profile_reminder.html"
+    INACTIVE_USER_REMINDER = "inactive_user_reminder.html"
+    PREMIUM_ENCOURAGEMENT = "premium_encouragement.html"
+    TRIAL_END = "trial_end.html"
+    PROFILE_VIEWS_MILESTONE = "profile_views_milestone.html"
+    NEW_CLUB_OFFER = "new_club_offer.html"
+    TRANSFER_STATUS_REMINDER = "transfer_status_reminder.html"
+    TRANSFER_REQUEST_REMINDER = "transfer_request_reminder.html"
+    INVITE_FRIENDS_REMINDER = "invite_friends_reminder.html"
 
 
 class MailContent(BaseModel):
@@ -191,55 +203,49 @@ class EmailTemplateRegistry:
     )
     NO_RESPONSE_REMINDER = MailContent(
         subject_format="⏳ Masz zapytanie – czas odpowiedzieć",
-        template_path=cfg.mail.templates_dir + "/inquiries/no_response_reminder.html",
+        template_file=EmailTemplateFileNames.NO_RESPONSE_REMINDER.value,
     )
     PLAYER_WELCOME = MailContent(
         subject_format="👋 Witaj na PlayMaker.pro – pokaż, co potrafisz",
-        template_path=cfg.mail.templates_dir + "/onboarding/player_welcome.html",
+        template_file=EmailTemplateFileNames.PLAYER_WELCOME.value,
     )
     PROFESSIONAL_WELCOME = MailContent(
         subject_format="👋 Witaj w PlayMaker.pro – znajdź zawodników szybciej",
-        template_path=cfg.mail.templates_dir + "/onboarding/professional_welcome.html",
+        template_file=EmailTemplateFileNames.PROFESSIONAL_WELCOME.value,
     )
     INCOMPLETE_PROFILE_REMINDER = MailContent(
         subject_format="🔧 Twój profil to wciąż wersja demo",
-        template_path=cfg.mail.templates_dir
-        + "/engagement/incomplete_profile_reminder.html",
+        template_file=EmailTemplateFileNames.INCOMPLETE_PROFILE_REMINDER.value,
     )
     INACTIVE_USER_REMINDER = MailContent(
         subject_format="👀 PlayMaker gra dalej – a Ty?",
-        template_path=cfg.mail.templates_dir
-        + "/engagement/inactive_user_reminder.html",
+        template_file=EmailTemplateFileNames.INACTIVE_USER_REMINDER.value,
     )
     PREMIUM_ENCOURAGEMENT = MailContent(
         subject_format="🚀 Czas na awans – przejdź na Premium",
-        template_path=cfg.mail.templates_dir + "/engagement/premium_encouragement.html",
+        template_file=EmailTemplateFileNames.PREMIUM_ENCOURAGEMENT.value,
     )
     TRIAL_END = MailContent(
         subject_format="🕒 Koniec próbnej rundy – co dalej?",
-        template_path=cfg.mail.templates_dir + "/engagement/trial_end.html",
+        template_file=EmailTemplateFileNames.TRIAL_END.value,
     )
     PROFILE_VIEWS_MILESTONE = MailContent(
         subject_format="🔥 Twój profil robi szum",
-        template_path=cfg.mail.templates_dir
-        + "/engagement/profile_views_milestone.html",
+        template_file=EmailTemplateFileNames.PROFILE_VIEWS_MILESTONE.value,
     )
     NEW_CLUB_OFFER = MailContent(
         subject_format="⚽ Nowa szansa na transfer – sprawdź teraz",
-        template_path=cfg.mail.templates_dir + "/engagement/new_club_offer.html",
+        template_file=EmailTemplateFileNames.NEW_CLUB_OFFER.value,
     )
     TRANSFER_STATUS_REMINDER = MailContent(
         subject_format="📣 Pokaż, że jesteś dostępny na rynku",
-        template_path=cfg.mail.templates_dir
-        + "/engagement/transfer_status_reminder.html",
+        template_file=EmailTemplateFileNames.TRANSFER_STATUS_REMINDER.value,
     )
     TRANSFER_REQUEST_REMINDER = MailContent(
         subject_format="🔎 Kogo szukasz? Pokaż to innym",
-        template_path=cfg.mail.templates_dir
-        + "/engagement/transfer_request_reminder.html",
+        template_file=EmailTemplateFileNames.TRANSFER_REQUEST_REMINDER.value,
     )
     INVITE_FRIENDS_REMINDER = MailContent(
         subject_format="🎁 Zapraszaj znajomych i odbieraj nagrody",
-        template_path=cfg.mail.templates_dir
-        + "/engagement/invite_friends_reminder.html",
+        template_file=EmailTemplateFileNames.INVITE_FRIENDS_REMINDER.value,
     )

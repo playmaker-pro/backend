@@ -168,7 +168,7 @@ def test_premium_inquiries_on_trial(
     assert user.userinquiry.limit_raw == 2
     assert trial_premium_coach_profile.products.inquiries.current_counter == 1
 
-    assert outbox == []
+    outbox.clear()
 
     mck_timezone_now.return_value += timedelta(days=7, seconds=1)
     trial_premium_coach_profile.refresh_from_db()
@@ -176,7 +176,7 @@ def test_premium_inquiries_on_trial(
     assert not trial_premium_coach_profile.is_premium
     assert len(outbox) == 1
     assert outbox[0].to[0] == trial_premium_coach_profile.user.email
-    assert outbox[0].subject == "⚠️ Twoje Premium wygasło – odnów je teraz!"
+    assert outbox[0].subject == "🕒 Koniec próbnej rundy – co dalej?"
     assert user.userinquiry.left == 0
     assert user.userinquiry.limit == 2
     assert user.userinquiry.counter == 2
@@ -259,7 +259,7 @@ def test_try_trial_after_subscription(player_profile, mck_timezone_now, outbox):
     assert player_profile.is_premium
     assert player_profile.is_promoted
 
-    assert outbox == []
+    outbox.clear()
 
     mck_timezone_now.return_value += timedelta(days=30, hours=1)
 
@@ -298,8 +298,6 @@ def test_player_custom_period(player_profile, period, mck_timezone_now, outbox):
         days=period
     )
 
-    assert outbox == []
-
     mck_timezone_now.return_value += timedelta(days=period, hours=1)
 
     assert not player_profile.is_premium
@@ -311,12 +309,11 @@ def test_player_custom_period(player_profile, period, mck_timezone_now, outbox):
 def test_custom_period(coach_profile, period, mck_timezone_now, outbox):
     coach_profile.setup_premium_profile(PremiumType.CUSTOM, period=period)
     coach_profile.refresh_from_db()
-    breakpoint()
+
     assert coach_profile.products.trial_tested
     assert coach_profile.premium.subscription_lifespan.days == period
     assert coach_profile.promotion.subscription_lifespan.days == period
     assert coach_profile.products.inquiries.subscription_lifespan.days == period
-    assert outbox == []
 
     mck_timezone_now.return_value += timedelta(days=period, hours=1)
 

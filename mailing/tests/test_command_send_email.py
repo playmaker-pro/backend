@@ -33,6 +33,7 @@ class TestCommandSendEmail:
         outbox,
     ):
         """Test the command to send email notifications."""
+        outbox.clear()
         command = SendEmailCommand()
         parser = CommandParser()
         command.add_arguments(parser)
@@ -50,14 +51,13 @@ class TestCommandSendEmail:
         command.handle(**options)
 
         assert len(outbox) == recipients_count
-        # TODO: coś więcej
 
     @pytest.mark.parametrize("recipients", ["players", "coaches", "all"])
     def test_command_simple_parametrized(
         self, recipients, test_template, player_profile, coach_profile, outbox
     ):
         """Simple parametrized test using call_command."""
-
+        outbox.clear()
         call_command(
             "send_email",
             f"--{recipients}",

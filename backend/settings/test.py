@@ -3,9 +3,8 @@ from .development import *  # type: ignore
 
 CONFIGURATION = Environment.TEST
 
-from .base import MEDIA_ROOT
 
-MEDIA_ROOT = MEDIA_ROOT
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 CELERY_TASK_ALWAYS_EAGER = True
 CELERY_TASK_EAGER_PROPAGATES = True

@@ -4,6 +4,7 @@ from celery import shared_task
 
 from mailing.schemas import EmailTemplateRegistry
 from mailing.services import MailingService
+from mailing.utils import build_email_context
 from profiles.models import PlayerProfile
 from transfers.models import ProfileTransferRequest
 from utils.cache import (
@@ -30,7 +31,7 @@ def clear_cache_for_transfer_status():
 @shared_task
 def notify_players_about_new_transfer_request(
     transfer_request_id: int,
-):  # ASK: Wszyscy piłkarze czy w określonej odległości od klubu?
+):
     try:
         ProfileTransferRequest.objects.get(pk=transfer_request_id)
     except ProfileTransferRequest.DoesNotExist:
@@ -39,9 +40,10 @@ def notify_players_about_new_transfer_request(
         )
         return
 
-    mail_schema = EmailTemplateRegistry.NEW_TRANSFER_REQUEST()
+    mail_schema = EmailTemplateRegistry.NEW_CLUB_OFFER
 
-    for user in PlayerProfile.objects.filter(user__declared_role="P").select_related(
+    for player in PlayerProfile.objects.filter(user__declared_role="P").select_related(
         "user"
     ):
-        MailingService(mail_schema).send_mail(user)
+        context = build_email_context(player.user)
+        MailingService(mail_schema(context)).send_mail(player.user)

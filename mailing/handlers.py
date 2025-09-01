@@ -1,20 +1,25 @@
 from django.utils.log import AdminEmailHandler
 
-from mailing.tasks import notify_admins
-
 
 class AsyncAdminEmailHandler(AdminEmailHandler):
     """Custom AdminEmailHandler that sends emails via Celery."""
 
     def emit(self, record):
-        try:
-            subject = self.format(record)
-            if "Traceback (most recent call last)" in subject:
-                subject = subject.split("Traceback (most recent call last)")[0].strip()
-            else:
-                subject = subject.strip()[:255]
+        """
+        Emit a log record by sending it via Celery task.
 
-            message = str(record.__dict__)
-            notify_admins.delay(subject=subject, message=message)  # Wywołaj Celery task
+        This method processes the log record and sends it to admins
+        using the notify_admins Celery task instead of sending
+        the email synchronously.
+        """
+        try:
+            subject = self.format_subject(record.getMessage())
+            message = self.format(record)
+            self.send_mail(subject, message)
         except Exception:
             self.handleError(record)
+
+    def send_mail(self, subject, message, *args, **kwargs):
+        from mailing.tasks import notify_admins
+
+        return notify_admins.delay(subject=subject, message=message)
