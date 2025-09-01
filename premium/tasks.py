@@ -42,7 +42,8 @@ def premium_expired(premium_products_id: int):
         and pp_object.profile.meta.transfer_object
         and pp_object.profile.meta.transfer_object.is_anonymous
     ):
-        pp_object.profile.meta.transfer_object.delete()
+        pp_object.profile.meta.transfer_object.is_anonymous = False
+        pp_object.profile.meta.transfer_object.save()
 
     context = build_email_context(pp_object.profile.user)
     MailingService(mail_content(context)).send_mail(pp_object.profile.user)

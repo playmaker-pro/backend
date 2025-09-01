@@ -127,23 +127,22 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
         }
         return status_translations.get(status, status)
 
-
     def to_representation(self, instance: _models.InquiryRequest) -> None:
         """Custom representation for InquiryRequest, handling recipient data and status translation."""
         data = super().to_representation(instance)
         # Translate status
         data["status"] = self.get_translated_status(instance.status)
 
-        anonymous_transfer_object = instance.recipient.profile.meta.transfer_object
+        transfer_object = instance.recipient.profile.meta.transfer_object
 
         if (
             instance.anonymous_recipient
             and instance.status != _models.InquiryRequest.STATUS_ACCEPTED
-            and anonymous_transfer_object
+            and transfer_object
         ):
             recipient = data.get("recipient_object", {})
-            recipient["slug"] = anonymous_transfer_object.anonymous_slug
-            recipient["uuid"] = anonymous_transfer_object.anonymous_uuid
+            recipient["slug"] = transfer_object.anonymous_slug
+            recipient["uuid"] = transfer_object.anonymous_uuid
             recipient["id"] = 0
             recipient["first_name"] = "Anonimowy"
             recipient["last_name"] = "profil"
@@ -154,7 +153,7 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
                 "phone_number": {"dial_code": None, "number": None},
             }
             data["recipient_object"] = recipient
-            data["recipient_profile_uuid"] = anonymous_transfer_object.anonymous_uuid
+            data["recipient_profile_uuid"] = transfer_object.anonymous_uuid
 
         return data
 
@@ -172,8 +171,10 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
                 )
 
             if _models.InquiryRequest.objects.filter(
-                sender=sender, recipient=recipient
-            ).exists():
+                sender=sender,
+                recipient=recipient,
+                anonymous_recipient=attrs.get("anonymous_recipient", False),
+            ).first():
                 raise serializers.ValidationError(
                     f"You have already sent inquiry to {recipient}."
                 )
