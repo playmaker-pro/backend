@@ -1,14 +1,16 @@
 import random
+import uuid
 
 import factory
 from django.contrib.auth import get_user_model
-from django.utils.text import slugify
+from django.template.defaultfilters import slugify
 from faker import Faker
 
 from profiles import models
+from utils.factories import clubs_factories
 from utils.factories.mapper_factories import MapperFactory
 
-from . import clubs_factories, user_factories, utils
+from . import user_factories, utils
 from .base import CustomObjectFactory
 
 User = get_user_model()
@@ -24,6 +26,11 @@ class PlayerPositionFactory(CustomObjectFactory):
 class ProfileVideoFactory(CustomObjectFactory):
     class Meta:
         model = models.ProfileVideo
+        django_get_or_create = ("url",)
+
+    url = factory.Faker("url")
+    title = factory.Faker("sentence", nb_words=1)
+    description = factory.Faker("paragraph", nb_sentences=3)
 
 
 class PlayerProfilePositionFactory(CustomObjectFactory):
@@ -45,10 +52,10 @@ class VerificationStageFactory(CustomObjectFactory):
 
 
 class ProfileMetaFactory(CustomObjectFactory):
-    # _profile_class = factory.LazyAttribute(lambda _: "some_class")
-    # _uuid = factory.LazyAttribute(lambda _: uuid.uuid4())
-    # _slug = factory.LazyAttribute(lambda _: "some-slug")
-    # user = factory.SubFactory(user_factories.UserFactory)
+    _profile_class = factory.LazyAttribute(lambda _: "some_class")
+    _uuid = factory.LazyAttribute(lambda _: uuid.uuid4())
+    _slug = factory.Faker("slug")
+    user = factory.SubFactory(user_factories.UserFactory)
 
     class Meta:
         model = models.ProfileMeta
@@ -80,10 +87,8 @@ class PlayerProfileFactory(ProfileFactory):
         model = models.PlayerProfile
 
     mapper = factory.SubFactory(MapperFactory)
-    team_history_object = (
-        clubs_factories.TeamHistoryFactory.get_random_or_create_subfactory()
-    )
-    team_object = clubs_factories.TeamFactory.get_random_or_create_subfactory()
+    # team_history_object = factory.SubFactory(clubs_factories.TeamHistoryFactory)
+    team_object = factory.SubFactory(clubs_factories.TeamFactory)
     height = factory.LazyAttribute(lambda _: utils.get_random_int(150, 200))
     weight = factory.LazyAttribute(lambda _: utils.get_random_int(60, 100))
     birth_date = factory.LazyAttribute(
@@ -108,17 +113,6 @@ class PlayerProfileFactory(ProfileFactory):
     #     PlayerProfilePositionFactory, "player_profile"
     # )
     verification_stage = factory.SubFactory(VerificationStageFactory)
-
-    @classmethod
-    def set_subfactories(cls) -> None:
-        """Overwrite fields with subfactories"""
-        cls.team_history_object = factory.SubFactory(clubs_factories.TeamHistoryFactory)
-
-    # @factory.post_generation
-    # def set_team(self, *args, **kwargs) -> None:
-    #     """Set team_object based on team_history_object"""
-    #     if self.team_history_object:
-    #         self.team_object = self.team_history_object.team
 
     @classmethod
     def create_with_language(
@@ -164,10 +158,8 @@ class CoachProfileFactory(ProfileFactory):
     coach_role = factory.LazyAttribute(
         lambda _: random.choice(models.CoachProfile.COACH_ROLE_CHOICES)[0]
     )
-    team_history_object = (
-        clubs_factories.TeamHistoryFactory.get_random_or_create_subfactory()
-    )
-    team_object = clubs_factories.TeamFactory.get_random_or_create_subfactory()
+    # team_history_object = factory.SubFactory(clubs_factories.TeamHistoryFactory)
+    team_object = factory.SubFactory(clubs_factories.TeamFactory)
     soccer_goal = factory.LazyAttribute(
         lambda _: random.choice(models.CoachProfile.GOAL_CHOICES)[0]
     )
@@ -175,27 +167,14 @@ class CoachProfileFactory(ProfileFactory):
     voivodeship_obj = factory.LazyAttribute(lambda _: utils.get_random_voivo())
     address = factory.LazyAttribute(lambda _: utils.get_random_address())
 
-    @classmethod
-    def set_subfactories(cls) -> None:
-        """Overwrite fields with subfactories"""
-        cls.team_history_object = factory.SubFactory(clubs_factories.TeamHistoryFactory)
-
-    # @factory.post_generation
-    # def set_team(self, *args, **kwargs) -> None:
-    #     """Set team_object based on team_history_object"""
-    #     if self.team_history_object:
-    #         self.team_object = self.team_history_object.team
-
 
 class ClubProfileFactory(ProfileFactory):
     class Meta:
         model = models.ClubProfile
 
     phone = factory.LazyAttribute(lambda _: utils.get_random_phone_number())
-    club_object = factory.LazyAttribute(
-        lambda _: clubs_factories.ClubFactory.random_object()
-    )
-    team_object = clubs_factories.TeamFactory.get_random_or_create_subfactory()
+    club_object = factory.SubFactory(clubs_factories.ClubFactory)
+    team_object = factory.SubFactory(clubs_factories.TeamFactory)
     club_role = factory.LazyAttribute(
         lambda _: random.choice(models.ClubProfile.CLUB_ROLE)[0]
     )
@@ -314,3 +293,12 @@ class CatalogFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: f"Catalog {n}")
     slug = factory.LazyAttribute(lambda obj: slugify(obj.name))
     description = "Sample catalog description"
+
+
+class ProfileVisitationFactory(CustomObjectFactory):
+    class Meta:
+        model = models.ProfileVisitation
+
+    visitor = factory.SubFactory(ProfileMetaFactory)
+    visited = factory.SubFactory(ProfileMetaFactory)
+    timestamp = factory.LazyAttribute(lambda _: utils.get_random_date("-30d", "now"))

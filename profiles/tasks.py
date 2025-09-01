@@ -4,6 +4,9 @@ from celery import shared_task
 from django.utils import timezone
 from django_celery_beat.models import ClockedSchedule, PeriodicTask
 
+from mailing.schemas import EmailTemplateRegistry
+from mailing.services import MailingService
+from mailing.utils import build_email_context
 from profiles import models as profile_models
 from profiles.services import NotificationService
 
@@ -51,7 +54,7 @@ def post_create_profile_tasks(class_name: str, profile_id: int) -> None:
     profile.ensure_visitation_exist(commit=False)
     profile.ensure_meta_exist(commit=False)
     profile.save()
-    create_post_create_profile__periodic_tasks(class_name, profile_id)
+    create_post_create_profile__periodic_tasks.delay(class_name, profile_id)
     NotificationService(profile.meta).notify_welcome()
 
     if profile.user.display_status == profile_models.User.DisplayStatus.NOT_SHOWN:
@@ -188,3 +191,32 @@ def create_post_create_profile__periodic_tasks(
             clocked_time=timezone.now() + timezone.timedelta(days=4)
         ),
     )
+
+
+@shared_task
+def post_create_player_profile(pk: int) -> None:
+    """
+    Post-save signal handler for PlayerProfile to ensure metrics exist.
+    """
+    profile = profile_models.PlayerProfile.objects.get(pk=pk)
+    context = build_email_context(profile.user)
+    MailingService(EmailTemplateRegistry.PLAYER_WELCOME(context)).send_mail(
+        profile.user
+    )
+
+
+@shared_task
+def post_create_other_profile(pk: int, profile_class_name: str) -> None:
+    """
+    Post-save signal handler for ScoutProfile, CoachProfile, and ClubProfile.
+    """
+    if profile_class_name not in ["CoachProfile", "ClubProfile", "ScoutProfile"]:
+        return
+
+    profile_model = getattr(profile_models, profile_class_name)
+
+    if profile := profile_model.objects.filter(pk=pk).first():
+        context = build_email_context(profile.user)
+        MailingService(EmailTemplateRegistry.PROFESSIONAL_WELCOME(context)).send_mail(
+            profile.user
+        )

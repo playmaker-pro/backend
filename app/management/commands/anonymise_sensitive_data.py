@@ -13,7 +13,7 @@ from backend.settings.config import Environment
 from profiles.models import ClubProfile, CoachProfile, PlayerProfile
 
 User = get_user_model()
-logger: logging.Logger = logging.getLogger("mocker")
+logger: logging.Logger = logging.getLogger("command")
 
 
 class Command(BaseCommand):

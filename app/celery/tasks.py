@@ -1,6 +1,7 @@
 from logging import getLogger
 
 from celery import shared_task
+from django.core.management import call_command
 from django_celery_beat.models import CrontabSchedule, PeriodicTask
 
 from profiles.services import NotificationService
@@ -236,3 +237,12 @@ def refresh_periodic_tasks() -> None:
         )
         if created:
             logger.info(f"Created new periodic task: {notification['name']}")
+
+
+@shared_task
+def run_daily_supervisor() -> None:
+    """
+    Run the daily supervisor command to handle daily tasks.
+    """
+
+    call_command("daily_supervisor")

@@ -24,7 +24,7 @@ from users.schemas import (
     UserGoogleDetailPydantic,
 )
 
-logger = logging.getLogger("django")
+logger = logging.getLogger(__name__)
 
 
 class SocialAppManager:

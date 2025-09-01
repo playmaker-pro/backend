@@ -48,7 +48,7 @@ from users.services import PasswordResetService, UserService
 user_service: UserService = UserService()
 password_reset_service: PasswordResetService = PasswordResetService()
 
-logger = logging.getLogger("django")
+logger = logging.getLogger(__name__)
 
 
 class UserRegisterEndpointView(EndpointView):

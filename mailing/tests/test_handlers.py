@@ -208,7 +208,7 @@ class TestEmailHandlerEndToEnd:
 
         handler = AsyncAdminEmailHandler()
         record = logging.LogRecord(
-            name="django",
+            name=__name__,
             level=logging.ERROR,
             pathname="/test/integration.py",
             lineno=100,

@@ -6,6 +6,8 @@ from django.contrib.auth import get_user_model
 from inquiries.constants import InquiryLogType
 from inquiries.errors import ForbiddenLogAction
 from inquiries.models import InquiryRequest, UserInquiry
+from mailing.models import MailLog
+from mailing.schemas import EmailTemplateFileNames
 
 User = get_user_model()
 
@@ -33,20 +35,16 @@ class TestSendEmails:
         player_profile.user.save()
         return player_profile
 
-    def test_send_email_on_send_request(
-        self, player_profile, coach_profile, outbox
-    ) -> None:
+    def test_send_email_on_send_request(self, player_profile, coach_profile) -> None:
         """Send email to recipient on new request"""
         InquiryRequest.objects.create(
             sender=player_profile.user, recipient=coach_profile.user
         )
 
-        assert len(outbox) == 1
-        assert outbox[0].to == [coach_profile.user.email]
-        assert outbox[0].subject == "Masz nowe zapytanie o piłkarski kontakt!"
+        assert MailLog.objects.filter(mailing__user=coach_profile.user).exists()
 
     def test_send_email_on_accepted_request(
-        self, player_profile, coach_profile, outbox
+        self, player_profile, coach_profile
     ) -> None:
         """Send email to sender on accept request"""
         inquiry_request = InquiryRequest.objects.create(
@@ -55,15 +53,12 @@ class TestSendEmails:
         inquiry_request.accept()
         inquiry_request.save()
 
-        assert outbox[-1].to == [coach_profile.user.email]
-        assert (
-            outbox[-1].subject
-            == "Piłkarz Jan Kowalski zaakceptował Twoje zapytanie o piłkarski kontakt!"
-        )
+        assert MailLog.objects.filter(
+            mailing__user=coach_profile.user,
+            mail_template=EmailTemplateFileNames.ACCEPTED_INQUIRY.value,
+        ).exists()
 
-    def test_send_email_on_reject_request(
-        self, player_profile, coach_profile, outbox
-    ) -> None:
+    def test_send_email_on_reject_request(self, player_profile, coach_profile) -> None:
         """Send email to sender on reject request"""
         inquiry_request = InquiryRequest.objects.create(
             sender=player_profile.user, recipient=coach_profile.user
@@ -71,14 +66,13 @@ class TestSendEmails:
         inquiry_request.reject()
         inquiry_request.save()
 
-        assert outbox[-1].to == [player_profile.user.email]
-        assert (
-            outbox[-1].subject
-            == "Trenerka Karolina Nowak odrzuciła Twoje zapytanie o piłkarski kontakt!"
-        )
+        assert MailLog.objects.filter(
+            mailing__user=player_profile.user,
+            mail_template=EmailTemplateFileNames.REJECTED_INQUIRY.value,
+        ).exists()
 
     def test_send_email_on_outdated_request_to_sender(
-        self, player_profile, coach_profile, outbox
+        self, player_profile, coach_profile
     ) -> None:
         """Send email to sender on outdated request"""
         inquiry_request = InquiryRequest.objects.create(
@@ -88,6 +82,7 @@ class TestSendEmails:
         _3days_back = inquiry_request.created_at - timedelta(days=4, hours=1)
         _6days_back = inquiry_request.created_at - timedelta(days=6, hours=1)
         _any_other_time = inquiry_request.created_at - timedelta(days=100)
+
         assert not inquiry_request.logs.filter(
             log_type=InquiryLogType.OUTDATED_REMINDER
         ).exists()
@@ -114,9 +109,14 @@ class TestSendEmails:
             == 1
         )
 
-        assert outbox[-1].to == [inquiry_request.recipient.email]
+        latest_mail = (
+            MailLog.objects.filter(mailing__user=inquiry_request.recipient)
+            .order_by("-sent_at")
+            .first()
+        )
+        assert latest_mail is not None
         assert (
-            outbox[-1].subject
+            latest_mail.subject
             == "Masz zapytanie o piłkarski kontakt czekające na decyzję."
         )
 
@@ -135,9 +135,14 @@ class TestSendEmails:
         inquiry_request.notify_recipient_about_outdated()
         inquiry_request.refresh_from_db()
 
-        assert outbox[-1].to == [inquiry_request.recipient.email]
+        latest_mail = (
+            MailLog.objects.filter(mailing__user=inquiry_request.recipient)
+            .order_by("-sent_at")
+            .first()
+        )
+        assert latest_mail is not None
         assert (
-            outbox[-1].subject
+            latest_mail.subject
             == "Masz zapytanie o piłkarski kontakt czekające na decyzję."
         )
         assert (
@@ -154,9 +159,7 @@ class TestSendEmails:
         with pytest.raises(ForbiddenLogAction):
             inquiry_request.notify_recipient_about_outdated()
 
-    def test_send_email_on_reward_sender(
-        self, player_profile, coach_profile, outbox
-    ) -> None:
+    def test_send_email_on_reward_sender(self, player_profile, coach_profile) -> None:
         """Send email to sender on reward sender"""
         inquiry_request = InquiryRequest.objects.create(
             sender=player_profile.user, recipient=coach_profile.user
@@ -167,18 +170,20 @@ class TestSendEmails:
         inquiry_request.save()
         inquiry_request.reward_sender()
 
-        assert outbox[-1].to == [inquiry_request.sender.email]
+        latest_mail = MailLog.objects.filter(
+            mailing__user=inquiry_request.sender,
+            mail_template=EmailTemplateFileNames.OUTDATED_INQUIRY.value,
+        ).first()
+        assert latest_mail is not None
         assert (
-            outbox[-1].subject == "Zwiększamy Twoją pulę zapytań o piłkarski kontakt!"
+            latest_mail.subject == "Zwiększamy Twoją pulę zapytań o piłkarski kontakt!"
         )
 
         # Assert we can't reward sender twice
         with pytest.raises(ForbiddenLogAction):
             inquiry_request.reward_sender()
 
-    def test_send_email_on_limit_reached(
-        self, player_profile, coach_profile, outbox
-    ) -> None:
+    def test_send_email_on_limit_reached(self, player_profile, coach_profile) -> None:
         """Send email to user if he reached inquiry requests limit"""
         player_profile.user.userinquiry.counter = 2
         player_profile.user.userinquiry.save()
@@ -188,8 +193,12 @@ class TestSendEmails:
             limit_reached.first().user == player_profile.user
         )
 
-        assert outbox[-1].to == [player_profile.user.email]
+        latest_mail = MailLog.objects.filter(
+            mailing__user=player_profile.user,
+            mail_template=EmailTemplateFileNames.INQUIRY_LIMIT.value,
+        ).first()
+        assert latest_mail is not None
         assert (
-            outbox[-1].subject
+            latest_mail.subject
             == "Rozbuduj swoje transferowe możliwości – Rozszerz limit zapytań!"
         )

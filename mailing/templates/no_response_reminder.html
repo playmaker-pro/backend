@@ -1,0 +1,37 @@
+{% extends "email_base.html" %}
+{% load gender_filter %}
+
+{% block content %}
+<p style="font-size: 16px; color: #555; line-height: 1.6; margin-bottom: 20px;">
+  Witaj {{user.first_name}}!
+</p>
+
+<p style="font-size: 16px; color: #555; line-height: 1.6; margin-bottom: 20px;">
+  {{"Dostałeś|Dostałaś"|gender_format:user.userpreferences.gender}} zapytanie od {{related_role_biernik}}
+  {{related_full_name}} i druga strona wciąż czeka na Twoją odpowiedź.
+</p>
+
+<p style="font-size: 16px; color: #555; line-height: 1.6; margin-bottom: 30px;">
+  Nie przegap szansy – zrób ruch!
+</p>
+
+<p>
+  <a href="https://www.playmaker.pro/kontakty"
+    style="display: inline-block; padding: 15px 30px; background-color: #ED1C24; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 18px;">
+    Odpowiedz na zapytanie
+  </a>
+</p>
+
+<p style="font-size: 14px; color: #777; line-height: 1.4; margin-top: 30px;">
+  Jeżeli po kliknięciu link się nie otworzy, skopiuj go, wklej w pole adresu przeglądarki i przejdź do wskazanej
+  strony:
+</p>
+<p>
+  <a href="https://www.playmaker.pro/kontakty" style="font-size:13px">https://www.playmaker.pro/kontakty</a>
+</p>
+
+<p style="font-size: 16px; color: #555; line-height: 1.6; margin-top: 40px;">
+  Pozdrawiamy,<br>
+  Zespół PlayMaker.pro
+</p>
+{% endblock %}

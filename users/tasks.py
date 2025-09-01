@@ -2,6 +2,7 @@ from celery import shared_task
 from django.utils import timezone
 
 from inquiries.services import InquireService
+from mailing.models import Mailing
 from profiles.errors import ProfileVisitHistoryDoesNotExistException
 from profiles.services import ProfileVisitHistoryService
 from users.models import Ref, User, UserPreferences
@@ -21,6 +22,7 @@ def prepare_new_user(*args, **kwargs) -> None:
     UserPreferences.objects.get_or_create(user=user)
     Ref.objects.get_or_create(user=user)
     InquireService.create_basic_inquiry_plan(user)
+    Mailing.objects.get_or_create(user=user)
 
 
 @shared_task

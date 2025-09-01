@@ -13,6 +13,7 @@ class InquiryLogType(models.TextChoices):
     OUTDATED = "OUTDATED_INQUIRY", _("Outdated inquiry")
     UNDEFINED = "UNDEFINED_INQUIRY", _("Undefined inquiry")
     OUTDATED_REMINDER = "OUTDATED_REMINDER", _("Reminder about outdated inquiry")
+    NO_RESPONSE_REMINDER = "NO_RESPONSE_REMINDER", _("No response reminder after 7 days")
 
 
 # Mapping of log types that should trigger email sending
@@ -22,6 +23,7 @@ EMAIL_ENABLED_LOG_TYPES = {
     InquiryLogType.NEW,
     InquiryLogType.OUTDATED,
     InquiryLogType.OUTDATED_REMINDER,
+    InquiryLogType.NO_RESPONSE_REMINDER,
 }
 
 
@@ -31,4 +33,5 @@ INQUIRY_EMAIL_TEMPLATE = {
     InquiryLogType.NEW: EmailTemplateRegistry.NEW_INQUIRY,
     InquiryLogType.OUTDATED: EmailTemplateRegistry.OUTDATED_INQUIRY,
     InquiryLogType.OUTDATED_REMINDER: EmailTemplateRegistry.OUTDATED_REMINDER,
+    InquiryLogType.NO_RESPONSE_REMINDER: EmailTemplateRegistry.NO_RESPONSE_REMINDER,
 }
