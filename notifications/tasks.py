@@ -36,14 +36,24 @@ def create_notification(
     title = kwargs.pop("title")
     description = kwargs.pop("description")
     href = kwargs.pop("href")
+    template_name = kwargs.pop("template_name", None)
+    template_params = kwargs.pop("template_params", None)
+
 
     notification, created = Notification.objects.get_or_create(
         target_id=profile_meta_id,
         title=title,
         description=description,
         href=href,
-        defaults=kwargs,
+        defaults={
+            "template_name": template_name,
+            "template_params": template_params,
+            **kwargs
+        },
     )
 
     if not created:
+        # Update existing notification with new template data
+        notification.template_name = template_name
+        notification.template_params = template_params
         notification.refresh()

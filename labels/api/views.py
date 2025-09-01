@@ -16,5 +16,9 @@ class LabelsAPI(EndpointView):
         Retrieves all label definitions and returns them in a serialized format.
         """
         available_labels = LabelDefinition.objects.all()
-        serializer = LabelDefinitionSerializer(available_labels, many=True)
+        serializer = LabelDefinitionSerializer(
+            available_labels, 
+            many=True, 
+            context=self.get_serializer_context()
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)

@@ -3,6 +3,7 @@ from urllib.parse import urljoin
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 
 class Notification(models.Model):
@@ -18,6 +19,7 @@ class Notification(models.Model):
     description = models.CharField(max_length=255)
     href = models.CharField(max_length=255)
     template_name = models.CharField(max_length=100, null=True, blank=True)
+    template_params = models.JSONField(null=True, blank=True)
     icon = models.CharField(max_length=255, null=True, blank=True)
     picture = models.ImageField(null=True, blank=True)
     picture_profile_role = models.CharField(max_length=1, null=True, blank=True)
@@ -47,11 +49,11 @@ class Notification(models.Model):
             return urljoin(settings.BASE_URL, self.picture.url)
 
     def __str__(self) -> str:
-        status = "ODCZYTANO" if self.seen else "NIE ODCZYTANO"
+        status = _("ODCZYTANO") if self.seen else _("NIE ODCZYTANO")
         return (
             f"{self.target} -- {self.title} -- [{status}] -- Update: {self.updated_at}"
         )
 
     class Meta:
-        verbose_name = "Powiadomienia użytkownika"
-        verbose_name_plural = "Powiadomienia użytkowników"
+        verbose_name = _("Powiadomienia użytkownika")
+        verbose_name_plural = _("Powiadomienia użytkowników")

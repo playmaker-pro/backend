@@ -140,11 +140,11 @@ class PreferenceChoicesView(EndpointView):
         """
 
         gender_choices = [
-            {"value": choice[0], "label": choice[1]}
+            {"value": choice[0], "label": str(choice[1])}
             for choice in UserPreferences.GENDER_CHOICES
         ]
         leg_choices = [
-            {"value": choice[0], "label": choice[1]}
+            {"value": choice[0], "label": str(choice[1])}
             for choice in PlayerProfile.LEG_CHOICES
         ]
         preference_choices = {

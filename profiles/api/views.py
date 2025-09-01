@@ -143,10 +143,14 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
         )
         if not serializer_class:
             serializer_class = serializers.UpdateProfileSerializer
+        # Get I18n-aware context from the mixin
+        context = self.get_serializer_context()
+        context.update({"requestor": request.user, "profile_uuid": profile_uuid})
+
         serializer = serializer_class(
             instance=profile,
             data=request.data,
-            context={"requestor": request.user, "profile_uuid": profile_uuid},
+            context=context,
         )
         if serializer.is_valid(raise_exception=True):
             serializer.save()
@@ -173,9 +177,11 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
                 serializer_class = serializers.ProfileSerializer
 
             paginated_query = self.paginate_queryset(qs)
-            serializer = serializer_class(
-                paginated_query,
-                context={
+
+            # Get I18n-aware context from the mixin
+            context = self.get_serializer_context()
+            context.update(
+                {
                     "requestor": request.user,
                     "request": request,
                     "label_context": "base",
@@ -184,7 +190,12 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
                     and request.user.profile.is_premium,
                     "transfer_status": "1"
                     in self.query_params.get("transfer_status", []),
-                },
+                }
+            )
+
+            serializer = serializer_class(
+                paginated_query,
+                context=context,
                 many=True,
             )
             paginated_response = self.get_paginated_response(serializer.data)
@@ -273,11 +284,15 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
         if not (user_preferences := request.user.userpreferences):
             raise UserPreferencesDoesNotExistHTTPException
 
+        # Get I18n-aware context from the mixin
+        context = self.get_serializer_context()
+        context.update({"profile_uuid": profile_uuid})
+
         serializer = UserPreferencesUpdateSerializer(
             user_preferences,
             data=request.data,
             partial=True,
-            context={"profile_uuid": profile_uuid},
+            context=context,
         )
         if serializer.is_valid(raise_exception=True):
             serializer.save()
@@ -316,10 +331,14 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
         if not request.user.userpreferences:
             raise UserPreferencesDoesNotExistHTTPException
 
+        # Get I18n-aware context from the mixin
+        context = self.get_serializer_context()
+
         serializer = MainUserDataSerializer(
             request.user,
             data=request.data,
             partial=True,
+            context=context,
         )
         if serializer.is_valid(raise_exception=True):
             serializer.save()
@@ -395,7 +414,10 @@ class PopularProfilesAPIView(MixinProfilesFilter, EndpointView):
             qs = self.get_queryset()
             qs = self.paginate_queryset(qs)
             qs = [obj.profile for obj in qs]
-            serializer = serializers.GenericProfileSerializer(qs, many=True)
+            context = self.get_serializer_context()
+            serializer = serializers.GenericProfileSerializer(
+                qs, many=True, context=context
+            )
             paginated_response = self.get_paginated_response(serializer.data)
             cache.data = paginated_response.data
             return paginated_response
@@ -442,11 +464,13 @@ class SuggestedProfilesAPIView(EndpointView):
             )
 
         if profile.__class__ is models.PlayerProfile:
-            qs_model = random.choice([
-                models.CoachProfile,
-                models.ClubProfile,
-                models.ScoutProfile,
-            ])
+            qs_model = random.choice(
+                [
+                    models.CoachProfile,
+                    models.ClubProfile,
+                    models.ScoutProfile,
+                ]
+            )
         else:
             qs_model = models.PlayerProfile
 
@@ -461,7 +485,12 @@ class SuggestedProfilesAPIView(EndpointView):
         else:
             qs = qs.order_by("-user__last_activity")
 
-        serializer = serializers.SuggestedProfileSerializer(qs[:10], many=True)
+        # Get I18n-aware context from the mixin
+        context = self.get_serializer_context()
+
+        serializer = serializers.SuggestedProfileSerializer(
+            qs[:10], many=True, context=context
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -472,7 +501,8 @@ class ProfilesNearbyAPIView(MixinProfilesFilter, EndpointView):
     pagination_class = Pagination
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-    def filter_localization(self, *args, **kwargs) -> None: ...
+    def filter_localization(self, *args, **kwargs) -> None:
+        ...
 
     def get_profiles_nearby(self, request: Request) -> Response:
         """Retrieve profiles from the closest area"""
@@ -514,8 +544,12 @@ class ProfilesNearbyAPIView(MixinProfilesFilter, EndpointView):
             )
             qs = self.filter_queryset()
             paginated_qs = self.paginate_queryset(qs)
+
+            # Get I18n-aware context from the mixin
+            context = self.get_serializer_context()
+
             data = serializers.GenericProfileSerializer(
-                paginated_qs, source="profile", many=True
+                paginated_qs, source="profile", many=True, context=context
             ).data
             paginated_response = self.get_paginated_response(data)
             cache.data = paginated_response.data
@@ -545,8 +579,11 @@ class ProfileSearchView(EndpointView):
         except ValueError:
             raise api_errors.InvalidSearchTerm()
         paginated_profiles = self.get_paginated_queryset(matching_users_queryset)
+
+        context = self.get_serializer_context()
+
         serializer = serializers.ProfileSearchSerializer(
-            paginated_profiles, many=True, context={"request": request}
+            paginated_profiles, many=True, context=context
         )
 
         return self.get_paginated_response(serializer.data)
@@ -630,7 +667,10 @@ class PlayerPositionAPI(EndpointView):
         Retrieve all player positions ordered by ID.
         """
         positions = models.PlayerPosition.objects.all()
-        serializer = serializers.PlayerPositionSerializer(positions, many=True)
+        context = self.get_serializer_context()
+        serializer = serializers.PlayerPositionSerializer(
+            positions, many=True, context=context
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -718,9 +758,11 @@ class ProfileVideoAPI(EndpointView):
         except ValueError:
             raise api_errors.IncorrectProfileRole
         labels_choices = (ChoicesTuple(*label) for label in labels)
+        context = self.get_serializer_context()
         serializer = ProfileEnumChoicesSerializer(
             labels_choices,
             many=True,  # type: ignore
+            context=context,
         )  # noqa: 501
         return Response(serializer.data)
 
@@ -1068,5 +1110,8 @@ class VisitationView(EndpointView):
                 "Available only for premium users", status=status.HTTP_204_NO_CONTENT
             )
 
-        serializer = serializers.ProfileVisitSummarySerializer(profile)
+        # Get I18n-aware context from the mixin
+        context = self.get_serializer_context()
+
+        serializer = serializers.ProfileVisitSummarySerializer(profile, context=context)
         return Response(serializer.data, status=status.HTTP_200_OK)

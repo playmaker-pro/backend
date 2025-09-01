@@ -1,12 +1,12 @@
 import json
 import uuid
 from datetime import datetime, timedelta
-
 import factory
 import pytest
 from django.db.models import signals
 from django.urls import reverse
 from django.utils import timezone
+from django.core.serializers.json import DjangoJSONEncoder
 from parameterized import parameterized
 from rest_framework.test import APIClient, APITestCase
 
@@ -250,7 +250,8 @@ class TestCreateProfileAPI(APITestCase):
     def test_successfully_create_profile_for_new_user(self, payload: dict) -> None:
         """Test creating profiles with correctly passed payload"""
         self.manager.login(self.user_obj)
-        response = self.client.post(self.url, json.dumps(payload), **self.headers)
+        payload_json = json.dumps(payload, cls=DjangoJSONEncoder)
+        response = self.client.post(self.url, payload_json, **self.headers)
 
         assert response.status_code == 201
         assert response.data["user_id"] and response.data["role"]
