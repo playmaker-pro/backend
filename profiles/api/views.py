@@ -104,7 +104,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
             raise api_errors.ProfileDoesNotExist
 
         if is_anonymous and not isinstance(profile_object, models.PlayerProfile):
-            raise api_errors.ProfileDoesNotExist
+            raise ValidationError("Only PlayerProfile can be anonymous.")
 
         return self.retrieve_profile_and_respond(request, profile_object)
 
