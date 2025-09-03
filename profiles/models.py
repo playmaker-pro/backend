@@ -2404,6 +2404,16 @@ class ProfileMeta(models.Model, VisitationMixin):
             return self.transfer_status
         return None
 
+    @property
+    def is_anonymous(self) -> bool:
+        """
+        Check if this profile has anonymous transfer settings.
+        Returns True if the profile has set their transfer status or transfer request to anonymous,
+        meaning they want to remain anonymous in the transfer market and profile visits.
+        """
+        transfer_obj = self.transfer_object
+        return transfer_obj is not None and transfer_obj.is_anonymous
+
     def __str__(self) -> None:
         return f"Meta of {self.profile}"
 

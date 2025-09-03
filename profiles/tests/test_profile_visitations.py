@@ -8,7 +8,8 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from profiles.models import BaseProfile, ProfileVisitation
-from utils.factories import PlayerProfileFactory
+from transfers.models import ProfileTransferStatus, ProfileTransferRequest
+from utils.factories import PlayerProfileFactory, TeamContributorFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -87,11 +88,13 @@ def test_who_visited_my_profile(client, subject):
     assert sum(subject.profile.visitation._visitors_count_per_year.values()) == 4
     assert response.status_code == status.HTTP_200_OK
     assert data["this_month_count"] == 3
-    assert data["this_year_count"] == len([
-        is_curr
-        for is_curr in [pv1, pv2, pv3, pv4]
-        if is_curr.timestamp > timezone.now() - timedelta(weeks=52)
-    ])
+    assert data["this_year_count"] == len(
+        [
+            is_curr
+            for is_curr in [pv1, pv2, pv3, pv4]
+            if is_curr.timestamp > timezone.now() - timedelta(weeks=52)
+        ]
+    )
     assert data["visits"][0]["visitor"]["uuid"] == str(pv1.visitor.profile.uuid)
     assert data["visits"][0]["days_ago"] == 3
     assert data["visits"][1]["visitor"]["uuid"] == str(pv2.visitor.profile.uuid)
@@ -134,3 +137,152 @@ def test_counter_per_year(timezone_now, subject):
         str(current_year): 1,
         str(current_year - 1): 3,
     }
+
+
+def test_anonymous_profile_with_transfer_status_not_tracked(client, subject):
+    """Test that profiles with anonymous transfer status don't get tracked when visiting."""
+    # Create a visitor profile
+    visitor_profile = PlayerProfileFactory.create()
+    visitor_profile.ensure_meta_exist()
+
+    # Create anonymous transfer status for visitor
+    ProfileTransferStatus.objects.create(
+        meta=visitor_profile.meta, status="1", is_anonymous=True
+    )
+
+    # Ensure visitor profile has premium access (needed for tracking)
+    visitor_profile.setup_premium_profile()
+
+    # Visitor visits the subject profile
+    client.force_authenticate(user=visitor_profile.user)
+    client.get(
+        reverse(
+            "api:profiles:get_or_update_profile",
+            kwargs={"profile_uuid": str(subject.profile.uuid)},
+        )
+    )
+
+    # Check that no ProfileVisitation was created
+    assert (
+        ProfileVisitation.objects.filter(
+            visitor=visitor_profile.meta, visited=subject.profile.meta
+        ).count()
+        == 0
+    )
+
+    # Check that visitation count wasn't incremented
+    subject.profile.refresh_from_db()
+    if subject.profile.visitation:
+        assert subject.profile.visitation.visitors_count_this_year == 0
+
+
+def test_anonymous_profile_with_transfer_request_not_tracked(client, subject):
+    """Test that profiles with anonymous transfer request don't get tracked when visiting."""
+    # Create a visitor profile
+    visitor_profile = PlayerProfileFactory.create()
+    visitor_profile.ensure_meta_exist()
+
+    # Create a team contributor (required for transfer request)
+    team_contributor = TeamContributorFactory.create(
+        profile_uuid=visitor_profile.uuid, role="IC"  # First coach
+    )
+
+    # Create anonymous transfer request for visitor
+    ProfileTransferRequest.objects.create(
+        meta=visitor_profile.meta,
+        requesting_team=team_contributor,
+        gender="M",
+        is_anonymous=True,
+    )
+
+    # Ensure visitor profile has premium access (needed for tracking)
+    visitor_profile.setup_premium_profile()
+
+    # Visitor visits the subject profile
+    client.force_authenticate(user=visitor_profile.user)
+    client.get(
+        reverse(
+            "api:profiles:get_or_update_profile",
+            kwargs={"profile_uuid": str(subject.profile.uuid)},
+        )
+    )
+
+    # Check that no ProfileVisitation was created
+    assert (
+        ProfileVisitation.objects.filter(
+            visitor=visitor_profile.meta, visited=subject.profile.meta
+        ).count()
+        == 0
+    )
+
+    # Check that visitation count wasn't incremented
+    subject.profile.refresh_from_db()
+    if subject.profile.visitation:
+        assert subject.profile.visitation.visitors_count_this_year == 0
+
+
+def test_non_anonymous_profile_still_tracked(client, subject):
+    """Test that non-anonymous profiles are still tracked when visiting."""
+    # Create a visitor profile
+    visitor_profile = PlayerProfileFactory.create()
+    visitor_profile.ensure_meta_exist()
+
+    # Create non-anonymous transfer status for visitor
+    ProfileTransferStatus.objects.create(
+        meta=visitor_profile.meta, status="1", is_anonymous=False
+    )
+
+    # Ensure visitor profile has premium access (needed for tracking)
+    visitor_profile.setup_premium_profile()
+
+    # Visitor visits the subject profile
+    client.force_authenticate(user=visitor_profile.user)
+    client.get(
+        reverse(
+            "api:profiles:get_or_update_profile",
+            kwargs={"profile_uuid": str(subject.profile.uuid)},
+        )
+    )
+
+    # Check that ProfileVisitation was created
+    assert (
+        ProfileVisitation.objects.filter(
+            visitor=visitor_profile.meta, visited=subject.profile.meta
+        ).count()
+        == 1
+    )
+
+    # Check that visitation count was incremented
+    subject.profile.refresh_from_db()
+    assert subject.profile.visitation.visitors_count_this_year == 1
+
+
+def test_profile_without_transfer_objects_still_tracked(client, subject):
+    """Test that profiles without transfer status/request are still tracked."""
+    # Create a visitor profile without any transfer objects
+    visitor_profile = PlayerProfileFactory.create()
+    visitor_profile.ensure_meta_exist()
+
+    # Ensure visitor profile has premium access (needed for tracking)
+    visitor_profile.setup_premium_profile()
+
+    # Visitor visits the subject profile
+    client.force_authenticate(user=visitor_profile.user)
+    client.get(
+        reverse(
+            "api:profiles:get_or_update_profile",
+            kwargs={"profile_uuid": str(subject.profile.uuid)},
+        )
+    )
+
+    # Check that ProfileVisitation was created
+    assert (
+        ProfileVisitation.objects.filter(
+            visitor=visitor_profile.meta, visited=subject.profile.meta
+        ).count()
+        == 1
+    )
+
+    # Check that visitation count was incremented
+    subject.profile.refresh_from_db()
+    assert subject.profile.visitation.visitors_count_this_year == 1
