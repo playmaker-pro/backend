@@ -169,6 +169,22 @@ DATABASES = {
     },
 }
 
+# MongoDB configuration for user login tracking
+# Note: Connection is initialized lazily in the service to avoid fork issues with Celery
+MONGODB_SETTINGS = {
+    'db': cfg.mongodb.db,
+    'host': cfg.mongodb.host,
+    'port': cfg.mongodb.port,
+}
+
+# Only add authentication if credentials are provided
+if cfg.mongodb.username and cfg.mongodb.password:
+    MONGODB_SETTINGS.update({
+        'username': cfg.mongodb.username,
+        'password': cfg.mongodb.password,
+        'authentication_source': cfg.mongodb.auth_source,
+    })
+
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
 

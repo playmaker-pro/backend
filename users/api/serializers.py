@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, Union
 
 from django.contrib.auth import get_user_model
 from django_countries import countries
+from django.conf import settings
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -39,6 +40,7 @@ from users.errors import UserRegisterException
 from users.models import Ref, User, UserPreferences
 from users.schemas import LoginSchemaOut
 from users.utils.api_utils import modify2custom_exception
+from users.tasks import track_user_login_task
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -337,6 +339,8 @@ class CustomTokenObtainSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         attrs = super().validate(attrs)
         user: User = self.user
+        if not getattr(settings, "DISABLE_EXTERNAL_TASKS", False):
+            track_user_login_task.delay(user.pk)
         return LoginSchemaOut(
             id=user.pk,
             first_name=user.first_name,

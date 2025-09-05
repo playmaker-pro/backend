@@ -1,7 +1,5 @@
 import logging
-
 from users.tasks import update_user_last_activity, update_visit_history_for_actual_date
-
 logger = logging.getLogger("user_activity")
 
 

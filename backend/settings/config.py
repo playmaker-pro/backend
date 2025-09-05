@@ -108,6 +108,17 @@ class MailingConfig(BaseModel):
         arbitrary_types_allowed = True
 
 
+class MongoDBConfig(BaseModel):
+    """Settings for MongoDB"""
+
+    host: str
+    port: int
+    db: str
+    username: str
+    password: str
+    auth_source: str
+
+
 class Config(BaseSettings):
     """General settings for webapp"""
 
@@ -118,6 +129,7 @@ class Config(BaseSettings):
     postgres: DatabaseConfig
     webapp: WebappConfig
     smtp: MailingConfig
+    mongodb: MongoDBConfig
 
     # add the rest of settings that should fit here
     class Config:

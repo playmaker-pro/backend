@@ -13,6 +13,7 @@ urlpatterns = [
     path("api/v3/", include(api_urls, namespace="api")),
     path("select2/", include("django_select2.urls")),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
+    path("users/", include("users.urls", namespace="users")),
 ]
 
 
