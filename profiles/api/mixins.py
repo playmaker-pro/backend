@@ -68,6 +68,17 @@ class ProfileRetrieveMixin:
 
     def manage_visit_history(self, profile_object, requestor) -> None:
         """Manage the visit history for a profile."""
+        # Skip tracking if the requestor is a logged-in user
+        # who has chosen to make their profile anonymous via transfer settings
+        if (
+            not isinstance(requestor, AnonymousUser)
+            and hasattr(requestor, "meta")
+            and requestor.meta
+            and requestor.meta.is_anonymous  # profile transfer setting is set to anonymous
+        ):
+            logger.debug(f"Skipping visit tracking for anonymous profile: {requestor}")
+            return
+
         try:
             history = visit_history_service.get_user_profile_visit_history(
                 user=profile_object.user, created_at=timezone.now()
