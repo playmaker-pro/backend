@@ -56,6 +56,9 @@ class PostmanService:
                 user__mailing__mailbox__sent_at__gt=thirty_days_ago,
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
+            .exclude(
+                user__date_joined__gt=timezone.now() - timezone.timedelta(days=3)
+            )
         ).select_related("user"):
             context = build_email_context(profile.user)
             MailingService(mail_schema(context)).send_mail(profile.user)
@@ -68,6 +71,9 @@ class PostmanService:
             .exclude(
                 user__mailing__mailbox__sent_at__gt=thirty_days_ago,
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
+            )
+            .exclude(
+                user__date_joined__gt=timezone.now() - timezone.timedelta(days=3)
             )
             .select_related("user")
         ):
@@ -82,6 +88,9 @@ class PostmanService:
             .exclude(
                 user__mailing__mailbox__sent_at__gt=thirty_days_ago,
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
+            )
+            .exclude(
+                user__date_joined__gt=timezone.now() - timezone.timedelta(days=3)
             )
             .select_related("user")
         ):
@@ -148,6 +157,9 @@ class PostmanService:
                 - timezone.timedelta(days=30),
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
+            .exclude(
+                user__date_joined__gt=timezone.now() - timezone.timedelta(days=5)
+            )
             .select_related("user")
         ):
             context = build_email_context(pp.user)
@@ -198,6 +210,9 @@ class PostmanService:
                 - timezone.timedelta(days=60),
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
+            .exclude(
+                user__date_joined__gt=timezone.now() - timezone.timedelta(days=7)
+            )
             .select_related("user")
         ):
             context = build_email_context(player.user)
@@ -219,6 +234,9 @@ class PostmanService:
                 - timezone.timedelta(days=60),
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
+            .exclude(
+                user__date_joined__gt=timezone.now() - timezone.timedelta(days=7)
+            )
             .select_related("user")
         ):
             context = build_email_context(meta.user)
@@ -233,6 +251,8 @@ class PostmanService:
         for user in User.objects.exclude(
             mailing__mailbox__sent_at__gt=timezone.now() - timezone.timedelta(days=60),
             mailing__mailbox__mail_template=mail_schema.template_file,
+        ).exclude(
+            date_joined__gt=timezone.now() - timezone.timedelta(days=10)
         ):
             context = build_email_context(user)
             MailingService(mail_schema(context)).send_mail(user)
