@@ -37,6 +37,7 @@ def anonymous_inquiry_request(anonymous_status, coach_profile):
         sender=coach_profile.user,
         recipient=anonymous_status.meta.user,
         anonymous_recipient=True,
+        recipient_anonymous_uuid=anonymous_status.anonymous_uuid,
     )
 
 
@@ -115,10 +116,10 @@ def test_get_my_sent_inquiries_with_anonymous_one_different_status(
         assert recipient["id"] > 0
         assert recipient["team_history_object"]
     else:
-        assert recipient["slug"] == player_profile.meta.transfer_object.anonymous_slug
-        assert recipient["uuid"] == str(
-            player_profile.meta.transfer_object.anonymous_uuid
-        )
+        # With the new system, we expect the stored UUID from the inquiry
+        stored_uuid = anonymous_inquiry_request.recipient_anonymous_uuid
+        assert recipient["slug"] == f"anonymous-{stored_uuid}"
+        assert recipient["uuid"] == str(stored_uuid)
         assert recipient["id"] == 0
         assert recipient["first_name"] == "Anonimowy"
         assert recipient["last_name"] == "profil"
@@ -135,3 +136,42 @@ def test_forbid_to_send_inquiry_to_self_anonymous_profile(api_client, anonymous_
 
     assert response.status_code == 400
     assert response.json() == {"error": "You can't send inquiry to yourself"}
+
+
+def test_anonymous_profile_endpoint_after_user_changes_status(
+    api_client, anonymous_status, coach_profile
+):
+    """Test that anonymous profile endpoint always shows anonymous data, even after user changes status."""
+    recipient_anonymous_uuid = anonymous_status.meta.transfer_object.anonymous_uuid
+    
+    # Send inquiry to anonymous recipient (to establish the link)
+    api_client.force_authenticate(user=coach_profile.user)
+    response = api_client.post(
+        URL_SEND(recipient_anonymous_uuid), {"anonymous_recipient": True}
+    )
+    assert response.status_code == 201
+    
+    # Later: recipient changes to non-anonymous
+    anonymous_status.is_anonymous = False
+    anonymous_status.save()
+    
+    # Verify recipient is no longer anonymous
+    assert anonymous_status.meta.is_anonymous is False
+    
+    # BUT: accessing via anonymous URL should still show anonymous data
+    anonymous_slug = f"anonymous-{recipient_anonymous_uuid}"
+    response = api_client.get(
+        reverse("api:profiles:get_profile_by_slug", kwargs={"profile_slug": anonymous_slug})
+    )
+    
+    assert response.status_code == 200
+    data = response.json()
+    
+    # Should still be anonymous despite user changing status
+    assert data["user"]["first_name"] == "Anonimowy"
+    assert data["user"]["last_name"] == "profil"
+    assert data["user"]["id"] == 0
+    assert data["uuid"] == str(recipient_anonymous_uuid)
+    assert data["slug"] == anonymous_slug
+    assert data["user"]["picture"] is None
+    assert data["team_history_object"] is None
