@@ -534,14 +534,8 @@ class InquiryRequest(models.Model):
         self.create_log_for_sender(InquiryLogType.REJECTED)
 
     def save(self, *args, **kwargs):
-        # Store recipient anonymous UUID for historical preservation (fallback)
-        # This is a fallback in case serializer didn't set it
-        if self.anonymous_recipient and not self.recipient_anonymous_uuid:
-            # Use the transfer_object property to get the transfer object
-            if hasattr(self.recipient, 'profile') and hasattr(self.recipient.profile, 'meta'):
-                transfer_object = self.recipient.profile.meta.transfer_object
-                if transfer_object and transfer_object.is_anonymous:
-                    self.recipient_anonymous_uuid = transfer_object.anonymous_uuid
+        recipient_profile_uuid = kwargs.pop("recipient_profile_uuid", None)
+        self._recipient_profile_uuid = recipient_profile_uuid
 
         if self.status == self.STATUS_NEW:
             self.send()

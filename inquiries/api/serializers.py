@@ -110,6 +110,7 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
     recipient_object = InquiryUserDataSerializer(
         read_only=True, source="recipient", required=False
     )
+    recipient_profile_uuid = serializers.UUIDField(write_only=True)
 
     class Meta:
         model = _models.InquiryRequest
@@ -140,25 +141,14 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
             recipient = data.get("recipient_object", {})
             
             # Use stored anonymous UUID for secure historical preservation
-            anonymous_uuid = None
             if instance.recipient_anonymous_uuid:
-                # Use stored UUID (preferred - historical preservation)
                 anonymous_uuid = str(instance.recipient_anonymous_uuid)
-            else:
-                # Fallback to current transfer object UUID (for existing data)
-                if hasattr(instance.recipient, 'profile') and hasattr(instance.recipient.profile, 'meta'):
-                    transfer_object = instance.recipient.profile.meta.transfer_object
-                    if transfer_object and transfer_object.is_anonymous:
-                        anonymous_uuid = str(transfer_object.anonymous_uuid)
-            
-            # Set secure anonymous slug and UUID
-            if anonymous_uuid:
                 recipient["slug"] = f"anonymous-{anonymous_uuid}"
                 recipient["uuid"] = anonymous_uuid
             else:
-                # Last resort fallback (should not happen with proper data)
-                recipient["slug"] = "anonymous-unknown"
-                recipient["uuid"] = "unknown"
+                # This should not happen with the new system
+                # All anonymous inquiries will have recipient_anonymous_uuid set
+                raise ValueError(f"Anonymous inquiry {instance.id} missing recipient_anonymous_uuid")
             
             # Anonymize other recipient data
             recipient["id"] = 0
@@ -250,7 +240,7 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
         inquiry_request = _models.InquiryRequest(**validated_data)
         inquiry_request.is_read_by_sender = True
         inquiry_request.is_read_by_recipient = False
-        inquiry_request.save()
+        inquiry_request.save(recipient_profile_uuid=recipient_profile_uuid)
         return inquiry_request
 
 

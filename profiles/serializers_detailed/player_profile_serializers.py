@@ -166,7 +166,6 @@ class PlayerProfileViewSerializer(BaseProfileSerializer):
                 }
             data["team_history_object"] = None
 
-        # ORIGINAL: Keep existing logic unchanged for transfer market/other use cases
         elif has_anonymous_transfer_status and (
             self.context.get("transfer_status")
             or self.context.get("is_anonymous", False)
