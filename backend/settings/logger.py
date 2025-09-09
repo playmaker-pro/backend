@@ -109,7 +109,7 @@ def get_logging_structure(logfile_root: str) -> Dict[str, Any]:
                 "filename": join(logfile_root, "mailing.log"),
                 "formatter": "verbose",
             },
-            "commands": {
+            "commands_file": {
                 "level": "DEBUG",
                 "class": "logging.FileHandler",
                 "filename": join(logfile_root, "commands.log"),
@@ -180,7 +180,7 @@ def get_logging_structure(logfile_root: str) -> Dict[str, Any]:
                 "propagate": False,
             },
             "commands": {
-                "handlers": ["console", "data_log_file"],
+                "handlers": ["console", "commands_file"],
                 "level": "DEBUG",
                 "propagate": False,
             },

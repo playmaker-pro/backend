@@ -117,6 +117,7 @@ class MongoDBConfig(BaseModel):
     username: str
     password: str
     auth_source: str
+    enabled: bool
 
 
 class Config(BaseSettings):

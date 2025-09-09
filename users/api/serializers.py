@@ -2,9 +2,9 @@ import logging
 from datetime import date
 from typing import Dict, List, Optional, Union
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django_countries import countries
-from django.conf import settings
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -39,8 +39,8 @@ from roles.definitions import PROFILE_TYPE_SHORT_MAP
 from users.errors import UserRegisterException
 from users.models import Ref, User, UserPreferences
 from users.schemas import LoginSchemaOut
-from users.utils.api_utils import modify2custom_exception
 from users.tasks import track_user_login_task
+from users.utils.api_utils import modify2custom_exception
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -418,9 +418,9 @@ class UserPreferencesSerializerDetailed(serializers.ModelSerializer):
 
     def validate_citizenship(self, citizenship: List[str]) -> List[str]:
         """Validate citizenship field"""
-        if not isinstance(citizenship, list) or not all(
-            [isinstance(el, str) for el in citizenship]
-        ):
+        if not isinstance(citizenship, list) or not all([
+            isinstance(el, str) for el in citizenship
+        ]):
             raise InvalidCitizenshipListException(
                 details="Citizenship must be a list of countries codes"
             )
@@ -479,9 +479,9 @@ class UserPreferencesSerializerDetailed(serializers.ModelSerializer):
         if spoken_languages := validated_data.pop(  # noqa: 5999
             "spoken_languages", None
         ):
-            instance.spoken_languages.set(
-                [language.pk for language in spoken_languages]
-            )
+            instance.spoken_languages.set([
+                language.pk for language in spoken_languages
+            ])
         instance = super().update(instance, validated_data)
         if profile_type == "PlayerProfile":
             if "birth_date" in validated_data or citizenship_updated:

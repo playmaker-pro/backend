@@ -60,41 +60,43 @@ class TestPostmanService:
     def test_blank_profile(self, outbox) -> None:
         # Create users with date_joined > 3 days ago to pass new exclusion logic
         old_date = timezone.now() - timedelta(days=5)
-        
+
         p1 = PlayerProfileFactory.create(
             user__declared_role="P", team_object=None, user__date_joined=old_date
         )
-        p2 = PlayerProfileFactory.create(user__declared_role="P", user__date_joined=old_date)
+        p2 = PlayerProfileFactory.create(
+            user__declared_role="P", user__date_joined=old_date
+        )
         p3 = PlayerProfileFactory.create(
-            user__declared_role="P", 
+            user__declared_role="P",
             user__display_status=User.DisplayStatus.NOT_SHOWN,
-            user__date_joined=old_date
+            user__date_joined=old_date,
         )
         p4 = PlayerProfileFactory.create(
-            user__declared_role="P", 
+            user__declared_role="P",
             user__display_status=User.DisplayStatus.VERIFIED,
-            user__date_joined=old_date
+            user__date_joined=old_date,
         )  # filled profile
         ProfileVideoFactory.create(user=p4.user)
         t1 = CoachProfileFactory.create(
-            user__declared_role="T", 
+            user__declared_role="T",
             user__display_status=User.DisplayStatus.NOT_SHOWN,
-            user__date_joined=old_date
+            user__date_joined=old_date,
         )
         t2 = CoachProfileFactory.create(
-            user__declared_role="T", 
+            user__declared_role="T",
             user__display_status=User.DisplayStatus.VERIFIED,
-            user__date_joined=old_date
+            user__date_joined=old_date,
         )
         c1 = CoachProfileFactory.create(
-            user__declared_role="C", 
+            user__declared_role="C",
             user__display_status=User.DisplayStatus.NOT_SHOWN,
-            user__date_joined=old_date
+            user__date_joined=old_date,
         )
         c2 = CoachProfileFactory.create(
-            user__declared_role="C", 
+            user__declared_role="C",
             user__display_status=User.DisplayStatus.VERIFIED,
-            user__date_joined=old_date
+            user__date_joined=old_date,
         )
         outbox.clear()
         postman_service.blank_profile()
@@ -163,20 +165,17 @@ class TestPostmanService:
     ) -> None:
         # Create users with date_joined > 5 days ago to pass exclusion logic
         old_date = timezone.now() - timedelta(days=7)
-        
+
         p1 = PlayerProfileFactory.create(
-            user__declared_role="P",
-            user__date_joined=old_date
+            user__declared_role="P", user__date_joined=old_date
         )
         p1.setup_premium_profile()
         p2 = PlayerProfileFactory.create(
-            user__declared_role="P",
-            user__date_joined=old_date
+            user__declared_role="P", user__date_joined=old_date
         )
         p2.setup_premium_profile(PremiumType.MONTH)
         p3 = PlayerProfileFactory.create(
-            user__declared_role="P",
-            user__date_joined=old_date
+            user__declared_role="P", user__date_joined=old_date
         )
 
         outbox.clear()
@@ -272,15 +271,13 @@ class TestPostmanService:
         outbox.clear()
         # Create users with date_joined > 7 days ago to pass exclusion logic
         old_date = timezone.now() - timedelta(days=12)
-        
+
         p1 = PlayerProfileFactory.create(
-            user__declared_role="P",
-            user__date_joined=old_date
+            user__declared_role="P", user__date_joined=old_date
         )
         TransferStatusFactory.create(meta=p1.meta)
         p2 = PlayerProfileFactory.create(
-            user__declared_role="P",
-            user__date_joined=old_date
+            user__declared_role="P", user__date_joined=old_date
         )
 
         assert p2.meta.transfer_object is None
@@ -321,13 +318,14 @@ class TestPostmanService:
         outbox.clear()
         # Create users with date_joined > 7 days ago to pass exclusion logic
         old_date = timezone.now() - timedelta(days=16)
-        
+
         t1 = CoachProfileFactory.create(
-            user__declared_role="T",
-            user__date_joined=old_date
+            user__declared_role="T", user__date_joined=old_date
         )
         TransferRequestFactory.create(meta=t1.meta)
-        c1 = ClubProfileFactory.create(user__declared_role="C", user__date_joined=old_date)
+        c1 = ClubProfileFactory.create(
+            user__declared_role="C", user__date_joined=old_date
+        )
 
         postman_service.profile_without_transfer_request()
         recipients = self._get_recipients_list(
@@ -365,16 +363,14 @@ class TestPostmanService:
     ) -> None:
         # Create users with date_joined > 10 days ago to pass exclusion logic
         old_date = timezone.now() - timedelta(days=16)
-        
+
         player_profile = PlayerProfileFactory.create(
-            user__declared_role="P",
-            user__date_joined=old_date
+            user__declared_role="P", user__date_joined=old_date
         )
         coach_profile = CoachProfileFactory.create(
-            user__declared_role="T",
-            user__date_joined=old_date
+            user__declared_role="T", user__date_joined=old_date
         )
-        
+
         outbox.clear()
 
         postman_service.invite_friends()

@@ -764,9 +764,8 @@ class TestAnonymousTransferStatus:
         assert list_profiles_response.status_code == 200
         assert data["count"] == 1
 
-        # Transfer status should not exist
-        assert not profile.meta.transfer_object
-        assert not ProfileTransferStatus.objects.filter().exists()
+        # Transfer status should not be anonymous anymore
+        assert not profile.meta.transfer_object.is_anonymous
 
     def test_cannot_create_anonymous_transfer_status_without_premium(
         self, profile, api_client, payload
