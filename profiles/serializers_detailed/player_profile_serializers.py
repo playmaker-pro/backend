@@ -142,15 +142,18 @@ class PlayerProfileViewSerializer(BaseProfileSerializer):
 
         # If accessed via anonymous URL, always anonymize (inquiry flow fix)
         if self.context.get("is_anonymous", False):
-            # Use the transfer object UUID that was used to resolve this profile
-            if instance.meta and instance.meta.transfer_object:
-                uuid = instance.meta.transfer_object.anonymous_uuid
-            else:
-                # Fallback if transfer object is missing
-                uuid = getattr(instance, 'uuid', None)
+            # Use the anonymous UUID from the original request URL
+            anonymous_uuid = self.context.get("anonymous_uuid")
+            if not anonymous_uuid:
+                # Fallback to transfer object UUID if context doesn't have it
+                if instance.meta and instance.meta.transfer_object:
+                    anonymous_uuid = instance.meta.transfer_object.anonymous_uuid
+                else:
+                    # This should not happen - raise error for debugging
+                    raise ValueError(f"Anonymous profile {instance.uuid} accessed but no anonymous_uuid available")
 
-            data["slug"] = f"anonymous-{uuid}"
-            data["uuid"] = uuid
+            data["slug"] = f"anonymous-{anonymous_uuid}"
+            data["uuid"] = anonymous_uuid
             data["user"]["id"] = 0
             data["user"]["first_name"] = "Anonimowy"
             data["user"]["last_name"] = "profil"
