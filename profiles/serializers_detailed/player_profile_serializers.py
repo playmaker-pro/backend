@@ -139,7 +139,37 @@ class PlayerProfileViewSerializer(BaseProfileSerializer):
             and instance.meta.transfer_object
             and instance.meta.transfer_status.is_anonymous
         )
-        if has_anonymous_transfer_status and (
+
+        # If accessed via anonymous URL, always anonymize (inquiry flow fix)
+        if self.context.get("is_anonymous", False):
+            # Use the anonymous UUID from the original request URL
+            anonymous_uuid = self.context.get("anonymous_uuid")
+            if not anonymous_uuid:
+                # Fallback to transfer object UUID if context doesn't have it
+                if instance.meta and instance.meta.transfer_object:
+                    anonymous_uuid = instance.meta.transfer_object.anonymous_uuid
+                else:
+                    # This should not happen - raise error for debugging
+                    raise ValueError(f"Anonymous profile {instance.uuid} accessed but no anonymous_uuid available")
+
+            data["slug"] = f"anonymous-{anonymous_uuid}"
+            data["uuid"] = anonymous_uuid
+            data["user"]["id"] = 0
+            data["user"]["first_name"] = "Anonimowy"
+            data["user"]["last_name"] = "profil"
+            data["user"]["picture"] = None
+            data["external_links"]["links"] = []
+            data["profile_video"] = []
+            # Only anonymize transfer_status if it exists
+            if data.get("transfer_status"):
+                data["transfer_status"]["contact_email"] = None
+                data["transfer_status"]["phone_number"] = {
+                    "dial_code": None,
+                    "number": None,
+                }
+            data["team_history_object"] = None
+
+        elif has_anonymous_transfer_status and (
             self.context.get("transfer_status")
             or self.context.get("is_anonymous", False)
         ):
@@ -152,16 +182,20 @@ class PlayerProfileViewSerializer(BaseProfileSerializer):
             data["user"]["picture"] = None
             data["external_links"]["links"] = []
             data["profile_video"] = []
-            data["transfer_status"]["contact_email"] = None
-            data["transfer_status"]["phone_number"] = {
-                "dial_code": None,
-                "number": None,
-            }
+
+            # Only anonymize transfer_status if it exists
+            if data.get("transfer_status"):
+                data["transfer_status"]["contact_email"] = None
+                data["transfer_status"]["phone_number"] = {
+                    "dial_code": None,
+                    "number": None,
+                }
             data["team_history_object"] = None
+
         elif has_anonymous_transfer_status:
             data["transfer_status"] = None
-        return data
 
+        return data
 
 class PlayerProfileUpdateSerializer(PlayerProfileViewSerializer):
     """Serializer for updating player profile data."""

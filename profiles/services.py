@@ -674,18 +674,29 @@ class ProfileService:
     ) -> models.BaseProfile:
         """
         Get anonymous profile object using uuid.
-        Iterate through each profile type.
-        Iterated object (PROFILE_MODEL_MAP) should include each subclass of BaseProfile.
+        First tries transfer objects, then falls back to inquiry history.
         Raise ProfileDoesNotExist if no anonymous profile with the given uuid exists.
         """
+        from inquiries.models import InquiryRequest
+        # First, try current transfer objects (fastest path)
         transfer_obj = ProfileMeta.objects.filter(
             Q(transfer_status__anonymous_uuid=profile_uuid)
             | Q(transfer_request__anonymous_uuid=profile_uuid)
         )
-        if not transfer_obj.exists():
-            raise ObjectDoesNotExist
+        if transfer_obj.exists():
+            return transfer_obj.first().profile
 
-        return transfer_obj.first().profile
+        # Fallback: check inquiry history for this anonymous UUID
+        inquiry_with_uuid = InquiryRequest.objects.filter(
+            recipient_anonymous_uuid=profile_uuid,
+            anonymous_recipient=True
+        ).first()
+
+        if inquiry_with_uuid:
+            return inquiry_with_uuid.recipient.profile
+
+        # If not found in either place, raise exception
+        raise ObjectDoesNotExist
 
     @classmethod
     def get_profile_by_slug(cls, slug: str) -> models.BaseProfile:

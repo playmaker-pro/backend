@@ -133,16 +133,24 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
         # Translate status
         data["status"] = self.get_translated_status(instance.status)
 
-        transfer_object = instance.recipient.profile.meta.transfer_object
-
+        # Handle anonymous recipient by using stored UUID for security
         if (
             instance.anonymous_recipient
             and instance.status != _models.InquiryRequest.STATUS_ACCEPTED
-            and transfer_object
         ):
             recipient = data.get("recipient_object", {})
-            recipient["slug"] = transfer_object.anonymous_slug
-            recipient["uuid"] = transfer_object.anonymous_uuid
+            
+            # Use stored anonymous UUID for secure historical preservation
+            if instance.recipient_anonymous_uuid:
+                anonymous_uuid = str(instance.recipient_anonymous_uuid)
+                recipient["slug"] = f"anonymous-{anonymous_uuid}"
+                recipient["uuid"] = anonymous_uuid
+            else:
+                # This should not happen with the new system
+                # All anonymous inquiries will have recipient_anonymous_uuid set
+                raise ValueError(f"Anonymous inquiry {instance.id} missing recipient_anonymous_uuid")
+            
+            # Anonymize other recipient data
             recipient["id"] = 0
             recipient["first_name"] = "Anonimowy"
             recipient["last_name"] = "profil"
@@ -153,7 +161,6 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
                 "phone_number": {"dial_code": None, "number": None},
             }
             data["recipient_object"] = recipient
-            data["recipient_profile_uuid"] = transfer_object.anonymous_uuid
 
         return data
 
@@ -225,6 +232,11 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
         logic specific to the InquiryRequest during its creation.
         """
         recipient_profile_uuid = validated_data.pop("recipient_profile_uuid", None)
+        
+        # If this is an anonymous inquiry, store the UUID for historical preservation
+        if validated_data.get("anonymous_recipient") and recipient_profile_uuid:
+            validated_data["recipient_anonymous_uuid"] = recipient_profile_uuid
+        
         inquiry_request = _models.InquiryRequest(**validated_data)
         inquiry_request.is_read_by_sender = True
         inquiry_request.is_read_by_recipient = False
