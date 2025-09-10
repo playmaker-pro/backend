@@ -117,13 +117,14 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
                 profile = ProfileService.get_anonymous_profile_by_uuid(anonymous_uuid)
             else:
                 profile = profile_service.get_profile_by_slug(profile_slug)
+                anonymous_uuid = None
         except ObjectDoesNotExist:
             raise api_errors.ProfileDoesNotExistBySlug
 
         if is_anonymous and not isinstance(profile, models.PlayerProfile):
             raise api_errors.ProfileDoesNotExist
 
-        return self.retrieve_profile_and_respond(request, profile, is_anonymous)
+        return self.retrieve_profile_and_respond(request, profile, is_anonymous, anonymous_uuid)
 
     def update_profile(self, request: Request, profile_uuid: uuid.UUID) -> Response:
         """PATCH request for profile (require UUID in body)"""
