@@ -677,6 +677,7 @@ class ProfileService:
         First tries transfer objects, then falls back to inquiry history.
         Raise ProfileDoesNotExist if no anonymous profile with the given uuid exists.
         """
+        from inquiries.models import InquiryRequest
         # First, try current transfer objects (fastest path)
         transfer_obj = ProfileMeta.objects.filter(
             Q(transfer_status__anonymous_uuid=profile_uuid)
@@ -686,7 +687,6 @@ class ProfileService:
             return transfer_obj.first().profile
 
         # Fallback: check inquiry history for this anonymous UUID
-        from inquiries.models import InquiryRequest
         inquiry_with_uuid = InquiryRequest.objects.filter(
             recipient_anonymous_uuid=profile_uuid,
             anonymous_recipient=True
