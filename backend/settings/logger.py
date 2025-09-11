@@ -130,9 +130,9 @@ def get_logging_structure(logfile_root: str) -> Dict[str, Any]:
         },
         "loggers": {
             "profiles": {
-                "handlers": ["console", "profiles_file"],
+                "handlers": ["profiles_file"],
                 "level": "DEBUG",
-                "propagate": False,
+                "propagate": True,
             },
             "django": {
                 "handlers": ["django_log_file", "console", "mail_admins"],
@@ -140,79 +140,83 @@ def get_logging_structure(logfile_root: str) -> Dict[str, Any]:
                 "level": "ERROR",
             },
             "django.request": {
-                "handlers": ["django_log_file", "console"],
+                "handlers": ["django_log_file", "console", "mail_admins"],
                 "level": "DEBUG",
                 "propagate": False,
             },
             "django.db.backends": {
-                "handlers": ["django_log_file", "console"],
+                "handlers": ["django_log_file", "console", "mail_admins"],
                 "level": "WARNING",
                 "propagate": False,
             },
             "adapters": {
-                "handlers": ["adapters", "console"],
+                "handlers": [
+                    "adapters",
+                ],
                 "level": "ERROR",
-                "propagate": False,
+                "propagate": True,
             },
             "project": {
-                "handlers": ["proj_log_file", "console"],
+                "handlers": ["proj_log_file"],
                 "level": "DEBUG",
-                "propagate": False,
+                "propagate": True,
             },
             "route_updater": {
-                "handlers": ["console", "route_updater"],
+                "handlers": [
+                    "route_updater",
+                ],
                 "level": "DEBUG",
-                "propagate": False,
+                "propagate": True,
             },
             "user_activity": {
-                "handlers": ["console", "user_activity_file"],
+                "handlers": ["user_activity_file"],
                 "level": "DEBUG",
-                "propagate": False,
+                "propagate": True,
             },
             "inquiries": {
-                "handlers": ["console", "inquiries_file"],
+                "handlers": ["inquiries_file"],
                 "level": "DEBUG",
-                "propagate": False,
+                "propagate": True,
             },
             "mailing": {
-                "handlers": ["console", "mailing_file"],
+                "handlers": ["mailing_file"],
                 "level": "DEBUG",
-                "propagate": False,
+                "propagate": True,
             },
             "commands": {
-                "handlers": ["console", "commands_file"],
+                "handlers": ["commands_file"],
                 "level": "DEBUG",
-                "propagate": False,
+                "propagate": True,
             },
             "payments": {
-                "handlers": ["console", "payments_file"],
+                "handlers": ["payments_file"],
                 "level": "DEBUG",
-                "propagate": False,
+                "propagate": True,
             },
             "celery": {
-                "handlers": ["celery_file", "console"],
+                "handlers": ["celery_file", "console", "mail_admins"],
                 "level": "DEBUG",
                 "propagate": False,
             },
             "celery.utils.functional": {
-                "handlers": ["celery_file", "console"],
+                "handlers": ["celery_file", "console", "mail_admins"],
                 "level": "ERROR",
                 "propagate": False,
             },
             "celery.beat": {
-                "handlers": ["celery_file", "console"],
+                "handlers": ["celery_file", "console", "mail_admins"],
                 "level": "DEBUG",
                 "propagate": False,
             },
             "django_celery_beat": {
-                "handlers": ["celery_file", "console"],
+                "handlers": ["celery_file", "console", "mail_admins"],
                 "level": "DEBUG",
                 "propagate": False,
             },
         },
         "root": {
             "level": "INFO",
-            "handlers": ["console"],
+            "handlers": ["console", "mail_admins"],
         },
     }
 

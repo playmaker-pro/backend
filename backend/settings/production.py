@@ -9,6 +9,7 @@ COMPRESS_ENABLED = True
 ADMINS = MANAGERS = [
     ("Jakub", "jakub@playmaker.pro"),
     ("Biuro", "biuro@playmaker.pro"),
+    ("Bartosz", "bartosz@playmaker.pro"),
 ]
 
 COMPRESS_OFFLINE = True

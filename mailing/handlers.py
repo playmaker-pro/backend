@@ -13,7 +13,8 @@ class AsyncAdminEmailHandler(AdminEmailHandler):
         the email synchronously.
         """
         try:
-            subject = self.format_subject(record.getMessage())
+            logger_name = record.name  # This gets the logger name
+            subject = self.format_subject(f"[{logger_name}] {record.getMessage()}")
             message = self.format(record)
             self.send_mail(subject, message)
         except Exception:
