@@ -4,7 +4,6 @@ from unittest.mock import patch
 import pytest
 from django.utils import timezone
 
-from mailing.models import UserEmailOutbox
 from payments.models import Transaction
 from premium.models import PremiumType
 
@@ -97,7 +96,7 @@ def test_check_if_premium_inquiries_refresh(
     )
     expected = primary_date + timedelta(days=30)
     assert current_updated_at_date == new_current_date and current_updated_at_date == (
-       expected
+        expected
     )
     assert player_profile.products.inquiries.valid_since.date() == primary_date
     assert player_profile.products.inquiries.current_counter == 0
@@ -144,7 +143,7 @@ def test_check_if_premium_inquiries_refresh(
 
 
 def test_premium_inquiries_on_trial(
-    trial_premium_coach_profile, mck_timezone_now, product_inquiries_XL
+    trial_premium_coach_profile, mck_timezone_now, product_inquiries_XL, outbox
 ):
     user = trial_premium_coach_profile.user
 
@@ -169,16 +168,15 @@ def test_premium_inquiries_on_trial(
     assert user.userinquiry.limit_raw == 2
     assert trial_premium_coach_profile.products.inquiries.current_counter == 1
 
-    assert not UserEmailOutbox.objects.filter(
-        recipient=trial_premium_coach_profile.user.email, email_type="PREMIUM_EXPIRED"
-    ).exists()
+    outbox.clear()
 
     mck_timezone_now.return_value += timedelta(days=7, seconds=1)
-    assert not trial_premium_coach_profile.is_premium
+    trial_premium_coach_profile.refresh_from_db()
 
-    assert UserEmailOutbox.objects.filter(
-        recipient=trial_premium_coach_profile.user.email, email_type="PREMIUM_EXPIRED"
-    ).exists()
+    assert not trial_premium_coach_profile.is_premium
+    assert len(outbox) == 1
+    assert outbox[0].to[0] == trial_premium_coach_profile.user.email
+    assert outbox[0].subject == "🕒 Koniec próbnej rundy – co dalej?"
     assert user.userinquiry.left == 0
     assert user.userinquiry.limit == 2
     assert user.userinquiry.counter == 2
@@ -215,6 +213,11 @@ def test_premium_inquiries_on_trial(
     for _ in range(10):
         user.userinquiry.increment()
 
+    assert outbox[-1].to[0] == trial_premium_coach_profile.user.email
+    assert (
+        outbox[-1].subject
+        == "Rozbuduj swoje transferowe możliwości – Rozszerz limit zapytań!"
+    )
     assert user.userinquiry.left == 0
     assert user.userinquiry.limit == 12
     assert user.userinquiry.counter == 12
@@ -240,49 +243,29 @@ def test_premium_inquiries_on_trial(
     assert trial_premium_coach_profile.products.inquiries.current_counter == 10
     assert user.userinquiry.can_make_request
 
-    assert (
-        UserEmailOutbox.objects.filter(
-            recipient=trial_premium_coach_profile.user.email,
-            email_type="PREMIUM_EXPIRED",
-        ).count()
-        == 1
-    )
-
     mck_timezone_now.return_value += timedelta(days=370, hours=1)
 
     assert not trial_premium_coach_profile.is_premium
-
-    assert (
-        UserEmailOutbox.objects.filter(
-            recipient=trial_premium_coach_profile.user.email,
-            email_type="PREMIUM_EXPIRED",
-        ).count()
-        == 2
-    )
-
+    assert outbox[-1].to[0] == trial_premium_coach_profile.user.email
     assert user.userinquiry.left == 0
     assert user.userinquiry.limit == 2
     assert user.userinquiry.counter == 2
 
 
-def test_try_trial_after_subscription(player_profile, mck_timezone_now):
+def test_try_trial_after_subscription(player_profile, mck_timezone_now, outbox):
     player_profile.setup_premium_profile(PremiumType.MONTH)
 
     assert player_profile.has_premium_inquiries
     assert player_profile.is_premium
     assert player_profile.is_promoted
 
-    assert not UserEmailOutbox.objects.filter(
-        recipient=player_profile.user.email, email_type="PREMIUM_EXPIRED"
-    ).exists()
+    outbox.clear()
 
     mck_timezone_now.return_value += timedelta(days=30, hours=1)
 
     assert not player_profile.is_premium
-    assert UserEmailOutbox.objects.filter(
-        recipient=player_profile.user.email, email_type="PREMIUM_EXPIRED"
-    ).exists()
-
+    assert outbox[-1].to[0] == player_profile.user.email
+    assert outbox[-1].subject == "⚠️ Twoje Premium wygasło – odnów je teraz!"
     assert not player_profile.has_premium_inquiries
     assert not player_profile.is_premium
     assert not player_profile.is_promoted
@@ -304,7 +287,7 @@ def test_double_trial(trial_premium_player_profile):
 
 
 @pytest.mark.parametrize("period", (2, 56, 123))
-def test_player_custom_period(player_profile, period, mck_timezone_now):
+def test_player_custom_period(player_profile, period, mck_timezone_now, outbox):
     player_profile.setup_premium_profile(PremiumType.CUSTOM, period=period)
     player_profile.refresh_from_db()
 
@@ -315,20 +298,15 @@ def test_player_custom_period(player_profile, period, mck_timezone_now):
         days=period
     )
 
-    assert not UserEmailOutbox.objects.filter(
-        recipient=player_profile.user.email, email_type="PREMIUM_EXPIRED"
-    ).exists()
-
     mck_timezone_now.return_value += timedelta(days=period, hours=1)
 
     assert not player_profile.is_premium
-    assert UserEmailOutbox.objects.filter(
-        recipient=player_profile.user.email, email_type="PREMIUM_EXPIRED"
-    ).exists()
+    assert outbox[-1].to[0] == player_profile.user.email
+    assert outbox[-1].subject == "⚠️ Twoje Premium wygasło – odnów je teraz!"
 
 
 @pytest.mark.parametrize("period", (2, 56, 123))
-def test_custom_period(coach_profile, period, mck_timezone_now):
+def test_custom_period(coach_profile, period, mck_timezone_now, outbox):
     coach_profile.setup_premium_profile(PremiumType.CUSTOM, period=period)
     coach_profile.refresh_from_db()
 
@@ -336,13 +314,9 @@ def test_custom_period(coach_profile, period, mck_timezone_now):
     assert coach_profile.premium.subscription_lifespan.days == period
     assert coach_profile.promotion.subscription_lifespan.days == period
     assert coach_profile.products.inquiries.subscription_lifespan.days == period
-    assert not UserEmailOutbox.objects.filter(
-        recipient=coach_profile.user.email, email_type="PREMIUM_EXPIRED"
-    ).exists()
 
     mck_timezone_now.return_value += timedelta(days=period, hours=1)
-    assert not coach_profile.is_premium
 
-    assert UserEmailOutbox.objects.filter(
-        recipient=coach_profile.user.email, email_type="PREMIUM_EXPIRED"
-    ).exists()
+    assert not coach_profile.is_premium
+    assert outbox[-1].to[0] == coach_profile.user.email
+    assert outbox[-1].subject == "⚠️ Twoje Premium wygasło – odnów je teraz!"

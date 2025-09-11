@@ -5,9 +5,10 @@ from django_filters import rest_framework as filters
 from rest_framework import viewsets
 
 from api.pagination import PagePagination
+from api.i18n import I18nViewMixin
 
 
-class EndpointView(viewsets.GenericViewSet):
+class EndpointView(I18nViewMixin, viewsets.GenericViewSet):
     """Base class for building views"""
 
     pagination_class = PagePagination

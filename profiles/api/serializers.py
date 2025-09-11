@@ -6,11 +6,14 @@ from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 from django.db.models import Count, QuerySet
 from django.db.models.functions import ExtractYear
+from django.utils import translation
+from django.utils.translation import gettext as _
 from django.http import QueryDict
 from pydantic import parse_obj_as
 from rest_framework import serializers
 
 from api.errors import ChoiceFieldValueErrorException, NotOwnerOfAnObject
+from api.i18n import I18nSerializerMixin
 from api.serializers import ProfileEnumChoicesSerializer
 from api.services import LocaleDataService
 from clubs import errors as clubs_errors
@@ -37,7 +40,7 @@ locale_service: LocaleDataService = LocaleDataService()
 label_service: LabelService = LabelService()
 
 
-class PlayerPositionSerializer(serializers.ModelSerializer):
+class PlayerPositionSerializer(I18nSerializerMixin, serializers.ModelSerializer):
     """
     Serializer for the player's position, including the ID and name of the position.
     """
@@ -46,6 +49,23 @@ class PlayerPositionSerializer(serializers.ModelSerializer):
         model = models.PlayerPosition
         fields = ["id", "name", "shortcut", "shortcut_pl"]
 
+    def to_representation(self, instance):
+        """Override to return translated position names and appropriate shortcuts."""
+        data = super().to_representation(instance)
+
+        # Get the current language from context
+        current_language = self.context.get('language', 'pl')
+        
+        # Translate the position name (Polish names in DB)
+        data['name'] = str(_(instance.name))
+        
+        # Return appropriate shortcut based on language
+        if current_language == 'pl':
+            data['shortcut'] = instance.shortcut_pl or instance.shortcut
+        else:
+            data['shortcut'] = instance.shortcut
+        
+        return data
 
 class PlayerProfilePositionSerializer(serializers.ModelSerializer):
     player_position = PlayerPositionSerializer()
@@ -128,10 +148,21 @@ class ProfileVideoSerializer(serializers.ModelSerializer):
         return super().update(instance, self.initial_data)
 
 
-class LicenceTypeSerializer(serializers.ModelSerializer):
+class LicenceTypeSerializer(I18nSerializerMixin, serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+
     class Meta:
         model = models.LicenceType
         fields = ["id", "name", "key"]
+
+    def get_name(self, obj) -> str:
+        """
+        Return translated licence name.
+        """
+        # Use Django's gettext to translate the licence name
+        if obj.name:
+            return _(obj.name)
+        return ""
 
 
 class CoachLicenceSerializer(serializers.ModelSerializer):
@@ -159,18 +190,20 @@ class CoachLicenceSerializer(serializers.ModelSerializer):
             try:
                 datetime.strptime(expiry_date, "%Y-%m-%d")
             except ValueError:
-                raise serializers.ValidationError({
-                    "error": "Invalid date format, must be YYYY-MM-DD."
-                })
+                raise serializers.ValidationError(
+                    {"error": "Invalid date format, must be YYYY-MM-DD."}
+                )
 
         if release_year := attrs.get("release_year"):  # noqa: E999
             min_year = 1970
             max_year = datetime.now().year
             if min_year > release_year or release_year > max_year:
-                raise serializers.ValidationError({
-                    "error": f"Invalid date format, must be YYYY between "
-                    f"{min_year} and {max_year}."
-                })
+                raise serializers.ValidationError(
+                    {
+                        "error": f"Invalid date format, must be YYYY between "
+                        f"{min_year} and {max_year}."
+                    }
+                )
 
         return attrs
 
@@ -196,9 +229,9 @@ class CoachLicenceSerializer(serializers.ModelSerializer):
         try:
             updated_licence = super().update(instance, validated_data)
         except IntegrityError:
-            raise serializers.ValidationError({
-                "error": "You already have this licence."
-            })
+            raise serializers.ValidationError(
+                {"error": "You already have this licence."}
+            )
         # Assign labels based on the updated license
         label_service.assign_licence_labels(updated_licence.owner_id)
 
@@ -215,16 +248,16 @@ class CoachLicenceSerializer(serializers.ModelSerializer):
         try:
             validated_data["licence"] = models.LicenceType.objects.get(id=licence_id)
         except models.LicenceType.DoesNotExist:
-            raise serializers.ValidationError({
-                "error": "Given licence does not exist."
-            })
+            raise serializers.ValidationError(
+                {"error": "Given licence does not exist."}
+            )
 
         try:
             licence_instance = models.CoachLicence.objects.create(**validated_data)
         except IntegrityError:
-            raise serializers.ValidationError({
-                "error": "You already have this licence."
-            })
+            raise serializers.ValidationError(
+                {"error": "You already have this licence."}
+            )
         # Assign labels based on the created license
         label_service.assign_licence_labels(licence_instance.owner_id)
         return licence_instance
@@ -350,10 +383,12 @@ class CourseSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"error": "Name is required."})
 
         if release_year and (1970 > release_year or release_year > datetime.now().year):
-            raise serializers.ValidationError({
-                "error": f"Invalid date format, must be YYYY between 1970 "
-                f"and {datetime.now().year}."
-            })
+            raise serializers.ValidationError(
+                {
+                    "error": f"Invalid date format, must be YYYY between 1970 "
+                    f"and {datetime.now().year}."
+                }
+            )
 
         return attrs
 
@@ -459,9 +494,9 @@ class BaseTeamContributorInputSerializer(serializers.Serializer):
                 if not isinstance(league_identifier, int):
                     # Check if country is provided
                     if not data.get("country"):
-                        validation_errors["country"] = (
-                            "This field is required for foreign teams."
-                        )
+                        validation_errors[
+                            "country"
+                        ] = "This field is required for foreign teams."
 
                     # Check if gender is provided for the foreign team
                     if not data.get("gender"):
@@ -582,9 +617,9 @@ class OtherProfilesTeamContributorInputSerializer(BaseTeamContributorInputSerial
 
         # Specific validations for non-player profiles
         if data.get("is_primary") is True and end_date:
-            validation_errors["end_date"] = (
-                "End date should not be provided if is_primary is True."
-            )
+            validation_errors[
+                "end_date"
+            ] = "End date should not be provided if is_primary is True."
         if self.instance:
             # Case where is_primary changes from True to False,
             # and no end_date is provided
@@ -605,9 +640,9 @@ class OtherProfilesTeamContributorInputSerializer(BaseTeamContributorInputSerial
             role not in models.TeamContributor.get_other_roles()
             and data.get("custom_role") is not None
         ):
-            validation_errors["custom_role"] = (
-                "Custom role should not be provided unless the role is 'Other'."
-            )
+            validation_errors[
+                "custom_role"
+            ] = "Custom role should not be provided unless the role is 'Other'."
 
         # Specific logic based on the profile type
         profile_short_type = self.context.get("profile_short_type")
@@ -653,6 +688,8 @@ class PlayerTeamContributorSerializer(serializers.ModelSerializer):
         """
         Retrieve the absolute url of the club logo.
         """
+        if self.is_anonymous:
+            return None
         request = self.context.get("request")
         team_history = obj.team_history.first()
         try:
@@ -661,8 +698,17 @@ class PlayerTeamContributorSerializer(serializers.ModelSerializer):
             return None
         return url
 
+    @property
+    def is_anonymous(self) -> bool:
+        """
+        Check if the requestor is anonymous.
+        """
+        return self.context.get("is_anonymous", False)
+
     def get_team_id(self, obj: models.TeamContributor) -> Optional[int]:
         """Returns team id"""
+        if self.is_anonymous:
+            return 0
         team_history = obj.team_history.first()
         return team_history.pk if team_history else None
 
@@ -670,6 +716,8 @@ class PlayerTeamContributorSerializer(serializers.ModelSerializer):
         """
         Retrieves the name of the team associated with the first team_history instance.
         """
+        if self.is_anonymous:
+            return ""
         team_history = obj.team_history.first()
         if team_history:
             return (
@@ -736,11 +784,20 @@ class AggregatedTeamContributorSerializer(serializers.ModelSerializer):
             "end_date",
         ]
 
+    @property
+    def is_anonymous(self) -> bool:
+        """
+        Check if the requestor is anonymous.
+        """
+        return self.context.get("is_anonymous", False)
+
     def get_team_name(self, obj: models.TeamContributor) -> str:
         """
         Get the team name for a TeamContributor object by prioritizing the short name
         over the full name for each associated team history object.
         """
+        if self.is_anonymous:
+            return ""
         team_histories = obj.team_history.all()
         preferred_name = ""
         for th in team_histories:
@@ -756,6 +813,8 @@ class AggregatedTeamContributorSerializer(serializers.ModelSerializer):
         """
         Retrieve the absolute url of the club logo.
         """
+        if self.is_anonymous:
+            return None
         request = self.context.get("request")
         team_history = obj.team_history.first()
         try:
@@ -831,7 +890,6 @@ class ProfileSerializer(serializers.Serializer):
     exclude_fields: tuple = (
         "event_log",
         "verification_id",
-        "data_mapper_id",
         "team_club_league_voivodeship_ver",
         "external_links_id",
         "verification_stage_id",
@@ -1077,9 +1135,9 @@ class CreateProfileSerializer(ProfileSerializer):
             data["user_id"] = user.pk
             return super().to_internal_value(data)
         else:
-            raise serializers.ValidationError({
-                "error": "Unable to define owner of a request."
-            })
+            raise serializers.ValidationError(
+                {"error": "Unable to define owner of a request."}
+            )
 
     def to_representation(self, *args, **kwargs) -> dict:
         ret = super(ProfileSerializer, self).to_representation(self.instance)
@@ -1117,10 +1175,12 @@ class CreateProfileSerializer(ProfileSerializer):
         if role == GUEST_SHORT:
             custom_role = self.initial_data.get("custom_role")
             if not custom_role:
-                raise serializers.ValidationError({
-                    "custom_role": f"This field is required when role is "
-                    f"{GUEST_SHORT} (GuestProfile)."
-                })
+                raise serializers.ValidationError(
+                    {
+                        "custom_role": f"This field is required when role is "
+                        f"{GUEST_SHORT} (GuestProfile)."
+                    }
+                )
 
     def save(self) -> None:
         """create profile and set role for given user, need to validate data first"""
@@ -1149,7 +1209,6 @@ class UpdateProfileSerializer(ProfileSerializer):
         "history_id",
         "mapper_id",
         "verification_id",
-        "data_mapper_id",
         "external_links_id",
         "address_id",
     )  # read-only fields, should not be able to update
@@ -1200,18 +1259,26 @@ class UpdateProfileSerializer(ProfileSerializer):
         self.instance.save()
 
 
-class ProfileLabelsSerializer(serializers.Serializer):
+class ProfileLabelsSerializer(I18nSerializerMixin, serializers.Serializer):
     label_name = serializers.CharField(
         source="label_definition.label_name", max_length=25
     )
-    label_description = serializers.CharField(
-        source="label_definition.label_description", max_length=200
-    )
+    label_description = serializers.SerializerMethodField()
     season_name = serializers.CharField(max_length=9)
     icon = serializers.CharField(source="label_definition.icon", max_length=200)
     league = serializers.CharField(max_length=255, required=False)
     team = serializers.CharField(max_length=255, required=False)
     season_round = serializers.CharField(max_length=10, required=False)
+
+    def get_label_description(self, obj) -> str:
+        """
+        Return translated label description.
+        """
+        if obj.label_definition and obj.label_definition.label_description:
+            from labels.translations import translate_label_description
+
+            return translate_label_description(obj.label_definition.label_description)
+        return ""
 
 
 class BaseProfileDataSerializer(serializers.Serializer):
@@ -1445,7 +1512,7 @@ class ProfileVisitSummarySerializer(serializers.Serializer):
         return profile.visitation.visitors_count_this_year
 
 
-class GenericProfileSerializer(serializers.Serializer):
+class GenericProfileSerializer(I18nSerializerMixin, serializers.Serializer):
     def to_representation(self, instance: models.PROFILE_TYPE) -> dict:
         from profiles.api.managers import SerializersManager
 

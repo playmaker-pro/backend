@@ -22,6 +22,8 @@ paths:
         - labels
       security:
         - jwtAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           description: "List of labels definition"
@@ -63,6 +65,8 @@ paths:
         - premium_products
       security:
         - jwtAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           description: "List of premium inquiries products."
@@ -153,6 +157,7 @@ paths:
             type: boolean
           required: false
           description: "Get only unseen notifications"
+        - $ref: '#/components/parameters/X-Language'
       tags:
         - notifications
       security:
@@ -183,6 +188,7 @@ paths:
             type: integer
           required: true
           description: "Notification ID"
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           description: "Notification marked as seen"
@@ -206,6 +212,17 @@ paths:
             type: string
             format: uuid
           required: true
+        - $ref: '#/components/parameters/X-Language'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                anonymous_recipient:
+                  type: boolean
+                  default: false
+                  description: Is recipient anonymous?
       tags:
         - inquiries
       security:
@@ -235,6 +252,8 @@ paths:
         - inquiries
       security:
         - jwtAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           description: "List of sent inquiry requests"
@@ -255,6 +274,8 @@ paths:
         - inquiries
       security:
         - jwtAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           description: "List of accepted inquiry requests (as sender and recipient)"
@@ -275,6 +296,8 @@ paths:
         - inquiries
       security:
         - jwtAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           description: "List of received inquiry requests"
@@ -295,6 +318,8 @@ paths:
         - inquiries
       security:
         - jwtAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           description: "Inquiry request meta data (inquiry plan, contact and count of sent requests)"
@@ -317,6 +342,7 @@ paths:
             type: integer
             description: InquiryRequest ID
           required: true
+        - $ref: '#/components/parameters/X-Language'
       tags:
         - inquiries
       security:
@@ -346,6 +372,7 @@ paths:
             type: integer
             description: InquiryRequest ID
           required: true
+        - $ref: '#/components/parameters/X-Language'
       tags:
         - inquiries
       security:
@@ -548,6 +575,7 @@ paths:
           schema:
             type: integer
           description: "Count of objects by page"
+        - $ref: '#/components/parameters/X-Language'
       tags:
         - clubs
       security:
@@ -655,6 +683,7 @@ paths:
             type: string
             example: "true"
           description: "Set to true to get only current season. No param - get all"
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           content:
@@ -724,6 +753,7 @@ paths:
           schema:
             type: string
           description: 'Club name query, LIKE'
+        - $ref: '#/components/parameters/X-Language'
       security:
         - jwtAuth: [ ]
       responses:
@@ -778,6 +808,7 @@ paths:
             type: string
             format: int
           required: true
+        - $ref: '#/components/parameters/X-Language'
       tags:
         - clubs
       security:
@@ -817,6 +848,7 @@ paths:
           schema:
             type: string
             format: date
+        - $ref: '#/components/parameters/X-Language'
       tags:
         - clubs
       security:
@@ -894,6 +926,8 @@ paths:
       summary: User preferences endpoint
       tags:
         - preference-choices
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           content:
@@ -943,6 +977,8 @@ paths:
         - video
       security:
         - jwtAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '201':
           description: "ProfileVideo created successfully"
@@ -964,6 +1000,7 @@ paths:
           schema:
             type: integer
           required: true
+        - $ref: '#/components/parameters/X-Language'
       requestBody:
         content:
           application/json:
@@ -1026,6 +1063,7 @@ paths:
             type: string
           required: false
           description: 'Profile role, like: {P, T, C, S...}. If not provided, all labels will be returned'
+        - $ref: '#/components/parameters/X-Language'
       tags:
         - video
       security:
@@ -1054,7 +1092,7 @@ paths:
                   }
                 ]
 
-  /profiles/catalogue/transfer-request/:
+  /transfers/catalogue/transfer-request/:
     get:
       operationId: transfer_request_catalogue
       description: Return paginated list of transfer requests.
@@ -1123,6 +1161,7 @@ paths:
           schema:
             type: integer
           description: "Count of objects by page"
+        - $ref: '#/components/parameters/X-Language'
       tags:
         - catalogues
       security:
@@ -1160,6 +1199,8 @@ paths:
       security:
         - jwtAuth: [ ]
         - { }
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           description: 'List of profiles following user'
@@ -1188,6 +1229,8 @@ paths:
       security:
         - jwtAuth: [ ]
         - { }
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           description: 'List of profiles followed by user'
@@ -1222,6 +1265,7 @@ paths:
             type: string
             format: uuid
           description: "The UUID of the profile to follow"
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '201':
           description: "Profile followed successfully"
@@ -1290,6 +1334,7 @@ paths:
             type: string
             format: uuid
           description: "The UUID of the profile to unfollow"
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '204':
           description: "Profile unfollowed successfully"
@@ -1376,6 +1421,7 @@ paths:
           schema:
             type: string
             enum: [ 'M', 'K' ]
+        - $ref: '#/components/parameters/X-Language'
       tags:
         - profiles
       security:
@@ -1437,6 +1483,8 @@ paths:
         - profiles
       security:
         - jwtAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '201':
           description: "Profile created successfully"
@@ -1579,6 +1627,7 @@ paths:
           schema:
             type: string
           description: "Exclude authenticated profile when set to 'true'"
+        - $ref: '#/components/parameters/X-Language'
         - in: query
           name: shuffle
           schema:
@@ -1818,6 +1867,13 @@ paths:
             type: string
             format: uuid
           required: true
+        - in: query
+          name: is_anonymous
+          schema:
+            type: boolean
+            description: "Is passed uuid anonymous?"
+            default: false
+        - $ref: '#/components/parameters/X-Language'
       tags:
         - profiles
       security:
@@ -1848,6 +1904,7 @@ paths:
             format: uuid
           required:
             true
+        - $ref: '#/components/parameters/X-Language'
       tags:
         - profiles
       requestBody:
@@ -1889,6 +1946,7 @@ paths:
           schema:
             type: string
           required: true
+        - $ref: '#/components/parameters/X-Language'
       tags:
         - profiles
       requestBody:
@@ -1920,6 +1978,7 @@ paths:
             type: string
           required: true
           description: 'Profile slug'
+        - $ref: '#/components/parameters/X-Language'
       tags:
         - profiles
       security:
@@ -1953,6 +2012,8 @@ paths:
         - profiles
       security:
         - jwtAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           description: 'List of profiles who visited me'
@@ -1976,6 +2037,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           description: Main user data retrieved successfully.
@@ -1999,6 +2061,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/X-Language'
       requestBody:
         required: true
         content:
@@ -2026,6 +2089,8 @@ paths:
       summary: "Get suggested profiles"
       tags:
         - profiles
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           description: 'List of suggested profiles retrieved successfully.'
@@ -2078,6 +2143,7 @@ paths:
           schema:
             type: string
             enum: [ 'M', 'K' ]
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           description: 'List of profiles near me retrieved successfully.'
@@ -2121,6 +2187,7 @@ paths:
             type: string
             format: uuid
           required: true
+        - $ref: '#/components/parameters/X-Language'
       tags:
         - profiles
       security:
@@ -2147,6 +2214,8 @@ paths:
         - profiles
       security:
         - jwtAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           content:
@@ -2210,6 +2279,8 @@ paths:
         - roles
       security:
         - jwtAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           content:
@@ -2234,6 +2305,8 @@ paths:
         - roles
       security:
         - jwtAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           content:
@@ -2256,6 +2329,8 @@ paths:
         - roles
       security:
         - jwtAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           content:
@@ -2287,6 +2362,8 @@ paths:
         - profiles
       security:
         - jwtAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           content:
@@ -2356,6 +2433,7 @@ paths:
           schema:
             type: integer
           required: true
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '204':
           description: Coach licence deleted successfully
@@ -2404,6 +2482,8 @@ paths:
         - profiles
       security:
         - jwtAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       requestBody:
         content:
           application/json:
@@ -2437,6 +2517,7 @@ paths:
           schema:
             type: integer
           required: true
+        - $ref: '#/components/parameters/X-Language'
       requestBody:
         content:
           application/json:
@@ -2469,6 +2550,7 @@ paths:
           schema:
             type: integer
           required: true
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '204':
           description: Coach licence deleted successfully
@@ -2487,6 +2569,8 @@ paths:
         - profiles
       security:
         - jwtAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           content:
@@ -2516,6 +2600,8 @@ paths:
         - profiles
       security:
         - jwtAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       requestBody:
         content:
           application/json:
@@ -2547,6 +2633,7 @@ paths:
           description: UUID of the user profile
           schema:
             type: string
+        - $ref: '#/components/parameters/X-Language'
       tags:
         - profiles
       security:
@@ -2573,6 +2660,7 @@ paths:
           description: UUID of the user profile
           schema:
             type: string
+        - $ref: '#/components/parameters/X-Language'
       requestBody:
         content:
           application/json:
@@ -2629,6 +2717,8 @@ paths:
       security:
         - jwtAuth: [ ]
         - { }
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           content:
@@ -2659,6 +2749,13 @@ paths:
             format: uuid
           required: true
           description: "Profile uuid to filter team contributor history."
+        - in: query
+          name: is_anonymous
+          schema:
+            type: boolean
+            description: "Is passed uuid anonymous?"
+            default: false
+        - $ref: '#/components/parameters/X-Language'
       responses:
         200:
           description: "Successfully retrieved."
@@ -2709,6 +2806,7 @@ paths:
             format: uuid
           required: true
           description: "Profile uuid"
+        - $ref: '#/components/parameters/X-Language'
       requestBody:
         required: true
         content:
@@ -2848,6 +2946,7 @@ paths:
             type: integer
           required: true
           description: "ID of the team contributor to update."
+        - $ref: '#/components/parameters/X-Language'
       requestBody:
         required: true
         content:
@@ -2965,6 +3064,7 @@ paths:
             format: uuid
           required: true
           description: "Profile uuid"
+        - $ref: '#/components/parameters/X-Language'
       responses:
         204:
           description: "Successfully deleted."
@@ -3017,6 +3117,7 @@ paths:
           schema:
             type: integer
           description: "Count of objects by page"
+        - $ref: '#/components/parameters/X-Language'
       tags:
         - profiles
       responses:
@@ -3044,7 +3145,7 @@ paths:
         '400':
           description: 'Invalid search term provided'
 
-  /profiles/list-transfer-status/:
+  /transfers/list-transfer-status/:
     get:
       operationId: transfer_status_listing
       description: "Returns list of transfer statuses."
@@ -3052,6 +3153,8 @@ paths:
         - transfer status
       security:
         - { }
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         "200":
           description: "List of avaiable transfer statuses."
@@ -3088,7 +3191,7 @@ paths:
                     }
                   ]
 
-  /profiles/transfer-status/additional-info/:
+  /transfers/transfer-status/additional-info/:
     get:
       operationId: transfer_status_additional_info_listing
       description: "Returns list of transfer status additional information."
@@ -3096,6 +3199,8 @@ paths:
         - transfer status
       security:
         - { }
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         "200":
           description: "List of avaiable objects."
@@ -3140,7 +3245,7 @@ paths:
                     }
                   ]
 
-  /profiles/{profile_uuid}/transfer-status/:
+  /transfers/{profile_uuid}/transfer-status/:
     get:
       operationId: profile_transfer_status
       description: "Returns profile transfer status object"
@@ -3151,6 +3256,19 @@ paths:
             type: string
             format: uuid
           required: true
+        - in: query
+          name: is_anonymous
+          schema:
+            type: boolean
+            description: "Is passed uuid anonymous?"
+            default: false
+        - in: query
+          name: expose
+          schema:
+            type: boolean
+            description: "Should expose anonymous data? (only for owner)"
+            default: false
+        - $ref: '#/components/parameters/X-Language'
       tags:
         - transfer status
       security:
@@ -3163,7 +3281,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/TransferStatusGet'
         "404":
-          description: "Transfer status for given profile not found."
+          description: "Transfer status for given profile not found OR profile has anonymous transfer status.."
           content:
             application/json:
               schema:
@@ -3175,20 +3293,16 @@ paths:
                   detail:
                     type: string
                     description: "Failure detail message"
+  /transfers/transfer-status/:
     patch:
       operationId: update_profile_transfer_status
       description: "Updates profile transfer status"
-      parameters:
-        - in: path
-          name: profile_uuid
-          schema:
-            type: string
-            format: uuid
-          required: true
       tags:
         - transfer status
       security:
         - jwtAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       requestBody:
         content:
           application/json:
@@ -3209,28 +3323,31 @@ paths:
                       description: "Profile phone number"
                 status:
                   type: integer
-                  description: "Id of transfer status object. Check avaiable objects at /profiles/list-transfer-status/"
+                  description: "Id of transfer status object. Check avaiable objects at /transfers/list-transfer-status/"
                 additional_info:
                   type: array
                   items:
                     type: integer
-                    description: "Id of an object from: /profiles/transfer-status/additional-info/"
+                    description: "Id of an object from: /transfers/transfer-status/additional-info/"
                 benefits:
                   type: array
                   items:
                     type: integer
-                    description: "Id of an object from: /profiles/transfer-request/benefits"
+                    description: "Id of an object from: /transfers/transfer-request/benefits"
                 salary:
                   type: integer
-                  description: "Id of an object from: /profiles/transfer-request/salary"
+                  description: "Id of an object from: /transfers/transfer-request/salary"
                 number_of_trainings:
                   type: integer
-                  description: "Id of an object from: /profiles/transfer-request/number-of-trainings/"
+                  description: "Id of an object from: /transfers/transfer-request/number-of-trainings/"
                 league:
                   type: array
                   items:
                     type: integer
                     description: "Id of an highest parent league taken from: /clubs/leagues/highest-parents/"
+                is_anonymous:
+                  type: boolean
+                  description: "If true, the transfer status will be anonymous and not linked to a specific team contributor."
             example:
               {
                 "benefits": [ 1,2 ],
@@ -3240,7 +3357,8 @@ paths:
                 "contact_email": "email@email.com",
                 "phone_number": { "dial_code": 1, "number": 123 },
                 "additional_info": [ 1, 2 ],
-                "number_of_trainings": 1
+                "number_of_trainings": 1,
+                "is_anonymous": True,
               }
       responses:
         "200":
@@ -3280,15 +3398,10 @@ paths:
       description: "Create profile transfer status object"
       security:
         - jwtAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       tags:
         - transfer status
-      parameters:
-        - in: path
-          name: profile_uuid
-          schema:
-            type: string
-            format: uuid
-          required: true
       requestBody:
         required: true
         content:
@@ -3310,28 +3423,31 @@ paths:
                       description: "Profile phone number"
                 status:
                   type: integer
-                  description: "Id of transfer status object. Check avaiable objects at /profiles/list-transfer-status/"
+                  description: "Id of transfer status object. Check avaiable objects at /transfers/list-transfer-status/"
                 additional_info:
                   type: array
                   items:
                     type: integer
-                    description: "Id of an object from: /profiles/transfer-status/additional-info/"
+                    description: "Id of an object from: /transfers/transfer-status/additional-info/"
                 benefits:
                   type: array
                   items:
                     type: integer
-                    description: "Id of an object from: /profiles/transfer-requests/benefits/"
+                    description: "Id of an object from: /transfers/transfer-requests/benefits/"
                 salary:
                   type: integer
-                  description: "Id of transfer status object. Check avaiable objects at /profiles/transfer-request/salary/"
+                  description: "Id of transfer status object. Check avaiable objects at /transfers/transfer-request/salary/"
                 number_of_trainings:
                   type: integer
-                  description: "Id of transfer status object. Check avaiable objects at /profiles/transfer-request/number-of-trainings/"
+                  description: "Id of transfer status object. Check avaiable objects at /transfers/transfer-request/number-of-trainings/"
                 league:
                   type: array
                   items:
                     type: integer
                     description: "Id of an highest parent league taken from: /clubs/leagues/highest-parents/"
+                is_anonymous:
+                  type: boolean
+                  description: "If true, the transfer status will be anonymous and not linked to a specific team contributor."
               required: [ "status", "additional_info", "league" ]
       responses:
         "201":
@@ -3357,17 +3473,12 @@ paths:
     delete:
       operationId: delete_profile_transfer_status
       description: "Deletes profile transfer status"
-      parameters:
-        - in: path
-          name: profile_uuid
-          schema:
-            type: string
-            format: uuid
-          required: true
       tags:
         - transfer status
       security:
         - jwtAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         "204":
           description: "Object deleted successful"
@@ -3398,7 +3509,7 @@ paths:
                     type: string
                     description: "Failure detail message"
 
-  /profiles/transfer-request/status:
+  /transfers/transfer-request/status/:
     get:
       operationId: profile_transfer_request_status_listing
       description: "Returns profile transfer request status objects"
@@ -3406,6 +3517,8 @@ paths:
         - transfer requests
       security:
         - { }
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         "200":
           description: "Get profile transfer request status objects."
@@ -3439,7 +3552,7 @@ paths:
                   }
                 ]
 
-  /profiles/transfer-request/position:
+  /transfers/transfer-request/position/:
     get:
       operationId: profile_transfer_request_position_listing
       description: "Returns profile transfer request position objects"
@@ -3447,6 +3560,8 @@ paths:
         - transfer requests
       security:
         - { }
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         "200":
           description: "Get profile transfer request position objects."
@@ -3512,7 +3627,7 @@ paths:
                   }
                 ]
 
-  /profiles/transfer-request/number-of-trainings:
+  /transfers/transfer-request/number-of-trainings/:
     get:
       operationId: profile_transfer_request_number-of-trainings_listing
       description: "Returns profile transfer request number of trainings objects"
@@ -3520,6 +3635,8 @@ paths:
         - transfer requests
       security:
         - { }
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         "200":
           description: "Get profile transfer request number of trainings objects."
@@ -3553,7 +3670,7 @@ paths:
                   }
                 ]
 
-  /profiles/transfer-request/benefits:
+  /transfers/transfer-request/benefits/:
     get:
       operationId: profile_transfer_request_additional-info_listing
       description: "Returns profile transfer request benefit objects"
@@ -3561,6 +3678,8 @@ paths:
         - transfer requests
       security:
         - { }
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         "200":
           description: "Get profile transfer request benefit objects."
@@ -3618,7 +3737,7 @@ paths:
                   }
                 ]
 
-  /profiles/transfer-request/salary:
+  /transfers/transfer-request/salary/:
     get:
       operationId: profile_transfer_request_salary_listing
       description: "Returns profile transfer request salary objects"
@@ -3667,7 +3786,7 @@ paths:
                   }
                 ]
 
-  /profiles/{profile_uuid}/transfer-request/teams:
+  /transfers/{profile_uuid}/transfer-request/teams:
     get:
       operationId: profile_actual_teams
       description: "Returns profile actual teams objects"
@@ -3678,6 +3797,13 @@ paths:
             type: string
             format: uuid
           required: true
+        - in: query
+          name: is_anonymous
+          schema:
+            type: boolean
+            description: "Is passed uuid anonymous?"
+            default: false
+        - $ref: '#/components/parameters/X-Language'
       tags:
         - transfer requests
       security:
@@ -3710,7 +3836,7 @@ paths:
                 ]
 
 
-  /profiles/{profile_uuid}/transfer-request/:
+  /transfers/{profile_uuid}/transfer-request/:
     get:
       operationId: profile_transfer_request
       description: "Returns profile transfer request object"
@@ -3721,6 +3847,19 @@ paths:
             type: string
             format: uuid
           required: true
+        - in: query
+          name: is_anonymous
+          schema:
+            type: boolean
+            description: "Is passed uuid anonymous?"
+            default: false
+        - in: query
+          name: expose
+          schema:
+            type: boolean
+            description: "Should expose anonymous data? (only for owner)"
+            default: false
+        - $ref: '#/components/parameters/X-Language'
       tags:
         - transfer requests
       security:
@@ -3745,20 +3884,16 @@ paths:
                   detail:
                     type: string
                     description: "Failure detail message"
+  /transfers/transfer-request/:
     patch:
       operationId: update_profile_transfer_request
       description: "Updates profile transfer request"
-      parameters:
-        - in: path
-          name: profile_uuid
-          schema:
-            type: string
-            format: uuid
-          required: true
       tags:
         - transfer requests
       security:
         - jwtAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       requestBody:
         content:
           application/json:
@@ -3802,15 +3937,10 @@ paths:
       description: "Create profile transfer request object"
       security:
         - jwtAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       tags:
         - transfer requests
-      parameters:
-        - in: path
-          name: profile_uuid
-          schema:
-            type: string
-            format: uuid
-          required: true
       requestBody:
         required: true
         content:
@@ -3841,17 +3971,12 @@ paths:
     delete:
       operationId: delete_profile_transfer_request
       description: "Deletes profile transfer request"
-      parameters:
-        - in: path
-          name: profile_uuid
-          schema:
-            type: string
-            format: uuid
-          required: true
       tags:
         - transfer requests
       security:
         - jwtAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         "204":
           description: "Object deleted successful"
@@ -3910,6 +4035,8 @@ paths:
         - users
       security:
         - jwtAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           content:
@@ -4074,6 +4201,8 @@ paths:
         - users
       security:
         - jwtAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       requestBody:
         content:
           image/jpeg:
@@ -4338,7 +4467,6 @@ paths:
                     email: example_email@playmaker.com
                     first_name: first_name
                     last_name: last_name
-                    username: username
                   summary: example1
           description: ''
         '400':
@@ -4804,15 +4932,8 @@ components:
         id:
           type: integer
           readOnly: true
-        username:
-          type: string
-          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
-            only.
-          pattern: ^[\w.@+-]+$
-          maxLength: 150
       required:
         - id
-        - username
     UserRegisterResponse:
       type: object
       description: Serializer for user registration response.
@@ -4831,16 +4952,9 @@ components:
         last_name:
           type: string
           maxLength: 150
-        username:
-          type: string
-          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
-            only.
-          pattern: ^[\w.@+-]+$
-          maxLength: 150
       required:
         - email
         - id
-        - username
         - last_name
         - first_name
 
@@ -6332,7 +6446,6 @@ components:
             "verification_id": null,
             "user_id": 1,
             "history_id": 1,
-            "data_mapper_id": null,
             "slug": "guest",
             "bio": null,
             "event_log": null,
@@ -6861,6 +6974,9 @@ components:
                 type: string
                 description: "Object name"
             required: [ "id", "name" ]
+        is_anonymous:
+          type: boolean
+          description: "If true, the transfer status will be anonymous and not linked to a specific team contributor."
       required: [ "contact_email", "phone_number", "status", "additional_info", "league", "benefits", "salary", "number_of_trainings" ]
       example:
         {
@@ -6908,8 +7024,8 @@ components:
             {
               "id": "1",
               "name": "1-2 treningi tygodniowo"
-            }
-          ]
+            }],
+          "is_anonymous": True,
         }
 
     TransferRequestUpdate:
@@ -6948,6 +7064,9 @@ components:
               type: integer
             number:
               type: string
+        is_anonymous:
+          type: boolean
+          description: "If true, the transfer request will be anonymous and not linked to a specific team contributor."
 
     TransferRequestCreate:
       type: object
@@ -6985,6 +7104,9 @@ components:
               type: integer
             number:
               type: string
+        is_anonymous:
+          type: boolean
+          description: "If true, the transfer request will be anonymous and not linked to a specific team contributor."
       required: [ "requesting_team", "status", "player_position" ]
 
     TransferRequestGetTeamContributor:
@@ -7097,6 +7219,8 @@ components:
           type: string
         club_voivodeship:
           type: string
+        is_anonymous:
+          type: boolean
       required: [ "requesting_team", "gender", "status", "position", "number_of_trainings", "salary", "contact_email", "phone_number", "benefits", "profile_uuid", "club_voivodeship" ]
 
       example:
@@ -7156,7 +7280,8 @@ components:
           "phone_number": {
             "dial_code": "+1",
             "number": "123"
-          }
+          },
+          "is_anonymous": True,
         }
 
     VerificationStageUpdate:
@@ -7928,6 +8053,17 @@ components:
           type: integer
         views:
           type: integer
+  parameters:
+    X-Language:
+      name: X-Language
+      in: header
+      required: false
+      description: 'Language code for internationalization. Supported languages: pl (Polish), en (English), de (German), fr (French), es (Spanish), it (Italian). Defaults to Polish if not specified.'
+      schema:
+        type: string
+        enum: [ 'pl', 'en', 'de', 'uk' ]
+        default: 'pl'
+        example: 'en'
   securitySchemes:
     jwtAuth:
       type: http

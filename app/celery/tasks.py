@@ -1,9 +1,10 @@
 from logging import getLogger
 
 from celery import shared_task
+from django.core.management import call_command
 from django_celery_beat.models import CrontabSchedule, PeriodicTask
 
-from notifications.services import NotificationService
+from profiles.services import NotificationService
 
 logger = getLogger("celery")
 
@@ -238,11 +239,10 @@ def refresh_periodic_tasks() -> None:
             logger.info(f"Created new periodic task: {notification['name']}")
 
 
-def bind_all(profile_meta_id: int) -> None:
+@shared_task
+def run_daily_supervisor() -> None:
     """
-    Bind all notifications to the given profile meta ID.
+    Run the daily supervisor command to handle daily tasks.
     """
-    from notifications.models import ProfileMeta
 
-    meta = ProfileMeta.objects.get(pk=profile_meta_id)
-    NotificationService(meta).bind_all()
+    call_command("daily_supervisor")

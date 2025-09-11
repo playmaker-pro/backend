@@ -8,9 +8,8 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
-from mailing.models import EmailTemplate
 from payments.models import Transaction
-from premium.tasks import premium_expired, setup_premium_profile
+from premium.tasks import premium_expired
 from premium.utils import get_date_days_after
 
 
@@ -61,13 +60,6 @@ class PremiumProfile(models.Model):
     def subscription_lifespan(self) -> timedelta:
         return self.valid_until.date() - self.valid_since.date()
 
-    def sent_email_that_premium_expired(self) -> None:
-        template = EmailTemplate.objects.get(
-            email_type=EmailTemplate.EmailType.PREMIUM_EXPIRED
-        )
-        schema = template.create_email_schema(self.product.profile.user)
-        EmailTemplate.send_email(schema)
-
     def _fresh_init(self) -> None:
         """Initialize the premium profile."""
         self.valid_since = timezone.now()
@@ -86,10 +78,10 @@ class PremiumProfile(models.Model):
         if not self.valid_until:
             return False
         elif self.valid_until <= timezone.now():
+            premium_expired.delay(self.product.pk)
             self.valid_until = None
             self.save()
 
-            premium_expired.delay(self.product.pk)
             return False
         return True
 
@@ -415,9 +407,7 @@ class Product(models.Model):
                 PremiumType.YEAR if self.name.endswith("_YEAR") else PremiumType.MONTH
             )
             profile = transaction.user.profile
-            setup_premium_profile.delay(
-                profile.pk, profile.__class__.__name__, premium_type.value
-            )
+            profile.setup_premium_profile(premium_type.value)
         elif self.ref == Product.ProductReference.INQUIRIES:
             plan = self.inquiry_plan
             transaction.user.userinquiry.set_new_plan(plan)

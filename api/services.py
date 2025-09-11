@@ -80,7 +80,7 @@ class LocaleDataService:
 
     def get_prior_cities_queryset(self) -> QuerySet:
         """Get City queryset of prior Cities"""
-        return City.objects.filter(name__in=self.prior_cities)
+        return City.objects.filter(name__in=self.prior_cities).order_by("-population")
 
     def get_cities_queryset_by_query_param(
         self, city_like: str, voivo_like: list
@@ -88,7 +88,7 @@ class LocaleDataService:
         """Get City queryset filtered by params"""
         return City.objects.filter(
             Q(name_ascii__icontains=city_like) | Q(region__name__in=voivo_like)
-        )
+        ).order_by("-population")
 
     def get_closest_city(self, latitude: float, longitude: float) -> City:
         """

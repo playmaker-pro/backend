@@ -1,8 +1,10 @@
 import typing
 import uuid
 
+from django.utils.translation import gettext as _
 from rest_framework import serializers
 
+from api.i18n import I18nSerializerMixin
 from clubs import models
 from external_links.serializers import ExternalLinksSerializer
 from profiles.models import TeamContributor
@@ -58,15 +60,31 @@ class SeasonSerializer(serializers.ModelSerializer):
 
 
 class GenderSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+
     class Meta:
         model = models.Gender
         fields = "__all__"
 
+    def get_name(self, obj: models.Gender) -> str:
+        """
+        Retrieve the translated name of the gender.
+        """
+        return _(obj.name)
+
 
 class SenioritySerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+
     class Meta:
         model = models.Seniority
         fields = "__all__"
+
+    def get_name(self, obj: models.Seniority) -> str:
+        """
+        Retrieve the translated name of the seniority.
+        """
+        return _(obj.name)
 
 
 class JuniorAgeGroupSerializer(serializers.ModelSerializer):
@@ -88,9 +106,17 @@ class LeagueSerializer(serializers.ModelSerializer):
 class LeagueBaseDataSerializer(LeagueSerializer):
     """League serializer with limited fields"""
 
+    seniority = serializers.SerializerMethodField()
+
     class Meta(LeagueSerializer.Meta):
         exclude = ()
         fields = ["id", "name", "gender", "seniority"]
+
+    def get_seniority(self, obj: models.League) -> str:
+        """
+        Retrieve the translated seniority.
+        """
+        return _(obj.seniority.name)
 
 
 class LeagueHistorySerializer(serializers.ModelSerializer):
@@ -117,7 +143,6 @@ class ClubSerializer(serializers.ModelSerializer):
         exclude = (
             "name",
             "scrapper_autocreated",
-            "data_mapper_id",
             "autocreated",
         )
 
@@ -148,7 +173,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Team
-        exclude = ("name", "autocreated", "data_mapper_id", "scrapper_autocreated")
+        exclude = ("name", "autocreated", "scrapper_autocreated")
 
     def get_current_team_league_history(self, obj: models.Team) -> dict:
         """Get current, serialized league history of team"""
@@ -193,9 +218,9 @@ class CustomTeamHistorySerializer(serializers.ModelSerializer):
         (e.g., "seniorzy").
         """
         if obj.junior_group and hasattr(obj.junior_group, "name"):
-            return obj.junior_group.name
+            return _(obj.junior_group.name)
         elif obj.seniority and hasattr(obj.seniority, "name"):
-            return obj.seniority.name
+            return _(obj.seniority.name)
         return None
 
 
@@ -240,7 +265,7 @@ class ClubTeamSerializer(serializers.ModelSerializer):
         season = self.context.get("season")
         gender = self.context.get("gender")
 
-        filters = {"club": obj, "visible": True}
+        filters = {"club": obj, "visible": True, "league_history__isnull": False}
 
         # Filtering by gender
         if gender:
@@ -333,11 +358,11 @@ class TeamHistoryBaseProfileSerializer(serializers.ModelSerializer):
         Team object.
         """
         profile_uuid: typing.Optional[uuid.UUID] = self.context.get("profile_uuid")
-        primary_contributor: typing.Optional[TeamContributor] = (
-            obj.teamcontributor_set.filter(
-                is_primary=True, profile_uuid=profile_uuid
-            ).first()
-        )
+        primary_contributor: typing.Optional[
+            TeamContributor
+        ] = obj.teamcontributor_set.filter(
+            is_primary=True, profile_uuid=profile_uuid
+        ).first()
 
         return primary_contributor.id if primary_contributor else None
 

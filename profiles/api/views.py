@@ -4,10 +4,8 @@ import uuid
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
-from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db.models import (
     Case,
@@ -18,8 +16,6 @@ from django.db.models import (
     When,
 )
 from django.utils import timezone
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
 from rest_framework import exceptions, status
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.request import Request
@@ -27,13 +23,12 @@ from rest_framework.response import Response
 from rest_framework.views import PermissionDenied
 
 from api import utils as api_utils
-from api.base_view import EndpointViewWithFilter
 from api.consts import ChoicesTuple
 from api.errors import NotOwnerOfAnObject
-from api.pagination import PagePagination, TransferRequestCataloguePagePagination
+from api.pagination import PagePagination, ProfileSearchPagination
 from api.serializers import ProfileEnumChoicesSerializer
 from api.views import EndpointView
-from clubs.services import LeagueService
+from backend.settings import cfg
 from external_links import serializers as external_links_serializers
 from external_links.errors import LinkSourceNotFound, LinkSourceNotFoundServiceException
 from external_links.services import ExternalLinksService
@@ -41,27 +36,10 @@ from labels.utils import fetch_all_labels
 from profiles import errors, models
 from profiles.api import errors as api_errors
 from profiles.api import serializers
-from profiles.api.errors import (
-    PermissionDeniedHTTPException,
-    TransferRequestDoesNotExistHTTPException,
-    TransferStatusDoesNotExistHTTPException,
-)
-from profiles.api.filters import TransferRequestCatalogueFilter
 from profiles.api.managers import SerializersManager
 from profiles.api.mixins import ProfileRetrieveMixin
 from profiles.filters import ProfileListAPIFilter
-from profiles.models import PROFILE_MODEL_MAP, ProfileMeta, ProfileTransferRequest
-from profiles.serializers_detailed.base_serializers import (
-    MainUserDataSerializer,
-    ProfileTransferRequestSerializer,
-    ProfileTransferStatusSerializer,
-    TeamContributorSerializer,
-    UpdateOrCreateProfileTransferSerializer,
-    UserPreferencesUpdateSerializer,
-)
-from profiles.serializers_detailed.catalogue_serializers import (
-    TransferRequestCatalogueSerializer,
-)
+from profiles.models import PROFILE_MODEL_MAP, ProfileMeta
 from profiles.services import (
     ProfileFilterService,
     ProfileService,
@@ -71,16 +49,13 @@ from profiles.services import (
     TeamContributorService,
 )
 from profiles.utils import map_service_exception
-from roles.definitions import (
-    TRANSFER_BENEFITS_CHOICES,
-    TRANSFER_REQUEST_STATUS_CHOICES,
-    TRANSFER_SALARY_CHOICES,
-    TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES,
-    TRANSFER_STATUS_CHOICES_WITH_UNDEFINED,
-    TRANSFER_TRAININGS_CHOICES,
+from users.api.serializers import (
+    MainUserDataSerializer,
+    UserMainRoleSerializer,
+    UserPreferencesUpdateSerializer,
 )
-from users.api.serializers import UserMainRoleSerializer
 from users.errors import UserPreferencesDoesNotExistHTTPException
+from utils.cache import CachedResponse
 
 if TYPE_CHECKING:
     pass
@@ -118,21 +93,38 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
         self, request: Request, profile_uuid: uuid.UUID
     ) -> Response:
         """GET single profile by uuid."""
+        is_anonymous = api_utils.convert_bool(
+            "is_anonymous", request.query_params.get("is_anonymous", "false")
+        )
         try:
-            profile_object = profile_service.get_profile_by_uuid(profile_uuid)
+            profile_object = profile_service.get_profile_by_uuid(
+                profile_uuid, is_anonymous
+            )
         except ObjectDoesNotExist:
             raise api_errors.ProfileDoesNotExist
+
+        if is_anonymous and not isinstance(profile_object, models.PlayerProfile):
+            raise ValidationError("Only PlayerProfile can be anonymous.")
 
         return self.retrieve_profile_and_respond(request, profile_object)
 
     def get_profile_by_slug(self, request: Request, profile_slug: str) -> Response:
         """GET single profile by slug."""
+        is_anonymous = profile_slug.startswith("anonymous-")
         try:
-            profile_object = profile_service.get_profile_by_slug(profile_slug)
+            if is_anonymous:
+                anonymous_uuid = profile_slug.split("anonymous-")[-1]
+                profile = ProfileService.get_anonymous_profile_by_uuid(anonymous_uuid)
+            else:
+                profile = profile_service.get_profile_by_slug(profile_slug)
+                anonymous_uuid = None
         except ObjectDoesNotExist:
             raise api_errors.ProfileDoesNotExistBySlug
 
-        return self.retrieve_profile_and_respond(request, profile_object)
+        if is_anonymous and not isinstance(profile, models.PlayerProfile):
+            raise api_errors.ProfileDoesNotExist
+
+        return self.retrieve_profile_and_respond(request, profile, is_anonymous, anonymous_uuid)
 
     def update_profile(self, request: Request, profile_uuid: uuid.UUID) -> Response:
         """PATCH request for profile (require UUID in body)"""
@@ -152,43 +144,64 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
         )
         if not serializer_class:
             serializer_class = serializers.UpdateProfileSerializer
+        # Get I18n-aware context from the mixin
+        context = self.get_serializer_context()
+        context.update({"requestor": request.user, "profile_uuid": profile_uuid})
+
         serializer = serializer_class(
             instance=profile,
             data=request.data,
-            context={"requestor": request.user, "profile_uuid": profile_uuid},
+            context=context,
         )
         if serializer.is_valid(raise_exception=True):
             serializer.save()
 
         return Response(serializer.data)
 
-    @method_decorator(cache_page(settings.DEFAULT_CACHE_LIFESPAN))
     def get_bulk_profiles(self, request: Request) -> Response:
         """
         Get list of profile for role delivered as param
         (?role={P, C, S, G, ...})
         Full list of choices can be found in roles/definitions.py
         """
-        qs: QuerySet = self.get_queryset()
-        serializer_class = self.get_serializer_class(
-            model_name=request.query_params.get("role")
-        )
-        if not serializer_class:
-            serializer_class = serializers.ProfileSerializer
+        with CachedResponse(
+            f"{cfg.redis.key_prefix.list_profiles}:{request.get_full_path()}", request
+        ) as cache:
+            if cached_data := cache.data:
+                return Response(cached_data)
 
-        paginated_query = self.paginate_queryset(qs)
-        serializer = serializer_class(
-            paginated_query,
-            context={
-                "requestor": request.user,
-                "request": request,
-                "label_context": "base",
-                "premium_viewer": request.user.is_authenticated
-                and request.user.profile.is_premium,
-            },
-            many=True,
-        )
-        return self.get_paginated_response(serializer.data)
+            qs: QuerySet = self.get_queryset()
+            serializer_class = self.get_serializer_class(
+                model_name=request.query_params.get("role")
+            )
+            if not serializer_class:
+                serializer_class = serializers.ProfileSerializer
+
+            paginated_query = self.paginate_queryset(qs)
+
+            # Get I18n-aware context from the mixin
+            context = self.get_serializer_context()
+            context.update(
+                {
+                    "requestor": request.user,
+                    "request": request,
+                    "label_context": "base",
+                    "premium_viewer": request.user.is_authenticated
+                    and request.user.profile
+                    and request.user.profile.is_premium,
+                    "transfer_status": "1"
+                    in self.query_params.get("transfer_status", []),
+                }
+            )
+
+            serializer = serializer_class(
+                paginated_query,
+                context=context,
+                many=True,
+            )
+            paginated_response = self.get_paginated_response(serializer.data)
+            cache.data = paginated_response.data
+            return paginated_response
 
     def get_profile_labels(self, request: Request, profile_uuid: uuid.UUID) -> Response:
         try:
@@ -272,11 +285,15 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
         if not (user_preferences := request.user.userpreferences):
             raise UserPreferencesDoesNotExistHTTPException
 
+        # Get I18n-aware context from the mixin
+        context = self.get_serializer_context()
+        context.update({"profile_uuid": profile_uuid})
+
         serializer = UserPreferencesUpdateSerializer(
             user_preferences,
             data=request.data,
             partial=True,
-            context={"profile_uuid": profile_uuid},
+            context=context,
         )
         if serializer.is_valid(raise_exception=True):
             serializer.save()
@@ -315,10 +332,14 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
         if not request.user.userpreferences:
             raise UserPreferencesDoesNotExistHTTPException
 
+        # Get I18n-aware context from the mixin
+        context = self.get_serializer_context()
+
         serializer = MainUserDataSerializer(
             request.user,
             data=request.data,
             partial=True,
+            context=context,
         )
         if serializer.is_valid(raise_exception=True):
             serializer.save()
@@ -384,21 +405,23 @@ class PopularProfilesAPIView(MixinProfilesFilter, EndpointView):
         ):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        cache_key = f"popular_profiles:{request.get_full_path()}"
-        cached_response = cache.get(cache_key)
+        with CachedResponse(
+            cache_key=f"{cfg.redis.key_prefix.popular_profiles}:{request.get_full_path()}",
+            request=request,
+        ) as cache:
+            if cached_data := cache.data:
+                return Response(cached_data)
 
-        if cached_response:
-            return Response(cached_response)
-
-        qs = self.get_queryset()
-        qs = self.paginate_queryset(qs)
-        qs = [obj.profile for obj in qs]
-        serializer = serializers.GenericProfileSerializer(qs, many=True)
-        response_data = self.get_paginated_response(serializer.data).data
-
-        cache.set(cache_key, response_data, timeout=settings.DEFAULT_CACHE_LIFESPAN)
-
-        return Response(response_data)
+            qs = self.get_queryset()
+            qs = self.paginate_queryset(qs)
+            qs = [obj.profile for obj in qs]
+            context = self.get_serializer_context()
+            serializer = serializers.GenericProfileSerializer(
+                qs, many=True, context=context
+            )
+            paginated_response = self.get_paginated_response(serializer.data)
+            cache.data = paginated_response.data
+            return paginated_response
 
 
 class SuggestedProfilesAPIView(EndpointView):
@@ -428,6 +451,7 @@ class SuggestedProfilesAPIView(EndpointView):
         profile = user.profile
         params = {"user__last_activity__gte": timezone.now() - timedelta(days=30)}
 
+        ordering = None
         if loc := user.userpreferences.localization:
             cities_nearby = profile_service.get_cities_nearby(loc)
             params["user__userpreferences__localization__in"] = cities_nearby
@@ -441,24 +465,33 @@ class SuggestedProfilesAPIView(EndpointView):
             )
 
         if profile.__class__ is models.PlayerProfile:
-            qs_model = random.choice([
-                models.CoachProfile,
-                models.ClubProfile,
-                models.ScoutProfile,
-            ])
+            qs_model = random.choice(
+                [
+                    models.CoachProfile,
+                    models.ClubProfile,
+                    models.ScoutProfile,
+                ]
+            )
         else:
             qs_model = models.PlayerProfile
 
-        qs = (
-            qs_model.objects.to_list_by_api(
-                **params,
-            )
-            .annotate(city_order=ordering)
-            .exclude(user__pk=user.pk)
-            .order_by("city_order", "-user__last_activity")[:10]
-        )
+        qs = qs_model.objects.to_list_by_api(
+            **params,
+        ).exclude(user__pk=user.pk)
 
-        serializer = serializers.SuggestedProfileSerializer(qs[:10], many=True)
+        if ordering:
+            qs = qs.annotate(city_order=ordering).order_by(
+                "city_order", "-user__last_activity"
+            )
+        else:
+            qs = qs.order_by("-user__last_activity")
+
+        # Get I18n-aware context from the mixin
+        context = self.get_serializer_context()
+
+        serializer = serializers.SuggestedProfileSerializer(
+            qs[:10], many=True, context=context
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -469,7 +502,8 @@ class ProfilesNearbyAPIView(MixinProfilesFilter, EndpointView):
     pagination_class = Pagination
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-    def filter_localization(self, *args, **kwargs) -> None: ...
+    def filter_localization(self, *args, **kwargs) -> None:
+        ...
 
     def get_profiles_nearby(self, request: Request) -> Response:
         """Retrieve profiles from the closest area"""
@@ -482,11 +516,13 @@ class ProfilesNearbyAPIView(MixinProfilesFilter, EndpointView):
             or (hasattr(user, "profile") and not user.profile.is_premium)
         ):
             return Response(status=status.HTTP_204_NO_CONTENT)
+        with CachedResponse(
+            cache_key=f"user:{user.id}:{cfg.redis.key_prefix.profiles_nearby}:{request.get_full_path()}",
+            request=request,
+        ) as cache:
+            if cached_data := cache.data:
+                return Response(cached_data)
 
-        cache_key = f"user:{user.id}:get_profiles_nearby{request.get_full_path()}"
-        cached_response = cache.get(cache_key)
-
-        if not cached_response:
             cities_nearby = profile_service.get_cities_nearby(
                 user.userpreferences.localization
             )
@@ -509,29 +545,22 @@ class ProfilesNearbyAPIView(MixinProfilesFilter, EndpointView):
             )
             qs = self.filter_queryset()
             paginated_qs = self.paginate_queryset(qs)
+
+            # Get I18n-aware context from the mixin
+            context = self.get_serializer_context()
+
             data = serializers.GenericProfileSerializer(
-                paginated_qs, source="profile", many=True
+                paginated_qs, source="profile", many=True, context=context
             ).data
-
-            # Cache the entire response data
-            cached_response = self.get_paginated_response(data)
-            cache.set(
-                cache_key, cached_response.data, timeout=settings.DEFAULT_CACHE_LIFESPAN
-            )
-            return cached_response
-
-        # Return cached response directly
-        return Response(cached_response)
+            paginated_response = self.get_paginated_response(data)
+            cache.data = paginated_response.data
+            return paginated_response
 
 
 class ProfileSearchView(EndpointView):
     permission_classes = [IsAuthenticatedOrReadOnly]
     allowed_methods = ["get"]
-
-    def get_paginated_queryset(self, qs: QuerySet = None) -> QuerySet:
-        """Paginate queryset with custom page size"""
-        self.pagination_class.page_size = 5
-        return super().get_paginated_queryset(qs)
+    pagination_class = ProfileSearchPagination
 
     def search_profiles(self, request: Request) -> Response:
         """
@@ -551,8 +580,11 @@ class ProfileSearchView(EndpointView):
         except ValueError:
             raise api_errors.InvalidSearchTerm()
         paginated_profiles = self.get_paginated_queryset(matching_users_queryset)
+
+        context = self.get_serializer_context()
+
         serializer = serializers.ProfileSearchSerializer(
-            paginated_profiles, many=True, context={"request": request}
+            paginated_profiles, many=True, context=context
         )
 
         return self.get_paginated_response(serializer.data)
@@ -636,7 +668,10 @@ class PlayerPositionAPI(EndpointView):
         Retrieve all player positions ordered by ID.
         """
         positions = models.PlayerPosition.objects.all()
-        serializer = serializers.PlayerPositionSerializer(positions, many=True)
+        context = self.get_serializer_context()
+        serializer = serializers.PlayerPositionSerializer(
+            positions, many=True, context=context
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -724,9 +759,11 @@ class ProfileVideoAPI(EndpointView):
         except ValueError:
             raise api_errors.IncorrectProfileRole
         labels_choices = (ChoicesTuple(*label) for label in labels)
+        context = self.get_serializer_context()
         serializer = ProfileEnumChoicesSerializer(
             labels_choices,
             many=True,  # type: ignore
+            context=context,
         )  # noqa: 501
         return Response(serializer.data)
 
@@ -829,12 +866,17 @@ class ProfileTeamsApi(EndpointView):
         Retrieve a list of team contributors associated
         with a given user profile.
         """
+        is_anonymous = api_utils.convert_bool(
+            "is_anonymous", request.query_params.get("is_anonymous", "false")
+        )
+
         # Retrieve the profile associated with the given UUID
         try:
-            profile = profile_service.get_profile_by_uuid(profile_uuid)
+            profile = profile_service.get_profile_by_uuid(profile_uuid, is_anonymous)
         except ObjectDoesNotExist:
             raise api_errors.ProfileDoesNotExist()
 
+        profile_uuid = profile.uuid
         # Get sorted list of team contributors
         sorted_contributors: list = team_contributor_service.get_teams_for_profile(
             profile_uuid
@@ -844,7 +886,9 @@ class ProfileTeamsApi(EndpointView):
             profile, "output"
         )
         serializer = serializer_class(
-            sorted_contributors, many=True, context={"request": request}
+            sorted_contributors,
+            many=True,
+            context={"request": request, "is_anonymous": is_anonymous},
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -1052,316 +1096,6 @@ class ExternalLinksAPI(EndpointView):
         return Response(serializer.data, status=status_code)
 
 
-class TransferStatusAPIView(EndpointView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
-    league_service = LeagueService()
-
-    def list_transfer_status(self, request: Request) -> Response:  # noqa
-        """Retrieve and display transfer statuses for the profiles."""
-        transfer_choices = (
-            ChoicesTuple(*transfer)
-            for transfer in TRANSFER_STATUS_CHOICES_WITH_UNDEFINED
-        )
-        serializer = ProfileEnumChoicesSerializer(transfer_choices, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def get_profile_transfer_status(
-        self,
-        request: Request,
-        profile_uuid: uuid.UUID,  # noqa
-    ) -> Response:
-        """Retrieve and display transfer status for the user."""
-        try:
-            profile = profile_service.get_profile_by_uuid(profile_uuid)
-        except ObjectDoesNotExist as exc:
-            raise api_errors.ProfileDoesNotExist from exc
-        transfer_status = profile_service.get_profile_transfer_status(profile)
-        if not transfer_status:
-            raise TransferStatusDoesNotExistHTTPException
-
-        serializer = ProfileTransferStatusSerializer(transfer_status)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def update_profile_transfer_status(  # noqa
-        self, request: Request, profile_uuid: uuid.UUID
-    ) -> Response:
-        """Update transfer status for the user."""
-
-        try:
-            profile = profile_service.get_profile_by_uuid(profile_uuid)
-        except ObjectDoesNotExist as exc:
-            raise api_errors.ProfileDoesNotExist from exc
-
-        if profile.user != request.user:
-            raise PermissionDeniedHTTPException
-
-        transfer_status = profile_service.get_profile_transfer_status(profile)
-
-        if not transfer_status:
-            raise api_errors.TransferStatusDoesNotExistHTTPException
-
-        serializer = ProfileTransferStatusSerializer(
-            instance=transfer_status,
-            data=request.data,
-            partial=True,
-            context={"profile": profile},
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def create_profile_transfer_status(
-        self,
-        request: Request,
-        profile_uuid: uuid.UUID,  # noqa
-    ) -> Response:
-        # views.py
-        """Create transfer status for the profile."""
-        try:
-            profile = profile_service.get_profile_by_uuid(profile_uuid)
-        except ObjectDoesNotExist as exc:
-            raise api_errors.ProfileDoesNotExist from exc
-
-        if profile.user != request.user:
-            raise PermissionDeniedHTTPException
-
-        serializer = ProfileTransferStatusSerializer(
-            data=request.data, context={"profile": profile}
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    def delete_profile_transfer_status(
-        self,
-        request: Request,
-        profile_uuid: uuid.UUID,  # noqa
-    ) -> Response:
-        """Delete transfer status for the profile."""
-        try:
-            profile = profile_service.get_profile_by_uuid(profile_uuid)
-        except ObjectDoesNotExist as exc:
-            raise api_errors.ProfileDoesNotExist from exc
-
-        if profile.user != request.user:
-            raise PermissionDeniedHTTPException
-
-        transfer_status = profile_service.get_profile_transfer_status(profile)
-
-        if not transfer_status:
-            raise api_errors.TransferStatusDoesNotExistHTTPException
-
-        transfer_status.delete()
-
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-    def get_transfer_status_additional_info(self, request: Request) -> Response:  # noqa
-        """Retrieve and display transfer statuses for the profiles."""
-        transfer_status_additional_info_choices = (
-            ChoicesTuple(*transfer)
-            for transfer in TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES
-        )
-        serializer = ProfileEnumChoicesSerializer(
-            transfer_status_additional_info_choices, many=True
-        )
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-class TransferRequestAPIView(EndpointView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
-    serializer_manager = SerializersManager()
-
-    def list_transfer_request_status(self, request: Request) -> Response:  # noqa
-        """Retrieve and display transfer statuses for the profiles."""
-        transfer_request_status_choices = (
-            ChoicesTuple(*transfer) for transfer in TRANSFER_REQUEST_STATUS_CHOICES
-        )
-        serializer = ProfileEnumChoicesSerializer(
-            transfer_request_status_choices, many=True
-        )
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def list_transfer_request_number_of_trainings(
-        self,
-        request: Request,  # noqa
-    ) -> Response:
-        """
-        Retrieve and display transfer status number of trainings for the profiles.
-        """
-        transfer_request_number_of_trainings_choices = (
-            ChoicesTuple(*transfer) for transfer in TRANSFER_TRAININGS_CHOICES
-        )
-        serializer = ProfileEnumChoicesSerializer(
-            transfer_request_number_of_trainings_choices, many=True
-        )
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def list_transfer_request_benefits(
-        self,
-        request: Request,  # noqa
-    ) -> Response:  # noqa
-        """
-        Retrieve and display transfer status additional information for the profiles.
-        """
-        transfer_request_additional_info_choices = (
-            ChoicesTuple(*transfer) for transfer in TRANSFER_BENEFITS_CHOICES
-        )
-        serializer = ProfileEnumChoicesSerializer(
-            transfer_request_additional_info_choices, many=True
-        )
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def list_transfer_request_salary(self, request: Request) -> Response:  # noqa
-        """
-        Retrieve and display transfer status request salary for the profiles.
-        """
-        transfer_request_salary_choices = (
-            ChoicesTuple(*transfer) for transfer in TRANSFER_SALARY_CHOICES
-        )
-        serializer = ProfileEnumChoicesSerializer(
-            transfer_request_salary_choices, many=True
-        )
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def get_profile_actual_teams(
-        self, request: Request, profile_uuid: uuid.UUID
-    ) -> Response:
-        """
-        Retrieve a list of team contributors associated
-        with a given user profile and are actual ones. This endpoint is just
-        for transfer request, so should be only visible for specific profile.
-        """
-        try:
-            profile = profile_service.get_profile_by_uuid(profile_uuid)
-        except ObjectDoesNotExist as exc:
-            raise api_errors.ProfileDoesNotExist() from exc
-
-        if profile.user != request.user:
-            raise PermissionDeniedHTTPException
-
-        queryset: QuerySet = team_contributor_service.get_profile_actual_teams(
-            profile_uuid
-        ).prefetch_related("team_history", "team_history__league_history__league")
-        serializer = TeamContributorSerializer(
-            queryset, many=True, context={"request": request}
-        )
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def create_transfer_request(
-        self, request: Request, profile_uuid: uuid.UUID
-    ) -> Response:
-        """Create transfer request for the profile."""
-
-        try:
-            profile = profile_service.get_profile_by_uuid(profile_uuid)
-        except ObjectDoesNotExist as exc:
-            raise api_errors.ProfileDoesNotExist() from exc
-
-        if profile.user != request.user:
-            raise PermissionDeniedHTTPException
-
-        serializer = UpdateOrCreateProfileTransferSerializer(
-            data=request.data, context={"profile": profile}
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    def get_profile_transfer_request(
-        self,
-        request: Request,
-        profile_uuid: uuid.UUID,  # noqa
-    ) -> Response:
-        """Retrieve and display transfer request for the user."""
-        try:
-            profile = profile_service.get_profile_by_uuid(profile_uuid)
-        except ObjectDoesNotExist as exc:
-            raise api_errors.ProfileDoesNotExist() from exc
-        transfer_request = profile_service.get_profile_transfer_request(profile)
-        if not transfer_request:
-            raise TransferRequestDoesNotExistHTTPException
-
-        serializer = ProfileTransferRequestSerializer(
-            transfer_request, context={"request": request}
-        )
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def update_transfer_request(
-        self,
-        request: Request,
-        profile_uuid: uuid.UUID,  # noqa
-    ) -> Response:
-        """Update transfer request for the user."""
-
-        try:
-            profile = profile_service.get_profile_by_uuid(profile_uuid)
-        except ObjectDoesNotExist as exc:
-            raise api_errors.ProfileDoesNotExist() from exc
-
-        if profile.user != request.user:
-            raise PermissionDeniedHTTPException
-
-        transfer_request = profile_service.get_profile_transfer_request(profile)
-
-        if not transfer_request:
-            raise api_errors.TransferRequestDoesNotExistHTTPException
-
-        serializer = UpdateOrCreateProfileTransferSerializer(
-            instance=transfer_request,
-            data=request.data,
-            partial=True,
-            context={"profile": profile},
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def delete_profile_transfer_request(
-        self, request: Request, profile_uuid: uuid.UUID
-    ) -> Response:
-        """Delete transfer request for the profile."""
-        try:
-            profile = profile_service.get_profile_by_uuid(profile_uuid)
-        except ObjectDoesNotExist as exc:
-            raise api_errors.ProfileDoesNotExist() from exc
-
-        if profile.user != request.user:
-            raise PermissionDeniedHTTPException
-
-        transfer_request = profile_service.get_profile_transfer_request(profile)
-
-        if not transfer_request:
-            raise api_errors.TransferRequestDoesNotExistHTTPException
-
-        transfer_request.delete()
-
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class TransferRequestCatalogueAPIView(EndpointViewWithFilter):
-    permission_classes = [
-        AllowAny,
-    ]
-    serializer_class = TransferRequestCatalogueSerializer
-    pagination_class = TransferRequestCataloguePagePagination
-    queryset = ProfileTransferRequest.objects.all().order_by("-created_at")
-    filterset_class = TransferRequestCatalogueFilter
-
-    @method_decorator(cache_page(settings.DEFAULT_CACHE_LIFESPAN))
-    def list_transfer_requests(self, request: Request) -> Response:
-        """Retrieve and display transfer requests."""
-        queryset = self.get_queryset()
-        queryset = self.filter_queryset(queryset)
-        paginated = self.get_paginated_queryset(queryset)
-        serializer = self.serializer_class(
-            paginated, many=True, context={"request": request}
-        )
-        return self.get_paginated_response(serializer.data)
-
-
 class VisitationView(EndpointView):
     def list_my_visitors(self, request: Request) -> Response:
         """List visitors of the profile."""
@@ -1377,5 +1111,8 @@ class VisitationView(EndpointView):
                 "Available only for premium users", status=status.HTTP_204_NO_CONTENT
             )
 
-        serializer = serializers.ProfileVisitSummarySerializer(profile)
+        # Get I18n-aware context from the mixin
+        context = self.get_serializer_context()
+
+        serializer = serializers.ProfileVisitSummarySerializer(profile, context=context)
         return Response(serializer.data, status=status.HTTP_200_OK)

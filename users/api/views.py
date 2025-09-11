@@ -4,6 +4,7 @@ import typing
 
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
+from django.conf import settings
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
@@ -23,7 +24,6 @@ from users.api.serializers import (
     ResetPasswordSerializer,
     UserProfilePictureSerializer,
     UserRegisterSerializer,
-    UserSerializer,
 )
 from users.errors import (
     ApplicationError,
@@ -45,11 +45,12 @@ from users.schemas import (
     UserGoogleDetailPydantic,
 )
 from users.services import PasswordResetService, UserService
+from users.tasks import track_user_login_task
 
 user_service: UserService = UserService()
 password_reset_service: PasswordResetService = PasswordResetService()
 
-logger = logging.getLogger("django")
+logger = logging.getLogger(__name__)
 
 
 class UserRegisterEndpointView(EndpointView):
@@ -106,12 +107,12 @@ class UserRegisterEndpointView(EndpointView):
             "first_name": user.first_name,
             "last_name": user.last_name,
         }
+
         return Response(response)
 
 
 class UsersAPI(EndpointView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = UserSerializer
     allowed_methods = ("list", "post", "put", "update")
 
     def get_permissions(self) -> typing.Sequence:
@@ -128,13 +129,6 @@ class UsersAPI(EndpointView):
             return [permission() for permission in retrieve_permission_list]
         else:
             return super().get_permissions()
-
-    def list(self, request):
-        return Response(
-            self.serializer_class(User.objects.all(), many=True).data,
-        )
-
-    def get_queryset(self): ...
 
     def my_main_profile(self, request: Request) -> Response:
         """
@@ -229,6 +223,9 @@ class UsersAPI(EndpointView):
             "first_name": user.first_name,
             "last_name": user.last_name,
         }
+        if not getattr(settings, "DISABLE_EXTERNAL_TASKS", False):
+            track_user_login_task.delay(user.pk)
+
         return response
 
     def google_auth(self, request):

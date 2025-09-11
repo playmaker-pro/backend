@@ -3,7 +3,6 @@
 from django.db import migrations, models
 
 from mailing.default_templates import INQUIRY_LIMIT_REACHED
-from mailing.models import EmailTemplate as _EmailTemplate
 
 
 def _create_email_template_for_reaching_inquiry_limit(apps, schema_editor):
@@ -11,7 +10,7 @@ def _create_email_template_for_reaching_inquiry_limit(apps, schema_editor):
     EmailTemplate = apps.get_model("mailing", "EmailTemplate")
 
     EmailTemplate.objects.create(
-        email_type=_EmailTemplate.EmailType.INQUIRY_LIMIT,
+        email_type="INQUIRY_LIMIT",
         subject="Rozbuduj swoje transferowe możliwości – Rozszerz limit zapytań!",
         body=INQUIRY_LIMIT_REACHED,
     )

@@ -1,11 +1,9 @@
-import factory as _factory
+import factory
 
-from mailing import models as _models
+from mailing.models import Mailing
 
 
-class UserEmailOutboxFactory(_factory.django.DjangoModelFactory):
+class MailingFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = _models.UserEmailOutbox
-
-    recipient = _factory.Faker("email")
-    email_type = _factory.Faker("word")
+        model = Mailing
+        django_get_or_create = ("user",)

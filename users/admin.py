@@ -1,16 +1,18 @@
+from django import forms
 from django.contrib import admin
 from django.contrib.admin import ChoicesFieldListFilter, SimpleListFilter
 from django.contrib.auth.admin import UserAdmin  # as BaseUserAdmin
 from django.core.handlers.wsgi import WSGIRequest
 from django.db.models import Case, F, Q, QuerySet, When
+from django.forms import TypedMultipleChoiceField
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
+from users import mongo_login_service
 from utils import linkify
 
 from . import models
-from .forms import UserPreferencesForm
 
 
 def verify_one(modeladmin, request, queryset):
@@ -67,22 +69,10 @@ class VerificationFilter(ChoicesFieldListFilter):
             ),
         )
 
-        # if self.value() in ['9', '10', '11', '12']:
-        #     query = Q(declared_role__in=['C'])
-        #     # queryset = queryset.filter(declared_role__in=['T', 'P'])
-        # else:
-        #     # queryset = queryset.filter(declared_role__in=['C'])
-        #     query = Q(declared_role__in=['T', 'P'])
-
         if self.value() in ["1", "3", "6", "8"]:
             query = Q(mapper_id__isnull=False)
         else:
             query = Q(mapper_id__isnull=False)
-            # queryset = queryset.filter(data_mapper_id__isnull=False)
-
-        # if self.value() in ['3', '4', '5', '6', '7', '8', '10', '11', '12']:
-        #     query &= Q(team_club_league_voivodeship_ver__isnull=False)
-        # queryset = queryset.filter(team_club_league_voivodeship_ver__isnull=False)
 
         return queryset.filter(query)
 
@@ -221,7 +211,6 @@ class UserAdminPanel(UserAdmin):
             {
                 "classes": ("wide",),
                 "fields": (
-                    "username",
                     "password1",
                     "password2",
                     "userpreferences",
@@ -237,21 +226,27 @@ class UserAdminPanel(UserAdmin):
         "state",
         "display_status",
         "is_active",
-        "last_login",
         "date_joined",
         "get_profile_permalink",
         linkify("profile"),
-        "get_profile_percentage",
         "declared_role",
         "get_mapper",
         "get_team_object",
         "get_team_club_league_voivodeship_ver",
         "last_activity",
+        "get_today_login_count",
+        "get_login_streak",
+        "get_mongo_last_login",
     )
     list_filter = ("state", "declared_role", HasDataMapperIdFilter)
-    search_fields = ("username", "first_name", "last_name", "declared_role")
+    search_fields = ("first_name", "last_name", "declared_role")
     readonly_fields = ("userpreferences", "profile")
     actions = [verify_one]
+    ordering = ("-date_joined",)
+
+    def has_delete_permission(self, request, obj=None):
+        """Disable delete permission for users."""
+        return False
 
     def get_team_object(self, obj):
         if obj.is_club:
@@ -286,18 +281,6 @@ class UserAdminPanel(UserAdmin):
                     return old_mapper.mapper_id
         return None
 
-    def get_profile_percentage(self, obj):
-        if obj.profile:
-            percentage = obj.profile.percentage_completion
-            return format_html(
-                f"""
-                <progress value="{percentage}" max="100"></progress>
-                <span style="font-weight:bold">{percentage}%</span>
-                """
-            )
-
-    get_profile_percentage.short_description = "Profile %"
-
     def get_profile_permalink(self, obj):
         if obj.profile:
             url = obj.profile.get_permalink
@@ -313,9 +296,59 @@ class UserAdminPanel(UserAdmin):
 
     get_profile.short_description = "Profile Type"
 
+    # MongoDB login tracking methods
+    def get_today_login_count(self, obj):
+        """Get today's login count from MongoDB."""
+        try:
+            return mongo_login_service.get_user_login_count(obj.id)
+        except Exception:
+            return 0
+
+    get_today_login_count.short_description = "Today Logins"
+
+    def get_login_streak(self, obj):
+        """Get login streak from MongoDB."""
+        try:
+            return mongo_login_service.get_user_login_streak(obj.id)
+        except Exception:
+            return 0
+
+    get_login_streak.short_description = "Login Streak"
+
+    def get_mongo_last_login(self, obj):
+        """Get last login timestamp from MongoDB with link to full history."""
+        try:
+            last_login = mongo_login_service.get_user_last_login(obj.id)
+            if last_login:
+                last_login_str = last_login.strftime("%Y-%m-%d %H:%M")
+                history_url = f"/users/admin/user/{obj.id}/login-history/"
+                return format_html(
+                    '<a href="{}" title="View full login history">{}</a>',
+                    history_url,
+                    last_login_str,
+                )
+            return "-"
+        except Exception:
+            return "-"
+
+    get_mongo_last_login.short_description = "Last Login"
+
+    def changelist_view(self, request, extra_context=None):
+        """Override changelist view to add bulk export link."""
+        extra_context = extra_context or {}
+        extra_context["bulk_export_url"] = "/users/admin/bulk-login-export/"
+        return super().changelist_view(request, extra_context=extra_context)
+
 
 @admin.register(models.UserPreferences)
 class UserPreferencesAdminPanel(admin.ModelAdmin):
+    class UserPreferencesForm(forms.ModelForm):
+        citizenship = TypedMultipleChoiceField(choices=models.UserPreferences.COUNTRIES)
+
+        class Meta:
+            model = models.UserPreferences
+            fields = "__all__"
+
     list_display = ("user", "localization", "display_languages", "citizenship")
     search_fields = ("user__last_name", "user__email")
     form = UserPreferencesForm
@@ -337,9 +370,7 @@ class UserPreferencesAdminPanel(admin.ModelAdmin):
         )
 
         # Custom search logic
-        user_query = Q(user__username__icontains=search_term) | Q(
-            user__email__icontains=search_term
-        )
+        user_query = Q(user__email__icontains=search_term)
         queryset |= self.model.objects.filter(user_query)
 
         return queryset, use_distinct

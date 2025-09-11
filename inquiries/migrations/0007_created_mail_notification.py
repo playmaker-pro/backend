@@ -2,70 +2,66 @@
 
 from django.db import migrations, models
 
-from inquiries.models import InquiryLogMessage as _InquiryLogMessage
 
+# def create_initial_email_messages(apps, *_):
+#     """Create initial email messages with valid formating."""
+#     _InquiryLogMessage = apps.get_model("inquiries", "InquiryLogMessage")
 
-def create_initial_email_messages(apps, *_):
-    """Create initial email messages with valid formating."""
-    InquiryLogMessage: _InquiryLogMessage = apps.get_model(
-        "inquiries", "InquiryLogMessage"
-    )
+#     accepted_inquiry = _InquiryLogMessage.objects.get(
+#         log_type='ACCEPTED_INQUIRY'
+#     )
+#     accepted_inquiry.email_title = (
+#         "#r# #zaakceptował|zaakceptowała# Twoje zapytanie o piłkarski kontakt!"
+#     )
+#     accepted_inquiry.email_body = """Witaj, gratulujemy!
 
-    accepted_inquiry = InquiryLogMessage.objects.get(
-        log_type=_InquiryLogMessage.MessageType.ACCEPTED
-    )
-    accepted_inquiry.email_title = (
-        "#r# #zaakceptował|zaakceptowała# Twoje zapytanie o piłkarski kontakt!"
-    )
-    accepted_inquiry.email_body = """Witaj, gratulujemy!
+# Twoje zapytanie o kontakt zostało zaakceptowane przez #rb#!
+# Odwiedź swój profil na PlayMaker.pro lub kliknij w poniższy link żeby zobaczyć dane kontaktowe:
+# https://playmaker.pro/xyz/
+# Do zobaczenia na PlayMaker.pro!
 
-Twoje zapytanie o kontakt zostało zaakceptowane przez #rb#!
-Odwiedź swój profil na PlayMaker.pro lub kliknij w poniższy link żeby zobaczyć dane kontaktowe:
-https://playmaker.pro/xyz/
-Do zobaczenia na PlayMaker.pro!
+# Pozdrawiamy,
+# Zespól PlayMaker.pro
 
-Pozdrawiamy,
-Zespól PlayMaker.pro
+# Wiadomość została wygenerowa automatycznie. Prosimy na nią nie odpowiadać."""
+#     accepted_inquiry.send_mail = True
+#     accepted_inquiry.save()
 
-Wiadomość została wygenerowa automatycznie. Prosimy na nią nie odpowiadać."""
-    accepted_inquiry.send_mail = True
-    accepted_inquiry.save()
+#     rejected_inquiry = _InquiryLogMessage.objects.get(
+#         log_type='REJECTED_INQUIRY'
+#     )
+#     rejected_inquiry.email_title = (
+#         "#r# #odrzucił|odrzuciła# Twoje zapytanie o piłkarski kontakt!"
+#     )
+#     rejected_inquiry.email_body = """Witaj, 
 
-    rejected_inquiry = InquiryLogMessage.objects.get(
-        log_type=_InquiryLogMessage.MessageType.REJECTED
-    )
-    rejected_inquiry.email_title = (
-        "#r# #odrzucił|odrzuciła# Twoje zapytanie o piłkarski kontakt!"
-    )
-    rejected_inquiry.email_body = """Witaj, 
+# Twoje zapytanie o kontakt zostało odrzucone przez #rb#. 
 
-Twoje zapytanie o kontakt zostało odrzucone przez #rb#. 
+# Pozdrawiamy, 
+# Zespół PlayMaker.pro
 
-Pozdrawiamy, 
-Zespół PlayMaker.pro
+# Wiadomość została wygenerowana automatycznie. Prosimy na nią nie odpowiadać."""
+#     rejected_inquiry.send_mail = True
+#     rejected_inquiry.save()
 
-Wiadomość została wygenerowana automatycznie. Prosimy na nią nie odpowiadać."""
-    rejected_inquiry.send_mail = True
-    rejected_inquiry.save()
+#     new_inquiry = _InquiryLogMessage.objects.get(
+#         log_type='NEW_INQUIRY'
+#     )
+#     new_inquiry.email_title = "Masz nowe zapytanie o piłkarski kontakt!"
+#     new_inquiry.email_body = """Witaj, 
 
-    new_inquiry = InquiryLogMessage.objects.get(
-        log_type=_InquiryLogMessage.MessageType.NEW
-    )
-    new_inquiry.email_title = "Masz nowe zapytanie o piłkarski kontakt!"
-    new_inquiry.email_body = """Witaj, 
+# #Otrzymałeś|Otrzymałaś# zapytanie o kontakt wysłane przez #rb#! 
+# Odwiedź swój profil na PlayMaker.pro lub kliknij w poniższy link żeby podjąć decyzję o kontakcie: 
+# https://playmaker.pro/xyz/ 
 
-#Otrzymałeś|Otrzymałaś# zapytanie o kontakt wysłane przez #rb#! 
-Odwiedź swój profil na PlayMaker.pro lub kliknij w poniższy link żeby podjąć decyzję o kontakcie: 
-https://playmaker.pro/xyz/ 
+# Do zobaczenia na PlayMaker.pro!     
 
-Do zobaczenia na PlayMaker.pro!     
+# Pozdrawiamy,
+# Zespół PlayMaker.pro
 
-Pozdrawiamy,
-Zespół PlayMaker.pro
-
-Wiadomość została wygenerowana automatycznie. Prosimy na nią nie odpowiadać."""
-    new_inquiry.send_mail = True
-    new_inquiry.save()
+# Wiadomość została wygenerowana automatycznie. Prosimy na nią nie odpowiadać."""
+#     new_inquiry.send_mail = True
+#     new_inquiry.save()
 
 
 class Migration(migrations.Migration):
@@ -119,5 +115,5 @@ class Migration(migrations.Migration):
                 null=True,
             ),
         ),
-        migrations.RunPython(create_initial_email_messages),
+        # migrations.RunPython(create_initial_email_messages),
     ]

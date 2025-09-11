@@ -4,14 +4,18 @@ from functools import cached_property
 from cities_light.models import City
 from django.db.models import Model
 from django.utils import translation
+from django.utils.translation import gettext as _
 from django_countries import CountryTuple
 from rest_framework import serializers as _serializers
+from rest_framework.fields import empty
 
 from api.consts import ChoicesTuple
 from api.errors import (
     ChoiceFieldValueErrorException,
     ChoiceFieldValueErrorHTTPException,
+    PhoneNumberMustBeADictionaryHTTPException,
 )
+from api.i18n import I18nSerializerMixin
 from api.services import LocaleDataService
 from app.utils import cities
 from users.errors import CityDoesNotExistException, CityDoesNotExistHTTPException
@@ -108,8 +112,8 @@ class CitySerializer(_serializers.ModelSerializer):
         return data
 
 
-class ProfileEnumChoicesSerializer(_serializers.CharField, _serializers.Serializer):
-    """Serializer for Profile Enums"""
+class ProfileEnumChoicesSerializer(I18nSerializerMixin, _serializers.CharField, _serializers.Serializer):
+    """Serializer for Profile Enums with translation support"""
 
     def __init__(
         self,
@@ -127,20 +131,23 @@ class ProfileEnumChoicesSerializer(_serializers.CharField, _serializers.Serializ
     def parse_dict(
         self, data: (typing.Union[int, str], typing.Union[int, str])
     ) -> dict:
-        """Create dictionary from tuple choices"""
-        return {str(val[0]): val[1] for val in data}
+        """Create dictionary from tuple choices with translation support"""
+        return {str(val[0]): _(str(val[1])) for val in data}
 
     def to_representation(self, obj: typing.Union[ChoicesTuple, str]) -> dict:
-        """Parse output"""
+        """Parse output with translation support"""
         parsed_obj = obj
         if not obj:
             return {}
         if not isinstance(obj, ChoicesTuple):
             parsed_obj = self.parse(obj)
-        return {"id": parsed_obj.id, "name": parsed_obj.name}
+        
+        # Explicitly translate the name using Django's translation system
+        translated_name = _(str(parsed_obj.name)) if parsed_obj.name else ""
+        return {"id": parsed_obj.id, "name": translated_name}
 
     def parse(self, _id) -> ChoicesTuple:
-        """Get choices by model field and parse output"""
+        """Get choices by model field and parse output with translation"""
         _id = str(_id)
         choices = self.parse_dict(
             getattr(self.model, self.source).__dict__["field"].choices
@@ -154,3 +161,73 @@ class ProfileEnumChoicesSerializer(_serializers.CharField, _serializers.Serializ
 
         value = choices[_id]
         return ChoicesTuple(_id, value)
+    
+    def to_internal_value(self, data):
+        """Convert input data to internal value"""
+        if isinstance(data, dict):
+            # Handle dict input like {"id": "some_value"}
+            return data.get("id", data)
+        # Handle direct string/value input
+        return data
+
+
+class PhoneNumberField(_serializers.Field):
+    """
+    A custom field for handling phone numbers in the ManagerProfile serializer.
+
+    This field is responsible for serializing and deserializing the phone number
+    information (which includes 'dial_code' and 'agency_phone'). It handles the logic
+    of combining these two separate fields into a single nested object for API
+    representation, and it also processes incoming data for these fields
+    in API requests.
+    """
+
+    def __init__(self, phone_field_name="phone_number", *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.phone_field_name = (
+            phone_field_name  # This can be 'phone_number' or 'agency_phone'
+        )
+
+    def run_validation(self, data=...):
+        """Validate phone number field before creating object."""
+
+        if data is not empty and not isinstance(data, dict):
+            raise PhoneNumberMustBeADictionaryHTTPException
+        return super().run_validation(data)
+
+    def to_representation(
+        self, obj: typing.Any
+    ) -> typing.Optional[typing.Dict[str, str]]:
+        """
+        Converts the object's phone number information into a nested
+        JSON object for API output.
+        """
+        dial_code = getattr(obj, "dial_code", None)
+        phone_number = getattr(obj, self.phone_field_name, None)
+
+        if dial_code is None and phone_number is None:
+            return None
+
+        return {
+            "dial_code": f"+{dial_code}" if dial_code is not None else None,
+            "number": phone_number,
+        }
+
+    def to_internal_value(self, data: dict) -> dict:
+        """
+        Processes the incoming data for the phone number field.
+        """
+        internal_value = {}
+        dial_code = data.get("dial_code")
+        phone_number = (
+            data.get("number")
+            if self.phone_field_name == "phone_number"
+            else data.get("agency_phone")
+        )
+
+        if dial_code is not None:
+            internal_value["dial_code"] = dial_code
+        if phone_number is not None:
+            internal_value[self.phone_field_name] = phone_number
+
+        return internal_value

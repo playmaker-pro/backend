@@ -1,5 +1,3 @@
-import logging
-
 import factory
 from django.conf import settings
 from django.db.models import Model
@@ -9,7 +7,6 @@ from pydantic import typing
 
 from backend.settings.config import Environment
 
-logger: logging.Logger = logging.getLogger("mocker")
 fake: Faker = Faker()
 
 
@@ -23,27 +20,11 @@ class CustomObjectFactory(factory.django.DjangoModelFactory):
         abstract = True
 
     @classmethod
-    def _create(cls, model_class, *args, **kwargs) -> Model:
-        """Overwrite _create() method to log results"""
-        obj: Model = super()._create(model_class, *args, **kwargs)
-        if settings.CONFIGURATION is not Environment.TEST:
-            logger.info(
-                f"[Factory: {cls.__name__}, model: "
-                f"{type(obj)}] Object: ID={obj.pk} | {obj}",
-            )
-        return obj
-
-    @classmethod
     def create(cls, **kwargs) -> Model:
-        """
-        Overwrite crate() method to log if something went wrong with saving new objects
-        """
-        try:
-            obj = super().create(**kwargs)
-            return cls._meta.model.objects.get(pk=obj.pk)
-        except Exception as e:
-            logger.error(e)
-            raise e
+        """Create and save an object to the database."""
+        obj = super().create(**kwargs)
+        obj.refresh_from_db()
+        return obj
 
     @classmethod
     def random_object(cls, **kwargs) -> Model:
@@ -53,18 +34,6 @@ class CustomObjectFactory(factory.django.DjangoModelFactory):
                 return cls._meta.model.objects.filter(**kwargs).order_by("?").first()
             except ProgrammingError:
                 pass
-
-    @classmethod
-    def get_random_or_create_subfactory(
-        cls, **kwargs
-    ) -> typing.Union[Model, factory.SubFactory]:
-        """Get random object or create subfactory of class"""
-        random_object: Model = cls.random_object(**kwargs)
-        return (
-            random_object or factory.SubFactory(cls, **kwargs)
-            if settings.CONFIGURATION is not Environment.TEST
-            else None
-        )
 
     @classmethod
     def transform_dict(cls, json_data: dict) -> dict:

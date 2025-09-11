@@ -1,12 +1,12 @@
 import json
 import uuid
 from datetime import datetime, timedelta
-
 import factory
 import pytest
 from django.db.models import signals
 from django.urls import reverse
 from django.utils import timezone
+from django.core.serializers.json import DjangoJSONEncoder
 from parameterized import parameterized
 from rest_framework.test import APIClient, APITestCase
 
@@ -75,7 +75,6 @@ class TestGetProfileAPI(APITestCase):
             user_id=self.user_obj.pk,
             playermetrics=None,
             team_object=None,
-            transfer_status=None,
         ).uuid
         response = self.client.get(self.url(profile_uuid), **self.headers)
 
@@ -177,6 +176,18 @@ class TestGetProfileAPI(APITestCase):
             "views": 2,
         }
 
+    def test_will_not_create_visitation_for_myself(self):
+        """Test that visitation is not created for the profile owner"""
+        profile = factories.PlayerProfileFactory.create(user_id=self.user_obj.pk)
+        self.client.force_authenticate(user=profile.user)
+
+        response = self.client.get(self.url(profile_uuid=profile.uuid))
+
+        assert response.status_code == 200
+        assert not ProfileVisitation.objects.filter(
+            visited=profile.meta, visitor=profile.meta
+        ).exists()
+
 
 class TestCreateProfileAPI(APITestCase):
     def setUp(self) -> None:
@@ -239,7 +250,8 @@ class TestCreateProfileAPI(APITestCase):
     def test_successfully_create_profile_for_new_user(self, payload: dict) -> None:
         """Test creating profiles with correctly passed payload"""
         self.manager.login(self.user_obj)
-        response = self.client.post(self.url, json.dumps(payload), **self.headers)
+        payload_json = json.dumps(payload, cls=DjangoJSONEncoder)
+        response = self.client.post(self.url, payload_json, **self.headers)
 
         assert response.status_code == 201
         assert response.data["user_id"] and response.data["role"]
@@ -757,43 +769,31 @@ class TestUpdateProfileAPI(APITestCase):
         Tests the removal of the 'Bramkarz 185+' label from a player
         profile when the player is no longer a goalkeeper or their height is below 185 cm.  # noqa 501
         """
-        # Setup: Create a goalkeeper with a height over 185 cm
-        profile = utils.create_empty_profile(user_id=self.user_obj.pk, role="P")
-        profile.height = 186
-        profile.save()
-
-        # Assign the goalkeeper position to the player profile
+        profile = PlayerProfileFactory.create(height=186, user=self.user_obj)
         factories.PlayerProfilePositionFactory(
             player_profile=profile,
             player_position=self.goalkeeper_position,
             is_main=True,
         )
-
-        # Assign the 'Bramkarz 185+' label
         label_service.assign_goalkeeper_height_label(profile.uuid)
-
-        # Check that the label is initially assigned
         initial_label_exists = Label.objects.filter(
             object_id=profile.user.id,
             label_definition__label_name="HIGH_KEEPER",
         ).exists()
+
         assert initial_label_exists, "Initial label assignment failed"
 
-        # Action: Update the profile to no longer meet the label criteria
-        # Example: Changing the height to below 185 cm
         payload = {"height": 180}
         response = self.client.patch(
             self.url(str(profile.uuid)), json.dumps(payload), **self.headers
         )
         assert response.status_code == 200
 
-        # Check that the label is removed
         label_exists_after_update = Label.objects.filter(
             object_id=profile.user.id,
             label_definition__label_name="HIGH_KEEPER",
         ).exists()
 
-        # Assert that the label no longer exists
         assert not label_exists_after_update, "Label not removed as expected"
 
 

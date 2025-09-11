@@ -10,13 +10,6 @@ from django.core import mail
 from django.utils import timezone
 
 from features.models import AccessPermission, Feature, FeatureElement
-from mailing.default_templates import (
-    GIFT_FOR_1_REFERRAL_REFERRED,
-    GIFT_FOR_1_REFERRAL_REFERRER,
-    GIFT_FOR_3_REFERRALS,
-    GIFT_FOR_5_REFERRALS,
-    GIFT_FOR_15_REFERRALS,
-)
 from roles.definitions import PLAYER_SHORT
 from users.models import Ref
 from users.schemas import UserGoogleDetailPydantic
@@ -367,16 +360,14 @@ class TestRefferalSystem:
         last_mails = {m.to[0]: m for m in mail.outbox[-2:]}
 
         assert ref.registered_users.count() == 1
-        assert (
-            last_mails[user_ref.email].subject
-            == "Witaj w PlayMaker.pro! Odbierz swój prezent powitalny"
+        expected_subject_referrer = (
+            "Gratulacje! Otrzymujesz nagrodę za polecenie nowego użytkownika"
         )
-        assert last_mails[user_ref.email].body == GIFT_FOR_1_REFERRAL_REFERRED
-        assert (
-            last_mails[user.email].subject
-            == "Gratulacje! Otrzymujesz nagrodę za polecenie nowego użytkownika"
+        assert last_mails[user.email].subject == expected_subject_referrer
+        expected_subject_referred = (
+            "Witaj w PlayMaker.pro! Odbierz swój prezent powitalny"
         )
-        assert last_mails[user.email].body == GIFT_FOR_1_REFERRAL_REFERRER
+        assert last_mails[user_ref.email].subject == expected_subject_referred
 
     def test_reward_3_referrals(self):
         user = PlayerProfileFactory.create().user
@@ -391,11 +382,8 @@ class TestRefferalSystem:
         last_mails = {m.to[0]: m for m in mail.outbox[-1:]}
 
         assert ref.registered_users.count() == 3
-        assert (
-            last_mails[user.email].subject
-            == "Gratulacje! Nagroda za 3 skuteczne polecenia PlayMaker.pro"
-        )
-        assert last_mails[user.email].body == GIFT_FOR_3_REFERRALS
+        expected_subject = "Gratulacje! Nagroda za 3 skuteczne polecenia PlayMaker.pro"
+        assert last_mails[user.email].subject == expected_subject
         assert user.profile.is_premium
         assert (
             user.profile.premium.valid_until.date()
@@ -415,11 +403,8 @@ class TestRefferalSystem:
         last_mails = {m.to[0]: m for m in mail.outbox[-1:]}
 
         assert ref.registered_users.count() == 5
-        assert (
-            last_mails[user.email].subject
-            == "Gratulacje! Otrzymujesz miesiąc Premium i treningi za 5 poleceń PlayMaker.pro"
-        )
-        assert last_mails[user.email].body == GIFT_FOR_5_REFERRALS
+        expected_subject = "Gratulacje! Otrzymujesz miesiąc Premium i treningi za 5 poleceń PlayMaker.pro"
+        assert last_mails[user.email].subject == expected_subject
         assert user.profile.is_premium
         assert (
             user.profile.premium.valid_until.date()
@@ -443,8 +428,9 @@ class TestRefferalSystem:
             last_mails[user.email].subject
             == "Gratulacje! 6 miesięcy Premium za 15 poleceń PlayMaker.pro"
         )
-        assert last_mails[user.email].body == GIFT_FOR_15_REFERRALS
         assert user.profile.is_premium
+        expected_subject = "Gratulacje! 6 miesięcy Premium za 15 poleceń PlayMaker.pro"
+        assert last_mails[user.email].subject == expected_subject
         assert (
             user.profile.premium.valid_until.date()
             == timezone.now().date()

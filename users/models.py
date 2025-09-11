@@ -14,12 +14,6 @@ from django_countries import countries
 from django_fsm import FSMField, transition
 from pydantic import typing
 
-from inquiries.models import InquiryRequest
-
-# from notifications.mail import (
-#     mail_user_waiting_for_verification,
-#     verification_notification,
-# )
 from roles import definitions
 from users.managers import CustomUserManager
 from utils import calculate_age, generate_fe_url_path
@@ -90,7 +84,7 @@ class User(AbstractUser, UserRoleMixin):
         STATE_MIGRATED_VERIFIED,
         STATE_MIGRATED_NEW,
     )
-
+    username = None
     STATES = list(zip(STATES, STATES))
     # Verfied means - user is who he declar
 
@@ -366,11 +360,6 @@ class User(AbstractUser, UserRoleMixin):
             return urljoin(settings.BASE_URL, self.picture.url)
 
     @property
-    def inquiries_contacts(self) -> models.QuerySet:
-        """Get user contacts - accepted InquiryRequests"""
-        return InquiryRequest.objects.contacts(self)
-
-    @property
     def contact_email(self) -> str:
         """
         Returns user contact email.
@@ -378,30 +367,6 @@ class User(AbstractUser, UserRoleMixin):
         example in sending notifications.
         """
         return self.userpreferences.contact_email or self.email
-
-    @property
-    def has_unread_inquiries(self) -> bool:
-        """
-        Determines if there are any unread inquiries related to the user,
-        either as a sender or recipient.
-
-        This property checks two conditions:
-        1. Inquiries sent by the user that have not been read by their recipients.
-        2. Inquiries received by the user that they have not read.
-        """
-
-        # Check for any sent inquiries that have been responded to but not read
-        # by the sender
-        unread_sent = InquiryRequest.objects.filter(
-            sender=self, is_read_by_sender=False
-        ).exists()
-
-        # Check for any received inquiries that have not been read by the recipient
-        unread_received = InquiryRequest.objects.filter(
-            recipient=self, is_read_by_recipient=False
-        ).exists()
-
-        return unread_sent or unread_received
 
     class Meta:
         verbose_name = "User"

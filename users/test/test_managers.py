@@ -24,10 +24,10 @@ from users.schemas import (
 from utils.factories.user_factories import UserFactory
 from utils.test.test_utils import ExternalCallsGuardMixin, MockedResponse
 
+pytestmark = pytest.mark.django_db
 User = get_user_model()
 
 
-@pytest.mark.django_db
 class TestGoogleManager(TestCase, ExternalCallsGuardMixin):
     """Test GoogleManager class."""
 

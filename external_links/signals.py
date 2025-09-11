@@ -2,7 +2,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from external_links import models
-from notifications.services import NotificationService
+from profiles.services import NotificationService
 
 
 @receiver(post_save, sender=models.ExternalLinksEntity)

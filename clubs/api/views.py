@@ -144,10 +144,13 @@ class ClubsAPI(EndpointViewWithFilter):
         paginated = self.get_paginated_queryset(queryset)
         season = request.query_params.get("season")
         gender = request.query_params.get("gender")
-        context = {"request": request, "season": season, "gender": gender}
-        serializer = self.serializer_class(
-            paginated, many=True, context=context
-        )
+
+        # Get the base serializer context with language support
+        context = self.get_serializer_context()
+        # Add additional context for filtering
+        context.update({"season": season, "gender": gender})
+
+        serializer = self.serializer_class(paginated, many=True, context=context)
         return self.get_paginated_response(serializer.data)
 
     def get_labels(self, request: Request, club_id: int) -> Response:

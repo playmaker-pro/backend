@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 class ProfileRetrieveMixin:
     def retrieve_profile_and_respond(
-        self, request, profile_object: models.PROFILE_MODELS
+        self, request, profile_object: models.PROFILE_MODELS, is_anonymous: bool = False, anonymous_uuid: str = None
     ) -> Response:
         """Shared logic for retrieving a profile and responding with serialized data."""
         # Profile visit counter logic
@@ -37,14 +37,19 @@ class ProfileRetrieveMixin:
         if not serializer_class:
             return Response(status=status.HTTP_204_NO_CONTENT)
 
+        context = self.get_serializer_context()
+        context.update({
+            "request": request,
+            "label_context": "profile",
+            "premium_viewer": request.user.is_authenticated
+            and request.user.profile
+            and request.user.profile.is_premium,
+            "is_anonymous": is_anonymous,
+            "anonymous_uuid": anonymous_uuid,
+        })
         serializer = serializer_class(
             profile_object,
-            context={
-                "request": request,
-                "label_context": "profile",
-                "premium_viewer": request.user.is_authenticated
-                and request.user.profile.is_premium,
-            },
+            context=context,
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -64,6 +69,17 @@ class ProfileRetrieveMixin:
 
     def manage_visit_history(self, profile_object, requestor) -> None:
         """Manage the visit history for a profile."""
+        # Skip tracking if the requestor is a logged-in user
+        # who has chosen to make their profile anonymous via transfer settings
+        if (
+            not isinstance(requestor, AnonymousUser)
+            and hasattr(requestor, "meta")
+            and requestor.meta
+            and requestor.meta.is_anonymous  # profile transfer setting is set to anonymous
+        ):
+            logger.debug(f"Skipping visit tracking for anonymous profile: {requestor}")
+            return
+
         try:
             history = visit_history_service.get_user_profile_visit_history(
                 user=profile_object.user, created_at=timezone.now()
@@ -74,5 +90,8 @@ class ProfileRetrieveMixin:
             history = visit_history_service.create(user=profile_object.user)
             visit_history_service.increment(instance=history, requestor=requestor)
 
-        if not isinstance(requestor, AnonymousUser):
+        if (
+            not isinstance(requestor, AnonymousUser)
+            and requestor.user is not profile_object.user
+        ):
             models.ProfileVisitation.upsert(visitor=requestor, visited=profile_object)

@@ -2,6 +2,7 @@ import os
 from datetime import timedelta
 
 import sentry_sdk
+from celery.schedules import crontab
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
@@ -9,6 +10,7 @@ from sentry_sdk import set_level
 from sentry_sdk.integrations.django import DjangoIntegration
 
 from . import cfg
+from .logger import setup_logging
 
 CONFIGURATION = cfg.environment
 
@@ -21,9 +23,7 @@ BASE_URL = "http://localhost:8000"
 
 VERSION = "2.3.3"
 
-
-SYSTEM_USER_EMAIL = "rafal.kesik@gmail.com"
-ADMIN_EMAIL = "biuro.playmaker.pro@gmail.com"
+SYSTEM_USER_EMAIL = "biuro@playmaker.pro"  # TODO: change soon
 
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -32,6 +32,8 @@ BASE_DIR = os.path.dirname(PROJECT_DIR)
 
 ADMINS = MANAGERS = [
     ("Biuro", "biuro@playmaker.pro"),
+    ("Jakub", "jakub@playmaker.pro"),
+    ("Bartosz", "bartosz@playmaker.pro"),
 ]
 
 DEFAULT_CACHE_LIFESPAN = 60 * 15  # in seconds (60 * 5 = 5min)
@@ -81,8 +83,6 @@ INSTALLED_APPS = [
     "django.contrib.sites",
     "django.contrib.humanize",
     "rest_framework",
-    # TODO authtoken deprecated. Changed to jwt
-    "rest_framework.authtoken",
     "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     "allauth",
@@ -136,7 +136,7 @@ ROOT_URLCONF = "backend.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, ".custom_email_templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -169,6 +169,22 @@ DATABASES = {
     },
 }
 
+# MongoDB configuration for user login tracking
+# Note: Connection is initialized lazily in the service to avoid fork issues with Celery
+MONGODB_SETTINGS = {
+    'db': cfg.mongodb.db,
+    'host': cfg.mongodb.host,
+    'port': cfg.mongodb.port,
+}
+
+# Only add authentication if credentials are provided
+if cfg.mongodb.username and cfg.mongodb.password:
+    MONGODB_SETTINGS.update({
+        'username': cfg.mongodb.username,
+        'password': cfg.mongodb.password,
+        'authentication_source': cfg.mongodb.auth_source,
+    })
+
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
 
@@ -198,7 +214,9 @@ LOCALE_PATHS = (os.path.join(BASE_DIR, "locale"),)
 
 LANGUAGES = (
     ("pl", _("Polski")),
-    ("en-us", _("Angielski")),
+    ("en", _("English")),
+    ("de", _("Deutsch")),
+    ("uk", _("Українська")),
 )
 
 # Configuration for django-cities-light library.
@@ -215,7 +233,9 @@ CITIES_LIGHT_CITY_SOURCES = [
     "http://download.geonames.org/export/dump/cities15000.zip",  # all cities with a population > 15000  # noqa
     "http://download.geonames.org/export/dump/cities5000.zip",  # all cities with a population > 5000  # noqa
     "http://download.geonames.org/export/dump/cities1000.zip",  # all cities with a population > 1000  # noqa
+    "http://download.geonames.org/export/dump/cities500.zip",  # all cities with a population > 500  # noqa
 ]  # more here: https://download.geonames.org/export/dump/readme.txt
+# changes here require to run `python manage.py cities_light` command to import data
 
 TIME_ZONE = "Europe/Warsaw"
 
@@ -242,7 +262,7 @@ STATICFILES_DIRS = [
 # ManifestStaticFilesStorage is recommended in production, to prevent outdated
 # Javascript / CSS assets being served from cache (e.g. after a Wagtail upgrade).
 # See https://docs.djangoproject.com/en/3.1/ref/contrib/staticfiles/#manifeststaticfilesstorage  # noqa
-STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
+# STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 STATIC_URL = "/static/"
@@ -261,6 +281,20 @@ WAGTAIL_USER_CREATION_FORM = "users.forms.CustomUserCreationForm"
 WAGTAIL_USER_CUSTOM_FIELDS = []  # ['country',]
 
 CORS_ORIGIN_ALLOW_ALL = True  # to be replaces  with CORS_ORIGIN_WHITELIST
+
+# Allow custom headers for CORS
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'x-language',
+]
 
 # easy-thumbnail
 THUMBNAIL_EXTENSION = "png"  # Or any extn for your thumbnails
@@ -307,28 +341,6 @@ ANNOUNCEMENT_INITAL_PLAN = ANNOUNCEMENT_DEFAULT_PLANS[0]
 
 SEASON_DEFINITION = {"middle": 7}
 
-# Inquiries app
-INQUIRIES_INITAL_PLANS = [
-    {
-        "default": True,
-        "limit": 3,
-        "name": "Basic Inital",
-        "description": "Default inital plan, need to be created if we wont "
-        "to add to each user UserInquery. In future can be alterd",
-    },
-    {
-        "default": False,
-        "limit": 5,
-        "name": "Basic Inital for coaches",
-        "description": "Default inital plan, need to be created if we wont "
-        "to add to each user UserInquery. In future can be alterd",
-    },
-]
-
-INQUIRIES_INITAL_PLAN = INQUIRIES_INITAL_PLANS[0]
-
-INQUIRIES_INITAL_PLAN_COACH = INQUIRIES_INITAL_PLANS[1]
-
 
 # messages
 MESSAGE_TAGS = {
@@ -368,166 +380,11 @@ ACCOUNT_FORMS = {"signup": "users.forms.CustomSignupForm"}
 BLOG_PAGINATION_PER_PAGE = 4
 
 
-import logging.config  # noqa
-from os.path import join  # noqa
-
-LOGGING_ROOTDIR = "_logs"
-
-
-def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
-    return {
-        "version": 1,
-        "disable_existing_loggers": False,
-        "formatters": {
-            "verbose": {
-                "format": "[%(asctime)s] %(levelname)s [%(pathname)s:%(lineno)s] %(message)s",  # noqa
-                "datefmt": "%d/%b/%Y %H:%M:%S",
-            },
-            "simple": {"format": "%(levelname)s %(message)s"},
-        },
-        "handlers": {
-            "mail_admins": {
-                "level": "ERROR",
-                "class": "mailing.handlers.AsyncAdminEmailHandler",
-            },
-            "profiles_file": {
-                "level": "DEBUG",
-                "class": "logging.FileHandler",
-                "filename": join(LOGFILE_ROOT, "profiles.log"),
-                "formatter": "verbose",
-            },
-            "data_log_file": {
-                "level": "DEBUG",
-                "class": "logging.FileHandler",
-                "filename": join(LOGFILE_ROOT, "data.log"),
-                "formatter": "verbose",
-            },
-            "django_log_file": {
-                "level": "DEBUG",
-                "class": "logging.FileHandler",
-                "filename": join(LOGFILE_ROOT, "django.log"),
-                "formatter": "verbose",
-            },
-            "proj_log_file": {
-                "level": "DEBUG",
-                "class": "logging.FileHandler",
-                "filename": join(LOGFILE_ROOT, "project.log"),
-                "formatter": "verbose",
-            },
-            "route_updater": {
-                "level": "DEBUG",
-                "class": "logging.FileHandler",
-                "filename": join(LOGFILE_ROOT, "route.updater.log"),
-                "formatter": "verbose",
-            },
-            "adapters": {
-                "level": "DEBUG",
-                "class": "logging.FileHandler",
-                "filename": join(LOGFILE_ROOT, "adapters.log"),
-                "formatter": "verbose",
-            },
-            "console": {
-                "level": "DEBUG",
-                "class": "logging.StreamHandler",
-                "formatter": "simple",
-            },
-            "user_activity_file": {
-                "level": "DEBUG",
-                "class": "logging.FileHandler",
-                "filename": join(LOGFILE_ROOT, "user_activity.log"),
-                "formatter": "verbose",
-            },
-            "inquiries_file": {
-                "level": "DEBUG",
-                "class": "logging.FileHandler",
-                "filename": join(LOGFILE_ROOT, "inquiries.log"),
-                "formatter": "verbose",
-            },
-            "mailing_file": {
-                "level": "DEBUG",
-                "class": "logging.FileHandler",
-                "filename": join(LOGFILE_ROOT, "mailing.log"),
-                "formatter": "verbose",
-            },
-            "commands": {
-                "level": "DEBUG",
-                "class": "logging.FileHandler",
-                "filename": join(LOGFILE_ROOT, "commands.log"),
-                "formatter": "verbose",
-            },
-            "payments_file": {
-                "level": "DEBUG",
-                "class": "logging.FileHandler",
-                "filename": join(LOGFILE_ROOT, "payments.log"),
-                "formatter": "verbose",
-            },
-            "celery_file": {
-                "level": "DEBUG",
-                "class": "logging.FileHandler",
-                "filename": join(LOGFILE_ROOT, "celery.log"),
-                "formatter": "verbose",
-            },
-        },
-        "loggers": {
-            "profiles": {
-                "handlers": ["console", "profiles_file"],
-                "level": "DEBUG",
-            },
-            "django": {
-                "handlers": ["django_log_file", "console", "mail_admins"],
-                "propagate": True,
-                "level": "ERROR",
-            },
-            "adapters": {
-                "handlers": ["adapters"],
-                "level": "ERROR",
-            },
-            "project": {
-                "handlers": ["proj_log_file"],
-                "level": "DEBUG",
-            },
-            "route_updater": {
-                "handlers": ["console", "route_updater"],
-                "level": "DEBUG",
-            },
-            "user_activity": {
-                "handlers": ["console", "user_activity_file"],
-                "level": "DEBUG",
-            },
-            "inquiries": {
-                "handlers": ["console", "inquiries_file"],
-                "level": "DEBUG",
-            },
-            "mailing": {
-                "handlers": ["console", "mailing_file"],
-                "level": "DEBUG",
-            },
-            "commands": {
-                "handlers": ["console", "data_log_file"],
-                "level": "DEBUG",
-            },
-            "payments": {
-                "handlers": ["console", "payments_file"],
-                "level": "DEBUG",
-            },
-            "celery": {
-                "handlers": ["celery_file", "console"],
-                "level": "DEBUG",
-            },
-            "celery.utils.functional": {
-                "handlers": ["celery_file", "console"],
-                "level": "ERROR",
-            },
-        },
-    }
-
-
 # Reset logging
-# (see http://www.caktusgroup.com/blog/2015/01/27/Django-Logging-Configuration-logging_config-default-settings-logger/)  # noqa
-LOGGING_CONFIG = None
-LOGGING = get_logging_structure()
-logging.config.dictConfig(LOGGING)
-logger = logging.getLogger(f"project.{__name__}")
+# (see http://www.caktusgroup.com/blog/2015/01/27/Django-Logging-Configuration-logging_config-default-settings-logger/)
+# LOGGING_CONFIG = None
+# setup_logging(LOGGING_ROOTDIR)
+LOGGING = setup_logging("_logs")
 
 
 CELERY_TASK_ALWAYS_EAGER = False
@@ -538,7 +395,12 @@ CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_TASK_TIME_LIMIT = 60 * 60
 CELERY_TIMEZONE = TIME_ZONE
-
+CELERY_BEAT_SCHEDULE = {
+    "daily-supervisor": {
+        "task": "app.celery.tasks.run_daily_supervisor",
+        "schedule": crontab(hour=10, minute=0),  # Codziennie o 10:00
+    },
+}
 
 # Redis & stream activity
 STREAM_REDIS_CONFIG = {
@@ -580,49 +442,11 @@ JQUERY_URL = False
 
 COUNTRIES_FIRST = ["PL", "GER", "CZ", "UA", "GB"]
 
-from django.urls import path  # noqa
-from django.views.generic import RedirectView  # noqa
-
-CONSTANTS_DIR = os.path.join(BASE_DIR, "constants")
-
-
-REDIRECTS_FILE_PATH = os.path.join(CONSTANTS_DIR, "redirects.yaml")
-
-
-def load_redirects_file():
-    import yaml
-
-    try:
-        with open(REDIRECTS_FILE_PATH) as f:
-            data = yaml.load(f, Loader=yaml.FullLoader)
-    except Exception as e:
-        print(
-            f"Loading redirects.yaml: No {REDIRECTS_FILE_PATH} file failed due to {e}"
-        )
-    return data
-
-
-def build_redirections(redirects):
-    return [
-        path(f"{old}", RedirectView.as_view(url=new, permanent=True))
-        for old, new in redirects.items()
-    ]
-
-
-REDIRECTS_LISTS = build_redirections(load_redirects_file())
-
-# To force and replace season on whole system
-# @todo(rkesik): not all elements supports that yet...
-FORCED_SEASON_NAME = None
 
 # User agents settings
 USER_AGENTS_CACHE = "default"
 
 SCRAPPER = True
-
-
-if FORCED_SEASON_NAME is not None:
-    print(f"Force to use season for dispaly metrics: {FORCED_SEASON_NAME}")
 
 
 DEFAULT_CLUB_PICTURE_URL = "/media/default_club.png"
@@ -693,6 +517,12 @@ CACHES = {
         },
     }
 }
+
+EMAIL_USE_TLS = cfg.smtp.use_tls
+EMAIL_HOST = cfg.smtp.host
+EMAIL_PORT = cfg.smtp.port
+EMAIL_HOST_USER = DEFAULT_FROM_EMAIL = SERVER_EMAIL = cfg.smtp.outgoing_address
+EMAIL_HOST_PASSWORD = cfg.smtp.password.get_secret_value()
 
 
 try:

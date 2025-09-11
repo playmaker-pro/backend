@@ -22,13 +22,17 @@ class InquiresAPIView(EndpointView):
     def get_my_sent_inquiries(self, request: Request) -> Response:
         """Get all sent inquiries by user"""
         sent_inquiries: QuerySet = InquireService.get_user_sent_inquiries(request.user)
-        serializer = InquiryRequestSerializer(sent_inquiries, many=True)
+        serializer = InquiryRequestSerializer(
+            sent_inquiries, many=True, context=self.get_serializer_context()
+        )
         return Response(serializer.data)
 
     def get_my_contacts(self, request: Request) -> Response:
         """Get all inquiries contacts by user"""
         contacts: QuerySet = InquireService.get_user_contacts(request.user)
-        serializer = InquiryRequestSerializer(contacts, many=True)
+        serializer = InquiryRequestSerializer(
+            contacts, many=True, context=self.get_serializer_context()
+        )
         return Response(serializer.data)
 
     def get_my_received_inquiries(self, request: Request) -> Response:
@@ -37,13 +41,15 @@ class InquiresAPIView(EndpointView):
         received_inquiries: QuerySet = InquireService.get_user_received_inquiries(
             request.user
         )
-        serializer = InquiryRequestSerializer(received_inquiries, many=True)
+        serializer = InquiryRequestSerializer(
+            received_inquiries, many=True, context=self.get_serializer_context()
+        )
         return Response(serializer.data)
 
     def get_my_inquiry_data(self, request: Request) -> Response:
         """Get all received inquiries by user"""
         data = InquireService.get_user_inquiry_metadata(request.user)
-        serializer = UserInquirySerializer(data)
+        serializer = UserInquirySerializer(data, context=self.get_serializer_context())
         return Response(serializer.data)
 
     def send_inquiry(
@@ -51,23 +57,38 @@ class InquiresAPIView(EndpointView):
     ) -> Response:
         """Create inquiry request"""
         sender = request.user
+        is_anonymous = "anonymous_recipient" in request.data
         try:
-            recipient = ProfileService.get_user_by_uuid(recipient_profile_uuid)
+            if is_anonymous:
+                recipient = ProfileService.get_anonymous_profile_by_uuid(
+                    recipient_profile_uuid
+                ).user
+            else:
+                recipient = ProfileService.get_user_by_uuid(recipient_profile_uuid)
+
+            if recipient is request.user:
+                raise ValidationError({"error": "You can't send inquiry to yourself"})
+
         except ObjectDoesNotExist:
             raise NotFound("Recipient does not exist")
+
         if sender == recipient:
-            raise ValidationError("You can't send inquiry to yourself")
+            raise ValidationError({"error": "You can't send inquiry to yourself"})
+
         body = {
-            **request.data,
+            "anonymous_recipient": is_anonymous,
             "sender": sender.pk,
             "recipient": recipient.pk,
             "recipient_profile_uuid": recipient_profile_uuid,
         }
-        serializer = InquiryRequestSerializer(data=body)
+
+        serializer = InquiryRequestSerializer(
+            data=body, context=self.get_serializer_context()
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_201_CREATED)
 
     def accept_inquiry_request(self, request: Request, request_id: int) -> Response:
         """Accept inquiry request by id"""
@@ -80,7 +101,9 @@ class InquiresAPIView(EndpointView):
             raise NotOwnerOfAnObject
 
         try:
-            serializer = InquiryRequestSerializer(instance=inquiry_object).accept()
+            serializer = InquiryRequestSerializer(
+                instance=inquiry_object, context=self.get_serializer_context()
+            ).accept()
         except TransitionNotAllowed:
             raise ValidationError("You can't accept this request")
 
@@ -98,7 +121,7 @@ class InquiresAPIView(EndpointView):
 
         try:
             serializer = InquiryRequestSerializer(
-                inquiry_object,
+                inquiry_object, context=self.get_serializer_context()
             ).reject()
         except TransitionNotAllowed:
             raise ValidationError("You can't reject this request")

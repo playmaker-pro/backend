@@ -48,7 +48,7 @@ migrate:
 
 .PHONY: start-celery
 start-celery:
-	nohup poetry run celery -A backend worker --autoscale=0,4 --without-mingle --without-gossip > /dev/null 2>&1 &
+	nohup poetry run celery -A backend worker --autoscale=0,6 --without-mingle --without-gossip > /dev/null 2>&1 &
 
 
 .PHONY: stop-celery
@@ -69,3 +69,13 @@ stop-celery-beat:
 .PHONY: shell
 shell:
 	poetry run python manage.py shell
+
+
+.PHONY: server
+server:
+	poetry run python manage.py runserver --celery
+
+
+.PHONY: postman
+postman:
+	poetry run python manage.py postman

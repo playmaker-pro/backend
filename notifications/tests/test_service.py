@@ -1,14 +1,19 @@
+import os
+from tempfile import NamedTemporaryFile
 from unittest.mock import patch
 
 import pytest
+from django.conf import settings
 from django.utils import timezone
 
 from followers.services import FollowService
 from inquiries.models import InquiryRequest
 from notifications.models import Notification
 from notifications.services import NotificationService
+from notifications.templates import NotificationBody
 from premium.models import PremiumType
 from profiles.models import ProfileVisitation
+from profiles.services import NotificationService
 from utils import factories
 
 pytestmark = pytest.mark.django_db
@@ -105,7 +110,7 @@ class TestNotifications:
             {
                 "title": "Profil tymczasowo ukryty",
                 "description": "Popraw informacje w profilu (imię, nazwisko, zdjęcie), aby przywrócić widoczność.",
-                "href": "/profil",
+                "href": "?modal=profile-hidden",
                 "icon": "hidden",
             },
             player_profile.meta,
@@ -205,7 +210,7 @@ class TestNotifications:
             target=player_profile.meta,
             title="Witaj w PlayMaker!",
             description="Dziękujemy za dołączenie do społeczności, Twoja podróż zaczyna się tutaj! Sprawdź, co daje Ci PlayMaker!",
-            href="/profil?modal=welcome",
+            href="?modal=welcome",
             icon="playmaker",
         ).exists()
 
@@ -219,7 +224,7 @@ class TestNotifications:
             target=player_profile.meta,
             title="Ktoś Cię obserwuje",
             description="Zobacz kto zaobserwował Twój profil.",
-            href="/obserowani",
+            href="/obserwowani?tab=obserwatorzy",
             icon="star",
         ).exists()
 
@@ -371,43 +376,65 @@ class TestNotifications:
                 target=profile.meta,
                 title="Dodaj linki",
                 description="Kliknij tutaj, aby przejść do profilu.",
-                href="/profil",
+                href="/profil#sekcja-linki",
                 icon="links",
             ).exists()
             is not has_links
         )
 
     @pytest.mark.parametrize(
-        "fixture_name, has_video",
+        "fixture_name, should_receive_notification, has_video",
         (
-            ("player_profile", True),
-            ("coach_profile", False),
-            ("scout_profile", False),
-            ("club_profile", True),
-            ("guest_profile", False),
+            (
+                "player_profile",
+                True,
+                False,
+            ),  # PlayerProfile without video should get notification
+            (
+                "player_profile",
+                False,
+                True,
+            ),  # PlayerProfile with video should NOT get notification
+            (
+                "coach_profile",
+                False,
+                False,
+            ),  # CoachProfile should never get notification
+            (
+                "scout_profile",
+                False,
+                False,
+            ),  # ScoutProfile should never get notification
+            ("club_profile", False, False),  # ClubProfile should never get notification
+            (
+                "guest_profile",
+                False,
+                False,
+            ),  # GuestProfile should never get notification
         ),
     )
-    def test_notify_add_video(self, fixture_name, request, has_video):
+    def test_notify_add_video(
+        self, fixture_name, request, should_receive_notification, has_video
+    ):
         """
-        Test the notify_add_video function.
+        Test the notify_add_video function - should only notify PlayerProfile users without videos.
         """
-        player_profile = request.getfixturevalue(fixture_name)
+        profile = request.getfixturevalue(fixture_name)
         if has_video:
-            player_profile.user.user_video.create(url="https://example.com/video.mp4")
+            profile.user.user_video.create(url="https://example.com/video.mp4")
         else:
-            player_profile.user.user_video.all().delete()  # Ensure no videos exist
+            profile.user.user_video.all().delete()  # Ensure no videos exist
 
-        NotificationService(player_profile.meta).bulk_notify_add_video()
-        assert (
-            Notification.objects.filter(
-                target=player_profile.meta,
-                title="Dodaj video",
-                description="Kliknij tutaj, aby przejść do profilu.",
-                href="/profil",
-                icon="video",
-            ).exists()
-            is not has_video
-        )
+        NotificationService.bulk_notify_add_video()
+        notification_exists = Notification.objects.filter(
+            target=profile.meta,
+            title="Dodaj video",
+            description="Kliknij tutaj, aby przejść do profilu.",
+            href="/profil#sekcja-video-z-gry",
+            icon="video",
+        ).exists()
+
+        assert notification_exists == should_receive_notification
 
     @pytest.mark.parametrize(
         "fixture_name,has_team_history",
@@ -435,7 +462,7 @@ class TestNotifications:
                 target=profile.meta,
                 title="Dodaj aktualną drużynę",
                 description="Kliknij tutaj, aby przejść do profilu.",
-                href="/profil",
+                href="/profil#sekcja-kariera",
                 icon="club",
             ).exists()
             is not has_team_history
@@ -493,3 +520,32 @@ class TestNotifications:
             href="/profil",
             icon="success",
         ).exists()
+
+    def test_notification_with_picture(self, player_profile):
+        """
+        Test that notification with picture is created correctly.
+        """
+        with NamedTemporaryFile(dir=settings.MEDIA_ROOT, suffix=".jpg") as temp_file:
+            temp_file.write(b"fake image data")
+            temp_file.flush()
+            picture_filename = os.path.basename(temp_file.name)
+            body = {
+                "title": "Test Notification",
+                "description": "This is a test notification with a picture.",
+                "href": "/test",
+                "icon": "test-icon",
+                "picture": picture_filename,
+                "picture_profile_role": "P",
+            }
+            NotificationService(player_profile.meta).create_notification(
+                NotificationBody(**body)
+            )
+
+            notification = Notification.objects.filter(
+                title=body["title"],
+            ).first()
+
+            assert notification is not None
+            assert notification.icon == "test-icon"
+            assert notification.picture == picture_filename
+            assert notification.picture_profile_role == "P"

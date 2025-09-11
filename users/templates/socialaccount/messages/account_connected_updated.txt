@@ -1,2 +1,0 @@
-
-{% extends "socialaccount/messages/account_connected.txt" %}

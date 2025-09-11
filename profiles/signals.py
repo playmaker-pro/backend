@@ -4,9 +4,10 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 
-from mailing.deprecated import mail_role_change_request
-from notifications.services import NotificationService
+from profiles.services import NotificationService
 from profiles.tasks import (
+    post_create_other_profile,
+    post_create_player_profile,
     post_create_profile_tasks,
 )
 from users.models import User
@@ -14,29 +15,6 @@ from users.models import User
 from . import models
 
 logger = logging.getLogger(__name__)
-
-
-@receiver(post_save, sender=models.RoleChangeRequest)
-def change_profile_approved_handler(sender, instance, created, **kwargs):
-    """users.User.declared_role is central point to navigate with role changes.
-    admin can alter somees role just changing User.declared_role
-    """
-    # we assume that when object is created RoleChangedRequest only admin
-    # should receive notification.
-    if created:
-        mail_role_change_request(instance)
-        return
-
-    if instance.approved:
-        user = instance.user
-        user.declared_role = instance.new
-        user.unverify(silent=True)
-        user.save()  # this should invoke create_profile_handler signal
-        # set_and_create_user_profile(user)
-        logger.info(
-            f"User {user} profile changed to {instance.new} "
-            f"sucessfully due to: accepted RoleChangeRequest"
-        )
 
 
 @receiver(post_save, sender=models.ProfileVisitation)
@@ -54,7 +32,7 @@ def enforce_visitation_limit(sender, instance, created, **kwargs):
 
 
 @receiver(post_save, sender=models.PlayerProfile)
-def ensure_metrics_exist(sender, instance, created, **kwargs):
+def post_save_player_profile(sender, instance, created, **kwargs):
     """
     Create metrics for a player profile if they don't exist.
     """
@@ -80,7 +58,13 @@ def post_create_profile(sender, instance, created, **kwargs):
     Create a profile for the user if it doesn't exist.
     """
     if created:
-        post_create_profile_tasks.delay(instance.__class__.__name__, instance.pk)
+        profile_class_name = instance.__class__.__name__
+        post_create_profile_tasks.delay(profile_class_name, instance.pk)
+
+        if profile_class_name in ["CoachProfile", "ClubProfile", "ScoutProfile"]:
+            post_create_other_profile.delay(instance.pk, profile_class_name)
+        elif profile_class_name == "PlayerProfile":
+            post_create_player_profile.delay(instance.pk)
 
 
 @receiver(post_save, sender=models.ProfileVisitation)

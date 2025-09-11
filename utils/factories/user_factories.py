@@ -22,7 +22,6 @@ class UserFactory(CustomObjectFactory):
         django_get_or_create = ("email",)
 
     email = factory.Faker("email")
-    username = factory.Faker("user_name")
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
     password = make_password("test")
@@ -35,6 +34,9 @@ class UserFactory(CustomObjectFactory):
     )
     ref = factory.RelatedFactory("utils.factories.user_factories.RefFactory", "user")
     display_status = User.DisplayStatus.VERIFIED
+    mailing = factory.RelatedFactory(
+        "utils.factories.mailing_factories.MailingFactory", "user"
+    )
 
     @classmethod
     def create_admin_user(

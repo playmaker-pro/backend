@@ -4,9 +4,9 @@ from typing import Any, Dict, List
 from django.core.management.base import BaseCommand
 from django.db.models import QuerySet
 
-from notifications.services import NotificationService
 from notifications.templates import NotificationBody
 from profiles.models import ProfileMeta
+from profiles.services import NotificationService
 
 
 @dataclass
@@ -132,6 +132,7 @@ class Command(BaseCommand):
                 title=arguments["title"],
                 description=arguments["description"],
                 href=arguments["href"],
+                icon=arguments["icon"],
             ),
             players=arguments["players"],
             coaches=arguments["coaches"],

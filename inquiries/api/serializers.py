@@ -1,22 +1,19 @@
 import typing
 
-from django.contrib.auth import get_user_model
+from django.utils.translation import gettext as _
 from rest_framework import serializers
 
-from api.serializers import ProfileEnumChoicesSerializer
+from api.serializers import PhoneNumberField, ProfileEnumChoicesSerializer
 from clubs.api.serializers import TeamHistoryBaseProfileSerializer
 from inquiries import models as _models
 from profiles.api.serializers import (
     PlayerProfilePositionSerializer as _PlayerProfilePositionSerializer,
 )
-from profiles.serializers_detailed.base_serializers import PhoneNumberField
 from profiles.serializers_detailed.player_profile_serializers import (
     PlayerMetricsSerializer,
 )
 from users.api.serializers import BaseUserDataSerializer as _BaseUserDataSerializer
-from users.models import UserPreferences
-
-User = get_user_model()
+from users.models import User, UserPreferences
 
 
 class InquiryContactSerializer(serializers.ModelSerializer):
@@ -119,6 +116,54 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
         model = _models.InquiryRequest
         fields = "__all__"
 
+    def get_translated_status(self, status: str) -> str:
+        """Translate inquiry status to current language."""
+        status_translations = {
+            _models.InquiryRequest.STATUS_NEW: _("NOWE"),
+            _models.InquiryRequest.STATUS_SENT: _("WYSŁANO"),
+            _models.InquiryRequest.STATUS_RECEIVED: _("PRZECZYTANE"),
+            _models.InquiryRequest.STATUS_ACCEPTED: _("ZAAKCEPTOWANE"),
+            _models.InquiryRequest.STATUS_REJECTED: _("ODRZUCONE"),
+        }
+        return status_translations.get(status, status)
+
+    def to_representation(self, instance: _models.InquiryRequest) -> None:
+        """Custom representation for InquiryRequest, handling recipient data and status translation."""
+        data = super().to_representation(instance)
+        # Translate status
+        data["status"] = self.get_translated_status(instance.status)
+
+        # Handle anonymous recipient by using stored UUID for security
+        if (
+            instance.anonymous_recipient
+            and instance.status != _models.InquiryRequest.STATUS_ACCEPTED
+        ):
+            recipient = data.get("recipient_object", {})
+            
+            # Use stored anonymous UUID for secure historical preservation
+            if instance.recipient_anonymous_uuid:
+                anonymous_uuid = str(instance.recipient_anonymous_uuid)
+                recipient["slug"] = f"anonymous-{anonymous_uuid}"
+                recipient["uuid"] = anonymous_uuid
+            else:
+                # This should not happen with the new system
+                # All anonymous inquiries will have recipient_anonymous_uuid set
+                raise ValueError(f"Anonymous inquiry {instance.id} missing recipient_anonymous_uuid")
+            
+            # Anonymize other recipient data
+            recipient["id"] = 0
+            recipient["first_name"] = "Anonimowy"
+            recipient["last_name"] = "profil"
+            recipient["picture"] = None
+            recipient["team_history_object"] = None
+            recipient["contact"] = {
+                "email": None,
+                "phone_number": {"dial_code": None, "number": None},
+            }
+            data["recipient_object"] = recipient
+
+        return data
+
     def validate(self, attrs: dict) -> dict:
         """Validate if user can make request"""
         if not self.instance:
@@ -133,8 +178,10 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
                 )
 
             if _models.InquiryRequest.objects.filter(
-                sender=sender, recipient=recipient
-            ).exists():
+                sender=sender,
+                recipient=recipient,
+                anonymous_recipient=attrs.get("anonymous_recipient", False),
+            ).first():
                 raise serializers.ValidationError(
                     f"You have already sent inquiry to {recipient}."
                 )
@@ -185,25 +232,36 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
         logic specific to the InquiryRequest during its creation.
         """
         recipient_profile_uuid = validated_data.pop("recipient_profile_uuid", None)
+        
+        # If this is an anonymous inquiry, store the UUID for historical preservation
+        if validated_data.get("anonymous_recipient") and recipient_profile_uuid:
+            validated_data["recipient_anonymous_uuid"] = recipient_profile_uuid
+        
         inquiry_request = _models.InquiryRequest(**validated_data)
         inquiry_request.is_read_by_sender = True
         inquiry_request.is_read_by_recipient = False
         inquiry_request.save(recipient_profile_uuid=recipient_profile_uuid)
         return inquiry_request
 
-    @property
-    def data(self) -> dict:
-        """Get data, but remove contact information if request is not accepted yet"""
-        data = super().data
-        if data.get("status") != _models.InquiryRequest.STATUS_ACCEPTED:
-            data["recipient_object"]["contact"] = {}
-        return data
-
 
 class InquiryPlanSerializer(serializers.ModelSerializer):
     class Meta:
         model = _models.InquiryPlan
         exclude = ("sort",)
+
+    def to_representation(self, instance: _models.InquiryPlan) -> dict:
+        """Override to provide dynamic translation of plan fields."""
+        data = super().to_representation(instance)
+
+        # Translate plan name and description dynamically
+        # These are stored in the database and need runtime translation
+        if instance.name:
+            data["name"] = _(instance.name)
+
+        if instance.description:
+            data["description"] = _(instance.description)
+
+        return data
 
 
 class UserInquiryLogSerializer(serializers.ModelSerializer):
@@ -246,7 +304,7 @@ class UserInquirySerializer(serializers.ModelSerializer):
     days_until_expiry = serializers.IntegerField(
         read_only=True, source="get_days_until_next_reference"
     )
-    logs = UserInquiryLogSerializer(many=True, read_only=True)
+    # logs = UserInquiryLogSerializer(many=True, read_only=True)
     unlimited = serializers.BooleanField(
         read_only=True, source="has_unlimited_inquiries"
     )

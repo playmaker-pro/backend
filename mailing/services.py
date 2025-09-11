@@ -1,94 +1,309 @@
-import re as _re
-from typing import List as List
+import logging
 
-from django.conf import settings
-from django.utils.translation import gettext_lazy as _
+from django.db.models import Count, F, Q
+from django.utils import timezone
 
-from mailing.schemas import EmailSchema as _EmailSchema
-from mailing.tasks import send
+from mailing.schemas import EmailTemplateRegistry, Envelope, MailContent
+from mailing.utils import build_email_context
+from premium.models import PremiumProduct
+from profiles.models import ClubProfile, CoachProfile, PlayerProfile, ProfileMeta
+from users.models import User
 
 
 class MailingService:
-    def __init__(self, schema: _EmailSchema) -> None:
-        self._schema: _EmailSchema = schema
+    """Handles sending templated emails and optionally logging them in the outbox."""
 
-    @property
-    def _subject(self) -> str:
-        """Return email subject."""
-        return self._schema.subject
+    def __init__(
+        self,
+        schema: MailContent,
+    ) -> None:
+        """
+        Initialize the mailing service.
 
-    @property
-    def _body(self) -> str:
-        """Return email body."""
-        return self._schema.body
+        Args:
+            schema (MailContent): The email template schema to use.
+        """
+        if schema is None:
+            raise ValueError("Schema cannot be None")
+        self._schema = schema
 
-    @property
-    def _recipients(self) -> List:
-        """Return email recipients."""
-        return self._schema.recipients
+    def send_mail(self, recipient: User) -> None:
+        """
+        Send the email using the provided schema and recipient.
+        """
+        envelope = Envelope(mail=self._schema, recipients=[recipient.email])
+        envelope.send()
 
-    @property
-    def _sender(self) -> str:
-        """Return email sender."""
-        return self._schema.sender
+    def send_mail_to_admins(self) -> None:
+        """
+        Send the email to admins using the provided schema.
+        """
+        envelope = Envelope(mail=self._schema)
+        envelope.send_to_admins()
 
-    def send_mail(self) -> None:
-        """Send email based on schema. Log error if sending failed."""
-        send.delay(
-            subject=self._subject,
-            message=self._body,
-            from_email=self._sender,
-            recipient_list=self._recipients,
-            log=self._schema.log,
+
+class PostmanService:
+    def __init__(self, logger: logging.Logger = logging.getLogger(__name__)) -> None:
+        self.logger = logger
+
+    def blank_profile(self):
+        """
+        Check for profiles that are not filled out and notify the user.
+        """
+        thirty_days_ago = timezone.now() - timezone.timedelta(days=30)
+        mail_schema = EmailTemplateRegistry.INCOMPLETE_PROFILE_REMINDER
+        qs = (
+            PlayerProfile.objects.filter(user__declared_role="P")
+            .filter(
+                Q(team_object__isnull=True)
+                | Q(user__user_video__isnull=True)
+                | Q(user__display_status=User.DisplayStatus.NOT_SHOWN)
+            )
+            .exclude(
+                user__mailing__mailbox__sent_at__gt=thirty_days_ago,
+                user__mailing__mailbox__mail_template=mail_schema.template_file,
+            )
+            .exclude(user__date_joined__gt=timezone.now() - timezone.timedelta(days=3))
+            .select_related("user")
         )
 
-
-class MessageContentParser:
-    def __init__(self, recipient: settings.AUTH_USER_MODEL, **extra_kwargs) -> None:
-        self._recipient: settings.AUTH_USER_MODEL = recipient
-        self._text: str = ""
-        self._extra_kwargs = extra_kwargs
-
-    @property
-    def text(self) -> str:
-        return str(self._text)
-
-    @text.setter
-    def text(self, value: str) -> None:
-        self._text = _(value)
-
-    @property
-    def _recipient_user_gender_index(self) -> int:
-        """Return 1 if related user is female, 0 otherwise"""
-        return int(self._recipient.userpreferences.gender == "K")
-
-    def _put_correct_form(self) -> None:
-        """Replace '#male_form|female_form#' with correct form of word based on recipient gender."""
-        pattern = r"#(\w+)\|(\w+)#"
-
-        matches = _re.findall(pattern, self.text)
-        _id = self._recipient_user_gender_index
-
-        for match in matches:
-            self._text = self._text.replace(
-                f"#{match[0]}|{match[1]}#", str(_(match[_id]))
+        for profile in qs:
+            context = build_email_context(profile.user)
+            MailingService(mail_schema(context)).send_mail(profile.user)
+            self.logger.info(
+                "Sent incomplete profile reminder to %s", profile.user.email
             )
+        self.logger.info(
+            "Incomplete profile reminder email has been sent to %d players", qs.count()
+        )
 
-    def _put_url(self) -> None:
-        """Replace '#url#' with url."""
-        url = self._extra_kwargs.get("url", "")
-        self._text = self._text.replace("#url#", url)
+        qs = (
+            CoachProfile.objects.filter(
+                user__declared_role="T",
+                user__display_status=User.DisplayStatus.NOT_SHOWN,
+            )
+            .exclude(
+                user__mailing__mailbox__sent_at__gt=thirty_days_ago,
+                user__mailing__mailbox__mail_template=mail_schema.template_file,
+            )
+            .exclude(user__date_joined__gt=timezone.now() - timezone.timedelta(days=3))
+            .select_related("user")
+        )
 
-    def parse_email_title(self, content: str) -> str:
-        """Transform text and return correct form of email_title."""
-        self.text = content
+        for profile in qs:
+            context = build_email_context(profile.user)
+            MailingService(mail_schema(context)).send_mail(profile.user)
+            self.logger.info(
+                "Sent incomplete profile reminder to %s", profile.user.email
+            )
+        self.logger.info(
+            "Incomplete profile reminder email has been sent to %d coaches", qs.count()
+        )
 
-        return self.text
+        qs = (
+            ClubProfile.objects.filter(
+                user__declared_role="C",
+                user__display_status=User.DisplayStatus.NOT_SHOWN,
+            )
+            .exclude(
+                user__mailing__mailbox__sent_at__gt=thirty_days_ago,
+                user__mailing__mailbox__mail_template=mail_schema.template_file,
+            )
+            .exclude(user__date_joined__gt=timezone.now() - timezone.timedelta(days=3))
+            .select_related("user")
+        )
+        for profile in qs:
+            context = build_email_context(profile.user)
+            MailingService(mail_schema(context)).send_mail(profile.user)
+            self.logger.info(
+                "Sent incomplete profile reminder to %s", profile.user.email
+            )
+        self.logger.info(
+            "Incomplete profile reminder email has been sent to %d clubs", qs.count()
+        )
 
-    def parse_email_body(self, content: str) -> str:
-        """Transform text and return correct form of email_body."""
-        self.text = content
-        self._put_url()
-        self._put_correct_form()
+    def inactive_for_30_days(self):
+        """
+        Check for profiles that have been inactive for 30 days and notify the user.
+        """
+        thirty_days_ago = timezone.now() - timezone.timedelta(days=30)
+        mail_schema = EmailTemplateRegistry.INACTIVE_USER_REMINDER
+        qs = (
+            User.objects.filter(
+                last_activity__lt=thirty_days_ago,
+            )
+            .exclude(
+                mailing__mailbox__sent_at__gt=thirty_days_ago,
+                mailing__mailbox__mail_template=mail_schema.template_file,
+            )
+            .exclude(
+                mailing__mailbox__sent_at__gt=F("last_activity"),
+                mailing__mailbox__mail_template=mail_schema.template_file,
+            )
+        )
+        for user in qs:
+            context = build_email_context(user, days_inactive=30)
+            MailingService(mail_schema(context)).send_mail(user)
+            self.logger.info("Sent inactive (30 days) user reminder to %s", user.email)
+        self.logger.info(
+            "Inactive (30 days) user reminder email has been sent to %d users",
+            qs.count(),
+        )
 
-        return self.text
+    def inactive_for_90_days(self):
+        """
+        Check for profiles that have been inactive for 90 days and notify the user.
+        """
+        ninety_days_ago = timezone.now() - timezone.timedelta(days=90)
+        mail_schema = EmailTemplateRegistry.INACTIVE_USER_REMINDER
+        qs = (
+            User.objects.filter(
+                last_activity__lt=ninety_days_ago,
+            )
+            .exclude(
+                mailing__mailbox__sent_at__gt=ninety_days_ago,
+                mailing__mailbox__mail_template=mail_schema.template_file,
+            )
+            .exclude(
+                mailing__mailbox__sent_at__gt=F("last_activity"),
+                mailing__mailbox__mail_template=mail_schema.template_file,
+            )
+        )
+        for user in qs:
+            context = build_email_context(user, days_inactive=90)
+            MailingService(mail_schema(context)).send_mail(user)
+            self.logger.info("Sent inactive (90 days) user reminder to %s", user.email)
+        self.logger.info(
+            "Inactive (90 days) user reminder email has been sent to %d users",
+            qs.count(),
+        )
+
+    def go_premium(self):
+        """
+        Remind users to go premium if they haven't done it yet.
+        """
+        mail_schema = EmailTemplateRegistry.PREMIUM_ENCOURAGEMENT
+        qs = (
+            PremiumProduct.objects.filter(premium__valid_until__isnull=True)
+            .exclude(
+                user__mailing__mailbox__sent_at__gt=timezone.now()
+                - timezone.timedelta(days=30),
+                user__mailing__mailbox__mail_template=mail_schema.template_file,
+            )
+            .exclude(user__date_joined__gt=timezone.now() - timezone.timedelta(days=5))
+            .select_related("user")
+        )
+        for pp in qs:
+            context = build_email_context(pp.user)
+            MailingService(mail_schema(context)).send_mail(pp.user)
+            self.logger.info("Sent premium encouragement email to %s", pp.user.email)
+        self.logger.info(
+            "Premium encouragement email has been sent to %d users",
+            qs.count(),
+        )
+
+    def views_monthly(
+        self,
+    ):
+        """
+        Remind to buy premium after the trial ends.
+        """
+        mail_schema = EmailTemplateRegistry.PROFILE_VIEWS_MILESTONE
+        qs = (
+            ProfileMeta.objects.annotate(
+                visits_count=Count(
+                    "visited_objects",
+                    filter=Q(
+                        visited_objects__timestamp__gte=timezone.now()
+                        - timezone.timedelta(days=14)
+                    ),
+                )
+            )
+            .filter(visits_count__gte=5)
+            .exclude(
+                user__mailing__mailbox__sent_at__gt=timezone.now()
+                - timezone.timedelta(days=14),
+                user__mailing__mailbox__mail_template=mail_schema.template_file,
+            )
+            .select_related("user")
+        )
+        for meta in qs:
+            context = build_email_context(meta.user)
+            MailingService(mail_schema(context)).send_mail(meta.user)
+            self.logger.info(
+                "Sent profile views milestone email to %s", meta.user.email
+            )
+        self.logger.info(
+            "Profile views milestone email has been sent to %d users", qs.count()
+        )
+
+    def player_without_transfer_status(self):
+        """
+        Notify players without transfer status to update it.
+        """
+        mail_schema = EmailTemplateRegistry.TRANSFER_STATUS_REMINDER
+        qs = (
+            PlayerProfile.objects.filter(
+                meta__transfer_status__isnull=True,
+                user__declared_role="P",
+            )
+            .exclude(
+                user__mailing__mailbox__sent_at__gt=timezone.now()
+                - timezone.timedelta(days=60),
+                user__mailing__mailbox__mail_template=mail_schema.template_file,
+            )
+            .exclude(user__date_joined__gt=timezone.now() - timezone.timedelta(days=7))
+            .select_related("user")
+        )
+
+        for player in qs:
+            context = build_email_context(player.user)
+            MailingService(mail_schema(context)).send_mail(player.user)
+            self.logger.info("Sent transfer status reminder to %s", player.user.email)
+        self.logger.info(
+            "Transfer status reminder email has been sent to %d players", qs.count()
+        )
+
+    def profile_without_transfer_request(self):
+        """
+        Notify profiles without transfer request to create one.
+        """
+        mail_schema = EmailTemplateRegistry.TRANSFER_REQUEST_REMINDER
+        qs = (
+            ProfileMeta.objects.filter(
+                transfer_request__isnull=True,
+                user__declared_role__in=["C", "T"],
+            )
+            .exclude(
+                user__mailing__mailbox__sent_at__gt=timezone.now()
+                - timezone.timedelta(days=60),
+                user__mailing__mailbox__mail_template=mail_schema.template_file,
+            )
+            .exclude(user__date_joined__gt=timezone.now() - timezone.timedelta(days=7))
+            .select_related("user")
+        )
+        for meta in qs:
+            context = build_email_context(meta.user)
+            MailingService(mail_schema(context)).send_mail(meta.user)
+            self.logger.info("Sent transfer request reminder to %s", meta.user.email)
+        self.logger.info(
+            "Transfer request reminder email has been sent to %d profiles", qs.count()
+        )
+
+    def invite_friends(self):
+        """
+        Invite friends to join the platform.
+        """
+        mail_schema = EmailTemplateRegistry.INVITE_FRIENDS_REMINDER
+        qs = User.objects.exclude(
+            mailing__mailbox__sent_at__gt=timezone.now() - timezone.timedelta(days=60),
+            mailing__mailbox__mail_template=mail_schema.template_file,
+        ).exclude(date_joined__gt=timezone.now() - timezone.timedelta(days=10))
+
+        for user in qs:
+            context = build_email_context(user)
+            MailingService(mail_schema(context)).send_mail(user)
+            self.logger.info("Sent invite friends reminder to %s", user.email)
+        self.logger.info(
+            "Invite friends reminder email has been sent to %d users", qs.count()
+        )

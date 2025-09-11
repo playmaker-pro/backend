@@ -210,7 +210,7 @@ class TransferRequestDoesNotExistHTTPException(CoreAPIException):
     """
 
     status_code = status.HTTP_404_NOT_FOUND
-    default_detail = "Given player does not have transfer request."
+    default_detail = "Given profile does not have transfer request."
 
 
 class NotAOwnerOfTheTeamContributorHTTPException(CoreAPIException):
@@ -220,12 +220,3 @@ class NotAOwnerOfTheTeamContributorHTTPException(CoreAPIException):
 
     status_code = status.HTTP_403_FORBIDDEN
     default_detail = "You can't request transfer for this team."
-
-
-class PhoneNumberMustBeADictionaryHTTPException(CoreAPIException):
-    """
-    API HTTP exception raised when a phone number is not a dictionary.
-    """
-
-    status_code = status.HTTP_400_BAD_REQUEST
-    default_detail = "Phone number must be a dictionary."
