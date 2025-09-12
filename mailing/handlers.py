@@ -1,4 +1,9 @@
 from django.utils.log import AdminEmailHandler
+from slack_sdk.errors import SlackApiError
+
+from app.slack.client import send_error_message
+from app.slack.errors import SlackDisabledException
+from backend.settings import cfg
 
 
 class AsyncAdminEmailHandler(AdminEmailHandler):
@@ -14,11 +19,16 @@ class AsyncAdminEmailHandler(AdminEmailHandler):
         """
         try:
             logger_name = record.name  # This gets the logger name
-            subject = self.format_subject(f"[{logger_name}] {record.getMessage()}")
+            subject = self.format_subject(
+                f"[{cfg.environment}][{logger_name}] {record.getMessage()}"
+            )
             message = self.format(record)
-            self.send_mail(subject, message)
-        except Exception:
-            self.handleError(record)
+            send_error_message.delay(subject, message)
+        except (SlackApiError, SlackDisabledException):
+            try:
+                self.send_mail(subject, message)
+            except Exception:
+                self.handleError(record)
 
     def send_mail(self, subject, message, *args, **kwargs):
         from mailing.tasks import notify_admins

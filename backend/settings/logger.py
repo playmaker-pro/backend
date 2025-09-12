@@ -196,15 +196,15 @@ def get_logging_structure(logfile_root: str) -> Dict[str, Any]:
             "celery": {
                 "handlers": ["celery_file", "console", "mail_admins"],
                 "level": "DEBUG",
-                "propagate": False,
+                "propagate": True,
             },
             "celery.utils.functional": {
-                "handlers": ["celery_file", "console", "mail_admins"],
-                "level": "ERROR",
+                "handlers": [],
+                "level": "DEBUG",
                 "propagate": False,
             },
             "celery.beat": {
-                "handlers": ["celery_file", "console", "mail_admins"],
+                "handlers": ["console"],
                 "level": "DEBUG",
                 "propagate": False,
             },

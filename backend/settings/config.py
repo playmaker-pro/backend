@@ -120,6 +120,12 @@ class MongoDBConfig(BaseModel):
     enabled: bool
 
 
+class SlackConfig(BaseModel):
+    oauth_token: SecretStr
+    error_notification_channel: str
+    enabled: bool = False
+
+
 class Config(BaseSettings):
     """General settings for webapp"""
 
@@ -131,6 +137,7 @@ class Config(BaseSettings):
     webapp: WebappConfig
     smtp: MailingConfig
     mongodb: MongoDBConfig
+    slack: SlackConfig
 
     # add the rest of settings that should fit here
     class Config:

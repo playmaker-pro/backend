@@ -38,13 +38,11 @@ class Command(BaseCommand):
         if (
             settings.CONFIGURATION == Environment.DEV.value
         ):  # celery beat can be used only in dev env
-            worker_args.extend(
-                [
-                    "--beat",
-                    "--scheduler",
-                    "django",
-                ]
-            )
+            worker_args.extend([
+                "--beat",
+                "--scheduler",
+                "django",
+            ])
 
         celery_app.worker_main(argv=worker_args)
 

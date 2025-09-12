@@ -22,7 +22,11 @@ logger = logging.getLogger(__name__)
 
 class ProfileRetrieveMixin:
     def retrieve_profile_and_respond(
-        self, request, profile_object: models.PROFILE_MODELS, is_anonymous: bool = False, anonymous_uuid: str = None
+        self,
+        request,
+        profile_object: models.PROFILE_MODELS,
+        is_anonymous: bool = False,
+        anonymous_uuid: str = None,
     ) -> Response:
         """Shared logic for retrieving a profile and responding with serialized data."""
         # Profile visit counter logic
@@ -77,7 +81,7 @@ class ProfileRetrieveMixin:
             and requestor.meta
             and requestor.meta.is_anonymous  # profile transfer setting is set to anonymous
         ):
-            logger.debug(f"Skipping visit tracking for anonymous profile: {requestor}")
+            logger.info(f"Skipping visit tracking for anonymous profile: {requestor}")
             return
 
         try:
@@ -86,7 +90,7 @@ class ProfileRetrieveMixin:
             )
             visit_history_service.increment(instance=history, requestor=requestor)
         except ProfileVisitHistoryDoesNotExistException:
-            logger.error("Profile visit history does not exist. Creating one..")
+            logger.info("Profile visit history does not exist. Creating one..")
             history = visit_history_service.create(user=profile_object.user)
             visit_history_service.increment(instance=history, requestor=requestor)
 
