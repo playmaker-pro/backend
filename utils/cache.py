@@ -21,7 +21,6 @@ class CachedResponse:
         request: Request,
         cache_timeout: int = settings.DEFAULT_CACHE_LIFESPAN,
     ):
-        self._base_cache_key = cache_key
         self._cache_timeout = cache_timeout
         self._request = request
         # Generate language-aware cache key

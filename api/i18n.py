@@ -59,6 +59,7 @@ class LanguageDetectionMixin:
                 return supported_code
         
         # Language not supported
+        logger.warning(f"Unsupported language '{language}', using default '{DEFAULT_LANGUAGE}'")
         translation.activate(DEFAULT_LANGUAGE)
         return DEFAULT_LANGUAGE
 
