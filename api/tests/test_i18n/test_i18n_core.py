@@ -43,8 +43,10 @@ class I18nConfigTests(TestCase):
         for lang_tuple in SUPPORTED_LANGUAGES:
             code, name = lang_tuple
             assert isinstance(code, str)
-            assert code == code.lower()
+            # Allow both lowercase and mixed-case language codes (e.g., 'en', 'uk-UA')
             assert len(code) >= 2
+            # Validate format: should be letters and hyphens only
+            assert all(c.isalpha() or c == '-' for c in code)
 
         # No duplicates
         assert len(SUPPORTED_LANGUAGE_CODES) == len(set(SUPPORTED_LANGUAGE_CODES))
@@ -62,6 +64,9 @@ class LanguageDetectionMixinTests(TestCase):
             # (headers, expected_language, description)
             ({"X-Language": "en"}, "en", "valid header"),
             ({"X-Language": "DE"}, "de", "mixed case header"),
+            ({"X-Language": "uk-UA"}, "uk-UA", "Ukrainian mixed case"),
+            ({"X-Language": "uk-ua"}, "uk-UA", "Ukrainian lowercase"),
+            ({"X-Language": "UK-UA"}, "uk-UA", "Ukrainian uppercase"),
             ({"X-Language": "invalid"}, DEFAULT_LANGUAGE, "invalid language"),
             ({}, DEFAULT_LANGUAGE, "no header"),
             ({"Other-Header": "value"}, DEFAULT_LANGUAGE, "different header"),
@@ -203,7 +208,7 @@ class I18nMixinIntegrationTests(TestCase):
 
     def test_multiple_languages_handling(self):
         """Test handling of different languages in the same application."""
-        test_languages = ["en", "de", "pl", "uk"]
+        test_languages = ["en", "de", "pl", "uk-UA"]
 
         for lang_code in test_languages:
             with self.subTest(language=lang_code):

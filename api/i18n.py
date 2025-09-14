@@ -36,8 +36,11 @@ class LanguageDetectionMixin:
         # X-Language header
         try:
             x_language = request.headers.get('X-Language')
-            if x_language and x_language.lower() in SUPPORTED_LANGUAGE_CODES:
-                return x_language.lower()
+            if x_language:
+                x_language_lower = x_language.lower()
+                for supported_code in SUPPORTED_LANGUAGE_CODES:
+                    if x_language_lower == supported_code.lower():
+                        return supported_code
         except AttributeError:
             # Request doesn't have headers attribute
             logger.debug("Request has no headers attribute")
@@ -49,13 +52,15 @@ class LanguageDetectionMixin:
         """
         Activate the specified language for Django's translation system.
         """
-        if language in SUPPORTED_LANGUAGE_CODES:
-            translation.activate(language)
-            return language
-        else:
-            logger.warning(f"Unsupported language '{language}', using default '{DEFAULT_LANGUAGE}'")
-            translation.activate(DEFAULT_LANGUAGE)
-            return DEFAULT_LANGUAGE
+        # Case-insensitive check for supported languages
+        for supported_code in SUPPORTED_LANGUAGE_CODES:
+            if language.lower() == supported_code.lower():
+                translation.activate(supported_code)
+                return supported_code
+        
+        # Language not supported
+        translation.activate(DEFAULT_LANGUAGE)
+        return DEFAULT_LANGUAGE
 
 
 class I18nViewMixin(LanguageDetectionMixin):
