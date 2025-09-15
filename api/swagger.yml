@@ -8058,10 +8058,10 @@ components:
       name: X-Language
       in: header
       required: false
-      description: 'Language code for internationalization. Supported languages: pl (Polish), en (English), de (German), fr (French), es (Spanish), it (Italian). Defaults to Polish if not specified.'
+      description: 'Language code for internationalization. Supported languages: pl (Polish), en (English), de (German), uk-UA (Ukrainian). Defaults to Polish if not specified.'
       schema:
         type: string
-        enum: [ 'pl', 'en', 'de', 'uk' ]
+        enum: [ 'pl', 'en', 'de', 'uk-UA' ]
         default: 'pl'
         example: 'en'
   securitySchemes:
