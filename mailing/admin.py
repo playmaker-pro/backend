@@ -6,9 +6,14 @@ from mailing import models
 class MailLogInline(admin.TabularInline):
     model = models.MailLog
     extra = 0
-    readonly_fields = ("id", "subject", "sent_at", "status")
-    fields = ("id", "subject", "sent_at", "status")
+    readonly_fields = ("id", "subject", "get_recipient", "sent_at", "status")
+    fields = ("id", "subject", "get_recipient", "sent_at", "status")
     can_delete = False
+
+    def get_recipient(self, obj):
+        return obj.mailing.user.email if obj.mailing and obj.mailing.user else "-"
+
+    get_recipient.short_description = "Recipient"
 
 
 @admin.register(models.MailLog)
