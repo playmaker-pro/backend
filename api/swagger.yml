@@ -6897,19 +6897,6 @@ components:
     TransferStatusGet:
       type: object
       properties:
-        contact_email:
-          type: string
-          description: "Contact email address."
-        phone_number:
-          type: object
-          properties:
-            dial_code:
-              type: string
-              description: "Represents dial code for phone number."
-            number:
-              type: string
-              description: "Contact mobile phone number."
-          required: [ "dial_code", "number" ]
         status:
           type: object
           properties:
@@ -6977,14 +6964,9 @@ components:
         is_anonymous:
           type: boolean
           description: "If true, the transfer status will be anonymous and not linked to a specific team contributor."
-      required: [ "contact_email", "phone_number", "status", "additional_info", "league", "benefits", "salary", "number_of_trainings" ]
+      required: [ "status", "additional_info", "league", "benefits", "salary", "number_of_trainings" ]
       example:
         {
-          "contact_email": "email@email.com",
-          "phone_number": {
-            "dial_code": "+1",
-            "number": 123
-          },
           "status": {
             "id": "1",
             "name": "Szukam klubu"
@@ -7205,23 +7187,13 @@ components:
             name:
               type: string
           required: [ "id", "name" ]
-        contact_email:
-          type: string
-        phone_number:
-          type: object
-          properties:
-            dial_code:
-              type: string
-            number:
-              type: string
-          required: [ "dial_code", "number" ]
         profile_uuid:
           type: string
         club_voivodeship:
           type: string
         is_anonymous:
           type: boolean
-      required: [ "requesting_team", "gender", "status", "position", "number_of_trainings", "salary", "contact_email", "phone_number", "benefits", "profile_uuid", "club_voivodeship" ]
+      required: [ "requesting_team", "gender", "status", "position", "number_of_trainings", "salary", "benefits", "profile_uuid", "club_voivodeship" ]
 
       example:
         {
@@ -7275,11 +7247,6 @@ components:
           "salary": {
             "id": "1",
             "name": "0 - 499 zł"
-          },
-          "contact_email": "email@email.com",
-          "phone_number": {
-            "dial_code": "+1",
-            "number": "123"
           },
           "is_anonymous": True,
         }

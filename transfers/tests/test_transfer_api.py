@@ -848,11 +848,9 @@ class TestAnonymousTransferRequest:
         assert data["requesting_team"]["team"]["team_contributor_id"] == 0
         assert data["requesting_team"]["team"]["picture_url"] is None
         assert data["profile_uuid"] == str(transfer_request.anonymous_uuid)
-        assert data["phone_number"] == {
-            "dial_code": None,
-            "number": None,
-        }
-        assert data["contact_email"] is None
+        # Contact fields are now write-only and never appear in responses
+        assert "phone_number" not in data
+        assert "contact_email" not in data
         assert data["is_anonymous"] is True
 
         api_client.patch(
@@ -898,8 +896,9 @@ class TestAnonymousTransferRequest:
         assert data["requesting_team"]["team"]["team_name"] != "Anonimowa drużyna"
         assert data["requesting_team"]["team"]["id"] != 0
         assert data["profile_uuid"] == str(coach_profile.uuid)
-        assert data["phone_number"]["number"] is not None
-        assert data["phone_number"]["dial_code"] is not None
+        # Contact fields are now write-only and never appear in responses
+        assert "phone_number" not in data
+        assert "contact_email" not in data
 
     def test_expose_anonymous_transfer_request_error_not_owner(
         self, coach_profile, player_profile, api_client
