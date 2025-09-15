@@ -17,7 +17,7 @@ class TestSendEmailCommand:
             "--title",
             test_template.subject,
             "--template_path",
-            test_template.template_path,
+            test_template.template_file,
         )
 
         assert len(outbox) == 1
@@ -35,7 +35,7 @@ class TestSendEmailCommand:
             "--title",
             test_template.subject,
             "--template_path",
-            test_template.template_path,
+            test_template.template_file,
         )
 
         received_by = [mail.to[0] for mail in outbox]
@@ -54,7 +54,7 @@ class TestSendEmailCommand:
             "--title",
             test_template.subject,
             "--template_path",
-            test_template.template_path,
+            test_template.template_file,
         )
 
         received_by = [mail.to[0] for mail in outbox]

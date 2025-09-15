@@ -1,6 +1,0 @@
-
-<select name="gender" data-width="{{ size }}"  class="selectpicker" data-allow-clear="true" title="płeć">
-    {% for option in options %}
-        <option {% if request.GET.gender == option %} selected {% endif %} value="{{ option }}">{{ option }}</option>
-    {% endfor %}
-</select>

@@ -42,7 +42,7 @@ class TestCommandSendEmail:
             "--title",
             test_template.subject,
             "--template_path",
-            test_template.template_path,
+            test_template.template_file,
         ] + recipients.split()
 
         options = parser.parse_args(args)
@@ -64,7 +64,7 @@ class TestCommandSendEmail:
             "--title",
             test_template.subject,
             "--template_path",
-            test_template.template_path,
+            test_template.template_file,
         )
 
         assert len(outbox) == 2 if recipients == "all" else 1

@@ -96,8 +96,6 @@ class WebappConfig(BaseModel):
 class MailingConfig(BaseModel):
     """Settings for mailing"""
 
-    templates_dir: str = os.path.join(ROOT_DIR, "mailing", "templates")
-
     host: str
     port: int
     outgoing_address: str

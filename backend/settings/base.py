@@ -55,7 +55,6 @@ INSTALLED_APPS = [
     "soccerbase",
     "notifications",
     "app",
-    "marketplace",
     "products",
     "fqa",
     "fantasy",
