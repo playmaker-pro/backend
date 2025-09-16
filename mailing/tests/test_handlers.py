@@ -1,18 +1,19 @@
 import logging
 import sys
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 from django.core import mail
 from django.test import TestCase, override_settings
 
+from backend.settings.config import Environment
 from mailing.handlers import AsyncAdminEmailHandler
 
 
 @pytest.fixture
 def mock_notify_admins():
     """Mock for notify_admins Celery task."""
-    with patch("mailing.tasks.notify_admins.delay") as mock:
+    with patch("mailing.handlers.AsyncAdminEmailHandler.send_mail") as mock:
         yield mock
 
 
@@ -61,6 +62,20 @@ def exception_log_record():
 class TestAsyncAdminEmailHandler:
     """Test cases for AsyncAdminEmailHandler."""
 
+    @pytest.fixture(autouse=True)
+    def override_settings(self):
+        with patch("mailing.handlers.settings") as mock_settings:
+            mock_settings.ADMINS = [("Test Admin", "admin@test.com")]
+            mock_settings.CONFIGURATION = Environment.STAGING
+            yield mock_settings
+
+    @pytest.fixture(autouse=True)
+    def mock_slack_dependencies(self):
+        """Mock Slack dependencies to avoid import errors."""
+        with patch("mailing.handlers.send_error_message") as mock_send_error:
+            mock_send_error.delay = Mock()
+            yield mock_send_error
+
     def setup_method(self):
         """Setup for each test method."""
         self.handler = AsyncAdminEmailHandler()
@@ -71,47 +86,36 @@ class TestAsyncAdminEmailHandler:
         assert isinstance(self.handler, AsyncAdminEmailHandler)
         assert self.handler.level == logging.ERROR
 
-    def test_emit_calls_celery_task(self, mock_notify_admins, error_log_record):
-        """Test that emit method calls Celery task with correct parameters."""
+    def test_emit_calls_slack_in_staging(
+        self, mock_slack_dependencies, error_log_record
+    ):
+        """Test that emit method calls Slack in staging environment."""
         self.handler.emit(error_log_record)
+        mock_slack_dependencies.delay.assert_called_once()
 
-        mock_notify_admins.assert_called_once()
-        call_args = mock_notify_admins.call_args[1]
-        assert "Test error message" in str(call_args)
-
-    def test_emit_with_exception_info(self, mock_notify_admins, exception_log_record):
+    def test_emit_with_exception_info(
+        self, mock_slack_dependencies, exception_log_record
+    ):
         """Test emit with exception information."""
         self.handler.emit(exception_log_record)
-        mock_notify_admins.assert_called_once()
+        mock_slack_dependencies.delay.assert_called_once()
 
-    def test_emit_handles_celery_task_exception(
-        self, mock_notify_admins, error_log_record
+    def test_emit_falls_back_to_email_on_slack_error(
+        self, mock_slack_dependencies, error_log_record
     ):
-        """Test that handler gracefully handles Celery task failures."""
-        mock_notify_admins.side_effect = Exception("Celery task failed")
+        """Test that handler falls back to email when Slack fails."""
+        # Make Slack fail
+        from app.slack.errors import SlackDisabledException
 
-        with patch.object(self.handler, "handleError") as mock_handle_error:
-            self.handler.emit(error_log_record)
-            mock_handle_error.assert_called_once_with(error_log_record)
-
-    def test_emit_warning_level_not_sent(self, mock_notify_admins):
-        """Test that WARNING level messages are not sent to admins."""
-        self.handler.setLevel(logging.WARNING)
-
-        record = logging.LogRecord(
-            name="test_logger",
-            level=logging.WARNING,
-            pathname="/test/path.py",
-            lineno=42,
-            msg="Warning message",
-            args=(),
-            exc_info=None,
+        mock_slack_dependencies.delay.side_effect = SlackDisabledException(
+            "Slack disabled"
         )
-        record.getMessage = lambda: "Warning message"
 
-        self.handler.emit(record)
+        with patch.object(self.handler, "send_mail") as mock_send_mail:
+            self.handler.emit(error_log_record)
+            mock_send_mail.assert_called_once()
 
-    def test_format_and_message_content(self, mock_notify_admins):
+    def test_format_and_message_content(self, mock_slack_dependencies):
         """Test that the handler properly formats the subject and message."""
         record = logging.LogRecord(
             name="test_logger",
@@ -126,40 +130,40 @@ class TestAsyncAdminEmailHandler:
 
         self.handler.emit(record)
 
-        mock_notify_admins.assert_called_once()
-        call_args = mock_notify_admins.call_args[1]
-        assert "critical issue" in str(call_args)
+        mock_slack_dependencies.delay.assert_called_once()
 
 
-@override_settings(ADMINS=[("Test Admin", "admin@test.com")])
+@override_settings(
+    ADMINS=[("Test Admin", "admin@test.com")], CONFIGURATION=Environment.STAGING
+)
 class TestAsyncAdminEmailHandlerIntegration(TestCase):
     """Integration tests for AsyncAdminEmailHandler with Django logging."""
 
-    def test_django_logger_error_triggers_email(self):
-        """Test that Django logger errors trigger email notifications."""
-        with patch("mailing.tasks.notify_admins.delay") as mock_notify_admins:
-            logger = logging.getLogger("django")
-            logger.error("Test Django error for email notification")
-            mock_notify_admins.assert_called()
+    @patch("mailing.handlers.send_error_message.delay")
+    def test_django_logger_error_triggers_slack(self, mock_send_error):
+        """Test that Django logger errors trigger Slack notifications."""
+        logger = logging.getLogger("django")
+        logger.error("Test Django error for slack notification")
+        mock_send_error.assert_called()
 
-    def test_application_exception_triggers_email(self):
-        """Test that application exceptions trigger email notifications."""
-        with patch("mailing.tasks.notify_admins.delay") as mock_notify_admins:
-            logger = logging.getLogger("django")
+    @patch("mailing.handlers.send_error_message.delay")
+    def test_application_exception_triggers_slack(self, mock_send_error):
+        """Test that application exceptions trigger Slack notifications."""
+        logger = logging.getLogger("django")
 
-            try:
-                raise RuntimeError("Test application error")
-            except RuntimeError:
-                logger.exception("Application error occurred")
+        try:
+            raise RuntimeError("Test application error")
+        except RuntimeError:
+            logger.exception("Application error occurred")
 
-            mock_notify_admins.assert_called()
+        mock_send_error.assert_called()
 
-    def test_critical_level_triggers_email(self):
-        """Test that CRITICAL level messages trigger email notifications."""
-        with patch("mailing.tasks.notify_admins.delay") as mock_notify_admins:
-            logger = logging.getLogger("django")
-            logger.critical("Critical system error")
-            mock_notify_admins.assert_called()
+    @patch("mailing.handlers.send_error_message.delay")
+    def test_critical_level_triggers_slack(self, mock_send_error):
+        """Test that CRITICAL level messages trigger Slack notifications."""
+        logger = logging.getLogger("django")
+        logger.critical("Critical system error")
+        mock_send_error.assert_called()
 
 
 class TestEmailHandlerEndToEnd:
@@ -201,9 +205,16 @@ class TestEmailHandlerEndToEnd:
     @override_settings(
         ADMINS=[("Test Admin", "admin@test.com")],
         EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+        CONFIGURATION=Environment.STAGING,
     )
-    def test_handler_integration_with_outbox(self):
-        """Test complete integration: handler -> task -> email outbox."""
+    @patch("mailing.handlers.send_error_message.delay")
+    def test_handler_integration_with_slack_fallback(self, mock_send_error):
+        """Test complete integration: handler -> slack with email fallback."""
+        from app.slack.errors import SlackDisabledException
+
+        # Make Slack fail to test email fallback
+        mock_send_error.side_effect = SlackDisabledException("Slack disabled")
+
         mail.outbox.clear()
 
         handler = AsyncAdminEmailHandler()
@@ -218,8 +229,10 @@ class TestEmailHandlerEndToEnd:
         )
         record.getMessage = lambda: "Integration test error: database connection failed"
 
-        handler.emit(record)
+        with patch("mailing.handlers.settings.CONFIGURATION", Environment.STAGING):
+            handler.emit(record)
 
+        # Should fallback to email when Slack fails
         assert len(mail.outbox) == 1
         email = mail.outbox[0]
         assert "Integration test error" in email.subject

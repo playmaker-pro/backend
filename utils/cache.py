@@ -6,6 +6,7 @@ from django.core.cache import cache
 from rest_framework.request import Request
 
 from backend.settings import cfg
+from api.i18n_config import SUPPORTED_LANGUAGE_CODES, DEFAULT_LANGUAGE
 
 logger = logging.getLogger(__name__)
 
@@ -20,14 +21,50 @@ class CachedResponse:
         request: Request,
         cache_timeout: int = settings.DEFAULT_CACHE_LIFESPAN,
     ):
-        self._cache_key = cache_key
         self._cache_timeout = cache_timeout
         self._request = request
+        # Generate language-aware cache key
+        self._cache_key = self._generate_language_aware_cache_key(cache_key, request)
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb): ...
+
+    def _get_request_language(self, request: Request) -> str:
+        """
+        Extract language from X-Language header, consistent with i18n.py
+        """
+        if not request:
+            return DEFAULT_LANGUAGE
+
+        try:
+            x_language = request.headers.get('X-Language')
+            if x_language:
+                # Make case-insensitive comparison
+                x_language_lower = x_language.lower()
+                for supported_code in SUPPORTED_LANGUAGE_CODES:
+                    if x_language_lower == supported_code.lower():
+                        return supported_code
+        except AttributeError:
+            # Request doesn't have headers attribute
+            logger.debug("Request has no headers attribute")
+
+        return DEFAULT_LANGUAGE
+
+    def _generate_language_aware_cache_key(self, base_key: str, request: Request) -> str:
+        """
+        Generate cache key that includes language if X-Language header is present.
+        This ensures cache isolation between different languages.
+        """
+        language = self._get_request_language(request)
+
+        # Only add language to cache key if it's not the default language
+        # This maintains backward compatibility for existing caches
+        if language != DEFAULT_LANGUAGE:
+            return f"{base_key}:lang_{language}"
+
+        return base_key
 
     @property
     def data(self):

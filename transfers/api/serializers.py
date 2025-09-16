@@ -201,9 +201,6 @@ class ProfileTransferRequestSerializer(
     contact_email = serializers.EmailField(
         required=False, allow_null=True, write_only=True
     )
-    contact_email = serializers.EmailField(
-        required=False, allow_null=True, write_only=True
-    )
     club_voivodeship = serializers.CharField(source="voivodeship", read_only=True)
     profile_uuid = serializers.UUIDField(source="profile.uuid", read_only=True)
     requesting_team = serializers.PrimaryKeyRelatedField(
@@ -265,14 +262,6 @@ class ProfileTransferRequestSerializer(
                 context=self.context,
             )
             data["salary"] = salary_serialized.data
-        user_preferences = instance.profile.user.userpreferences
-        if user_preferences.phone_number:
-            data["phone_number"] = PhoneNumberField(source="*").to_representation(
-                user_preferences
-            )
-        if user_preferences.contact_email:
-            data["contact_email"] = user_preferences.contact_email
-
         if data["is_anonymous"] and not self.context.get("expose", False):
             data["requesting_team"]["id"] = 0
             data["requesting_team"]["team"]["team_name"] = "Anonimowa drużyna"
@@ -280,11 +269,6 @@ class ProfileTransferRequestSerializer(
             data["requesting_team"]["team"]["team_contributor_id"] = 0
             data["requesting_team"]["team"]["picture_url"] = None
             data["profile_uuid"] = instance.anonymous_uuid
-            data["phone_number"] = {
-                "dial_code": None,
-                "number": None,
-            }
-            data["contact_email"] = None
         return data
 
     def validate_requesting_team(

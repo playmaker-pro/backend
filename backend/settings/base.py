@@ -55,7 +55,6 @@ INSTALLED_APPS = [
     "soccerbase",
     "notifications",
     "app",
-    "marketplace",
     "products",
     "fqa",
     "fantasy",
@@ -216,7 +215,7 @@ LANGUAGES = (
     ("pl", _("Polski")),
     ("en", _("English")),
     ("de", _("Deutsch")),
-    ("uk", _("Українська")),
+    ("uk-UA", _("Українська")),
 )
 
 # Configuration for django-cities-light library.

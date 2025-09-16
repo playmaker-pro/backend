@@ -1,13 +1,12 @@
-import os
 from enum import Enum
 from typing import List, Optional
 
 from django.conf import settings
-from django.template.loader import render_to_string
+from django.template import TemplateDoesNotExist
+from django.template.loader import get_template, render_to_string
 from django.utils.html import strip_tags
 from pydantic import BaseModel, validator
 
-from backend.settings import cfg
 from mailing.tasks import notify_admins, send
 
 
@@ -60,9 +59,16 @@ class MailContent(BaseModel):
 
     @validator("template_file")
     def validate_template_file(cls, v):
-        if not v or not os.path.exists(os.path.join(cfg.smtp.templates_dir, v)):
-            raise ValueError(f"Template file {v} does not exist.")
-        return v
+        if not v:
+            raise ValueError("Template file cannot be empty.")
+
+        try:
+            get_template(v)
+            return v
+        except TemplateDoesNotExist:
+            raise ValueError(
+                f"Template file {v} does not exist in any Django template directory."
+            )
 
     def render_content(self, context: dict) -> None:
         """
@@ -73,15 +79,8 @@ class MailContent(BaseModel):
         except KeyError as e:
             raise ValueError(f"Some context keys are missing: {e}")
 
-        self.html_content = render_to_string(self.template_path, context)
+        self.html_content = render_to_string(self.template_file, context)
         self.text_content = strip_tags(self.html_content)
-
-    @property
-    def template_path(self) -> str:
-        """
-        Returns the template path for the email content.
-        """
-        return os.path.join(cfg.smtp.templates_dir, self.template_file)
 
     @property
     def ready(self) -> bool:
