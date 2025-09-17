@@ -2415,7 +2415,7 @@ class ProfileMeta(models.Model, VisitationMixin):
         return transfer_obj is not None and transfer_obj.is_anonymous
 
     def __str__(self) -> None:
-        return f"Meta of {self.profile}"
+        return f"Meta of [{self._profile_class}] {self.user.get_full_name()}"
 
     class Meta:
         verbose_name = "Meta"
