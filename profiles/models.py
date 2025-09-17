@@ -2378,10 +2378,10 @@ class ProfileMeta(models.Model, VisitationMixin):
     _slug = models.CharField(max_length=255, null=False, blank=False, unique=True)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         related_name="meta_profile",
-        null=True,
-        blank=True,
+        null=False,
+        blank=False,
     )
 
     @property
