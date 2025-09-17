@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "transfers",
     "followers",
     "inquiries",
+    "marketplace",
     "clubs",
     "external_links",
     "soccerbase",
