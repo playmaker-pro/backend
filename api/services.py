@@ -63,20 +63,33 @@ class LocaleDataService:
 
     def validate_language_code(self, code: str) -> str:
         """Validate language code. Raise exception if given code is invalid, return code otherwise"""
-        code = code.lower()
-        language_codes: list = list(self.mapped_languages.keys())
-        if code not in language_codes:
+        # Map custom language codes to Django's standard codes for compatibility
+        django_code = self._map_to_django_code(code)
+
+        django_code_lower = django_code.lower()
+        language_codes: list = [lang.lower() for lang in self.mapped_languages.keys()]
+        if django_code_lower not in language_codes:
             raise ValueError(
-                f"Invalid language code: '{code}', choices: {language_codes}"
+                f"Invalid language code: '{code}', choices: {list(self.mapped_languages.keys())}"
             )
-        return code
+        return django_code_lower
+
+    def _map_to_django_code(self, code: str) -> str:
+        """Map custom language codes to Django's standard codes."""
+        code_mapping = {
+            'uk-UA': 'uk',  # Ukrainian with country code maps to Ukrainian
+            'uk-ua': 'uk',
+        }
+        return code_mapping.get(code, code)
 
     def get_english_language_name_by_code(self, code: str) -> str:
         """
         Get english language name by language code.
         English name is needed in order to translate name to any other language.
         """
-        return self.mapped_languages.get(code)
+        # Map custom codes to Django codes first
+        django_code = self._map_to_django_code(code)
+        return self.mapped_languages.get(django_code)
 
     def get_prior_cities_queryset(self) -> QuerySet:
         """Get City queryset of prior Cities"""

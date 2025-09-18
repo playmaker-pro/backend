@@ -14,6 +14,7 @@ from api.i18n import I18nViewMixin, I18nSerializerMixin
 
 class TestI18nView(I18nViewMixin, GenericViewSet):
     """Simple test view for I18n testing."""
+    __test__ = False
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -32,6 +33,7 @@ class TestI18nView(I18nViewMixin, GenericViewSet):
 
 class TestI18nSerializer(I18nSerializerMixin, Serializer):
     """Simple test serializer for I18n testing."""
+    __test__ = False
     
     def __init__(self, *args, **kwargs):
         self.activation_log = []  # Track language activations

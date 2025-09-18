@@ -460,26 +460,6 @@ msgstr "Offensivtrainer"
 msgid "Trenerzy defensywni"
 msgstr "Defensive Trainer"
 
-#: inquiries/api/serializers.py:122
-msgid "NOWE"
-msgstr "Neu"
-
-#: inquiries/api/serializers.py:123
-msgid "WYSŁANO"
-msgstr "Gesendet"
-
-#: inquiries/api/serializers.py:124
-msgid "PRZECZYTANE"
-msgstr "Gelesen"
-
-#: inquiries/api/serializers.py:125
-msgid "ZAAKCEPTOWANE"
-msgstr "Akzeptiert"
-
-#: inquiries/api/serializers.py:126
-msgid "ODRZUCONE"
-msgstr "Abgelehnt"
-
 msgid "Podstawowy plan"
 msgstr "Grundplan"
 
@@ -2103,3 +2083,14 @@ msgstr "5 Anfragen"
 
 msgid "10 zapytań"
 msgstr "10 Anfragen"
+
+# Add missing anonymous translations
+msgid "Anonimowy"
+msgstr "Anonym"
+
+msgid "profil"  
+msgstr "Profil"
+
+msgid "Anonimowa drużyna"
+msgstr "Anonyme Mannschaft"
+

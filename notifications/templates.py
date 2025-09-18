@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, Optional
 from django.utils.translation import gettext_lazy as _
+from django.utils import translation
 
 
 @dataclass
@@ -23,24 +24,21 @@ class NotificationBody:
     def __post_init__(self) -> None:
         """
         Post-initialization - store unformatted templates for proper translation.
-        Format only for backward compatibility (stored in title/description fields).
+        For backward compatibility, we still need formatted versions for legacy notifications.
         """
-        # Store formatted versions for backward compatibility
-        try:
-            self.formatted_title = self.title.format(**self.kwargs)
-            self.formatted_description = self.description.format(**self.kwargs)
-        except (KeyError, ValueError):
-            # If formatting fails, use original text
-            self.formatted_title = self.title
-            self.formatted_description = self.description
+        # Store unformatted templates in Polish for proper translation later
+        with translation.override('pl'):
+            self.formatted_title = str(self.title)  # Store template, not formatted text
+            self.formatted_description = str(self.description)  # Store template, not formatted text
 
     def to_dict(self) -> Dict[str, Any]:
         """
         Convert the notification body to a dictionary.
+        Store unformatted templates in the database for proper translation.
         """
         result = {
-            "title": self.formatted_title,  # For backward compatibility
-            "description": self.formatted_description,  # For backward compatibility
+            "title": self.formatted_title,  # Store unformatted template
+            "description": self.formatted_description,  # Store unformatted template
             "href": self.href,
             "template_name": self.template_name,
             "template_params": self.kwargs,  # Store parameters separately
