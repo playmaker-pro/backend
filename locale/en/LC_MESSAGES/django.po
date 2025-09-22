@@ -483,6 +483,13 @@ msgstr "Additional 5 inquiries available for premium profiles"
 msgid "Dodatkowe 10 zapytań dostępne dla profilów premium"
 msgstr "Additional 10 inquiries available for premium profiles"
 
+# Premium product names for TPay payments - base format for dynamic profile type appending
+msgid "Miesięczne konto premium dla profilu"
+msgstr "Monthly premium account for profile"
+
+msgid "Roczne konto premium dla profilu"
+msgstr "Yearly premium account for profile"
+
 #: mailing/models.py:108
 msgid ""
 "Type '#male_form|female_form#' - to mark something that should be determined "

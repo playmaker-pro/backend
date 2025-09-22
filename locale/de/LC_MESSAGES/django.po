@@ -2094,3 +2094,9 @@ msgstr "Profil"
 msgid "Anonimowa drużyna"
 msgstr "Anonyme Mannschaft"
 
+# Premium product names for TPay payments - base format for dynamic profile type appending
+msgid "Miesięczne konto premium dla profilu"
+msgstr "Monatliches Premium-Konto für Profil"
+
+msgid "Roczne konto premium dla profilu"
+msgstr "Jährliches Premium-Konto für Profil"
