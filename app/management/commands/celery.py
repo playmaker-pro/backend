@@ -30,9 +30,13 @@ class Command(BaseCommand):
         """Start celery worker process."""
         worker_args = [
             "worker",
-            "--autoscale=0,4",
+            "-l",
+            "ERROR",
+            "--autoscale=0,6",
             "--without-mingle",
             "--without-gossip",
+            "--without-heartbeat",
+            "-E",
         ]
 
         if (

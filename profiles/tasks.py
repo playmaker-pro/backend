@@ -1,6 +1,7 @@
 import json
 
 from celery import shared_task
+from celery.utils.log import get_task_logger
 from django.utils import timezone
 from django_celery_beat.models import ClockedSchedule, PeriodicTask
 
@@ -9,6 +10,8 @@ from mailing.services import MailingService
 from mailing.utils import build_email_context
 from profiles import models as profile_models
 from profiles.services import NotificationService
+
+logger = get_task_logger(__name__)
 
 
 @shared_task

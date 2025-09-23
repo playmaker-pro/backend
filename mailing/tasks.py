@@ -1,14 +1,14 @@
-import logging
 import time
 import uuid
 
 from celery import shared_task
+from celery.utils.log import get_task_logger
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.mail import mail_admins, send_mail
 
 User = get_user_model()
-logger: logging.Logger = logging.getLogger("mailing")
+logger = get_task_logger(__name__)
 
 
 @shared_task

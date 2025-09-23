@@ -1,6 +1,5 @@
-import logging
-
 from celery import shared_task
+from celery.utils.log import get_task_logger
 
 from inquiries.constants import INQUIRY_EMAIL_TEMPLATE, InquiryLogType
 from inquiries.models import InquiryRequest, UserInquiry, UserInquiryLog
@@ -9,7 +8,7 @@ from mailing.services import MailingService
 from mailing.utils import build_email_context
 from utils.constants import INQUIRY_LIMIT_INCREASE_URL
 
-logger = logging.getLogger("mailing")
+logger = get_task_logger(__name__)
 
 
 @shared_task

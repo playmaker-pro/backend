@@ -11,10 +11,10 @@ def map_vivos(apps, schema_editor):
     from django.apps import apps
 
     announcements = [
-        "ClubForPlayerAnnouncement",
-        "PlayerForClubAnnouncement",
-        "CoachForClubAnnouncement",
-        "ClubForCoachAnnouncement",
+        # "ClubForPlayerAnnouncement",
+        # "PlayerForClubAnnouncement",
+        # "CoachForClubAnnouncement",
+        # "ClubForCoachAnnouncement",
     ]
 
     for announcement in announcements:
