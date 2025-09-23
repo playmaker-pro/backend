@@ -1,4 +1,4 @@
-import logging.config
+import logging
 import os
 from os.path import join
 from typing import Any, Dict
@@ -26,16 +26,17 @@ def get_logging_structure(logfile_root: str) -> Dict[str, Any]:
                     or "Not Found" in record.getMessage()
                 ),
             },
+            "celery_logs_filter": {
+                "()": "django.utils.log.CallbackFilter",
+                "callback": lambda record: record
+                not in "beat: Waking up in"
+                in record.getMessage(),
+            },
         },
         "formatters": {
             "verbose": {
-                "format": "[%(asctime)s] %(levelname)s [%(pathname)s:%(lineno)s] %(message)s",
+                "format": "[%(asctime)s -- %(levelname)s -- %(name)s] [%(pathname)s:%(lineno)s] %(message)s",
                 "datefmt": "%d/%b/%Y %H:%M:%S",
-            },
-            "simple": {"format": "%(levelname)s %(message)s"},
-            "celery": {
-                "format": "[%(asctime)s: %(levelname)s/%(name)s] %(message)s",
-                "datefmt": "%Y-%m-%d %H:%M:%S",
             },
         },
         "handlers": {
@@ -47,7 +48,7 @@ def get_logging_structure(logfile_root: str) -> Dict[str, Any]:
             "console": {
                 "level": "DEBUG",
                 "class": "logging.StreamHandler",
-                "formatter": "simple",
+                "formatter": "verbose",
             },
             "profiles_file": {
                 "level": "DEBUG",
@@ -125,7 +126,7 @@ def get_logging_structure(logfile_root: str) -> Dict[str, Any]:
                 "level": "DEBUG",
                 "class": "logging.FileHandler",
                 "filename": join(logfile_root, "celery.log"),
-                "formatter": "celery",
+                "formatter": "verbose",
             },
         },
         "loggers": {
@@ -198,19 +199,9 @@ def get_logging_structure(logfile_root: str) -> Dict[str, Any]:
                 "level": "DEBUG",
                 "propagate": True,
             },
-            "celery.utils.functional": {
-                "handlers": [],
-                "level": "DEBUG",
-                "propagate": False,
-            },
-            "celery.beat": {
-                "handlers": ["console"],
-                "level": "DEBUG",
-                "propagate": False,
-            },
-            "django_celery_beat": {
-                "handlers": ["celery_file", "console", "mail_admins"],
-                "level": "DEBUG",
+            "celery.utils": {
+                "handlers": ["mail_admins", "console"],
+                "level": "ERROR",
                 "propagate": False,
             },
         },

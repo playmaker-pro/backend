@@ -1,10 +1,9 @@
-import logging
-
 from celery import shared_task
+from celery.utils.log import get_task_logger
 from django.utils import timezone
 from django_celery_beat.models import ClockedSchedule, PeriodicTask
 
-logger = logging.getLogger("celery")
+logger = get_task_logger(__name__)
 
 
 @shared_task

@@ -1,6 +1,5 @@
-import logging
-
 from celery import shared_task
+from celery.utils.log import get_task_logger
 
 from mailing.schemas import EmailTemplateRegistry
 from mailing.services import MailingService
@@ -13,7 +12,7 @@ from utils.cache import (
     clear_cache_for_key,
 )
 
-logger = logging.getLogger("celery")
+logger = get_task_logger(__name__)
 
 
 @shared_task

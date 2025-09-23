@@ -5,10 +5,13 @@ Module containing Celery tasks for notifications in PlayMaker.
 import os
 
 from celery import shared_task
+from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.core.files import File
 
 from notifications.models import Notification
+
+logger = get_task_logger(__name__)
 
 
 @shared_task
@@ -39,7 +42,6 @@ def create_notification(
     template_name = kwargs.pop("template_name", None)
     template_params = kwargs.pop("template_params", None)
 
-
     notification, created = Notification.objects.get_or_create(
         target_id=profile_meta_id,
         title=title,
@@ -48,7 +50,7 @@ def create_notification(
         defaults={
             "template_name": template_name,
             "template_params": template_params,
-            **kwargs
+            **kwargs,
         },
     )
 

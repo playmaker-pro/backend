@@ -1,6 +1,5 @@
-import logging
-
 from celery import shared_task
+from celery.utils.log import get_task_logger
 from django.utils import timezone
 
 from inquiries.services import InquireService
@@ -11,7 +10,7 @@ from users.models import Ref, User, UserPreferences
 from users.mongo_login_service import mongo_login_service
 from users.services import UserService
 
-logger = logging.getLogger("celery")
+logger = get_task_logger(__name__)
 
 
 def _get_user(user_id: int) -> User:
