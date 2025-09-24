@@ -2,7 +2,6 @@ import uuid as _uuid
 from decimal import Decimal as _Decimal
 from typing import List as _List
 
-from django.utils.translation import activate, get_language, deactivate
 from django.conf import settings as _settings
 from django.db import models as models
 from django_fsm import FSMField as _FSMField
@@ -114,45 +113,34 @@ class Transaction(models.Model):
 
     def get_localized_description(self) -> str:
         """Prepare localized description using the currently activated language"""
-        # Store the original language to restore later
-        original_language = get_language()
+        # Map profile types to their translatable display names from definitions
+        profile_type_map = {
+            PROFILE_TYPE_PLAYER: PLAYER_FULL,
+            PROFILE_TYPE_GUEST: GUEST_FULL,
+            PROFILE_TYPE_CLUB: CLUB_FULL,
+            PROFILE_TYPE_SCOUT: SCOUT_FULL,
+            PROFILE_TYPE_COACH: COACH_FULL,
+            PROFILE_TYPE_MANAGER: MANAGER_FULL,
+            PROFILE_TYPE_REFEREE: REFEREE_FULL,
+            PROFILE_TYPE_OTHER: OTHER_FULL,
+        }
 
-        try:
-            # Map profile types to their translatable display names from definitions
-            profile_type_map = {
-                PROFILE_TYPE_PLAYER: PLAYER_FULL,
-                PROFILE_TYPE_GUEST: GUEST_FULL,
-                PROFILE_TYPE_CLUB: CLUB_FULL,
-                PROFILE_TYPE_SCOUT: SCOUT_FULL,
-                PROFILE_TYPE_COACH: COACH_FULL,
-                PROFILE_TYPE_MANAGER: MANAGER_FULL,
-                PROFILE_TYPE_REFEREE: REFEREE_FULL,
-                PROFILE_TYPE_OTHER: OTHER_FULL,
-            }
+        # Get profile type from user
+        user_profile = getattr(self.user, "profile", None)
+        if user_profile:
+            profile_type_key = user_profile.PROFILE_TYPE
+            profile_display_name = profile_type_map.get(
+                profile_type_key, OTHER_FULL
+            )
+        else:
+            profile_display_name = OTHER_FULL
 
-            # Get profile type from user
-            user_profile = getattr(self.user, "profile", None)
-            if user_profile:
-                profile_type_key = user_profile.PROFILE_TYPE
-                profile_display_name = profile_type_map.get(
-                    profile_type_key, OTHER_FULL
-                )
-            else:
-                profile_display_name = OTHER_FULL
+        # Get the base name and append the profile type
+        base_description = _(self.product.name_readable)
+        profile_type_translated = _(profile_display_name)
+        full_description = f"{base_description} {profile_type_translated}"
 
-            # Get the base name and append the profile type
-            base_description = _(self.product.name_readable)
-            profile_type_translated = _(profile_display_name)
-            full_description = f"{base_description} {profile_type_translated}"
-
-            return f"PLAYMAKER.PRO | {full_description}"
-
-        finally:
-            # Always restore the original language to prevent thread contamination
-            if original_language:
-                activate(original_language)
-            else:
-                deactivate()
+        return f"PLAYMAKER.PRO | {full_description}"
 
     def resolve_from_tpay_schema(
         self, schema: _tpay_schemas.TpayTransactionResult, errors: _List[str]
