@@ -129,8 +129,6 @@ msgid "Stypendia"
 msgstr ""
 
 #: clubs/models.py:977
-#, fuzzy
-#| msgid "Zwrot za buty lub rękawice"
 msgid "Zwroty za buty/rękawice"
 msgstr "Boots or gloves reimbursement"
 
@@ -591,14 +589,10 @@ msgid "Trenerka"
 msgstr "Coach"
 
 #: notifications/services.py:14
-#, fuzzy
-#| msgid "Działacz klubu"
 msgid "Działacz klubowy"
 msgstr "Club Official"
 
 #: notifications/services.py:14
-#, fuzzy
-#| msgid "Działacz klubu"
 msgid "Działaczka klubowa"
 msgstr "Club Official"
 
