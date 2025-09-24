@@ -24,6 +24,8 @@ from django.db.models import (
     When,
 )
 from django.db.models import functions as django_base_functions
+from django.utils import translation
+from django.utils.translation import gettext as _
 from pydantic import BaseModel
 
 from api.consts import ChoicesTuple
@@ -103,24 +105,26 @@ class NotificationService:
         """
         Parse body of the notification.
         """
-        if profile := kwargs.pop("profile", None):
-            hide_profile = kwargs.pop("hide_profile", False)
-            full_name = profile.user.get_full_name()
+        # Force Polish for consistent database storage
+        with translation.override('pl'):
+            if profile := kwargs.pop("profile", None):
+                hide_profile = kwargs.pop("hide_profile", False)
+                full_name = profile.user.get_full_name()
 
-            try:
-                if hide_profile:
-                    kwargs["profile"] = "Anonimowy profil"
-                else:
-                    role_short = profile.user.declared_role
-                    gender_index = int(profile.user.userpreferences.gender == "K")
-                    subject = GENDER_BASED_ROLES[role_short][gender_index]
-                    kwargs["profile"] = f"{subject} {full_name}"
-                    kwargs["picture"] = profile.user.picture.name
-                    kwargs["picture_profile_role"] = role_short
-            except (KeyError, IndexError):
-                kwargs["profile"] = full_name
+                try:
+                    if hide_profile:
+                        kwargs["profile"] = str(_("Anonimowy profil"))
+                    else:
+                        role_short = profile.user.declared_role
+                        gender_index = int(profile.user.userpreferences.gender == "K")
+                        subject = GENDER_BASED_ROLES[role_short][gender_index]
+                        kwargs["profile"] = f"{subject} {full_name}"
+                        kwargs["picture"] = profile.user.picture.name
+                        kwargs["picture_profile_role"] = role_short
+                except (KeyError, IndexError):
+                    kwargs["profile"] = full_name
 
-        return NotificationBody(**template.value, kwargs=kwargs)
+            return NotificationBody(**template.value, kwargs=kwargs)
 
     @classmethod
     def bulk_notify_check_trial(cls) -> None:

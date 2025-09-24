@@ -5460,10 +5460,13 @@ components:
           type: string
         shortcut:
           type: string
+        shortcut_pl:
+          type: string
       required:
         - id
         - name
         - shortcut
+        - shortcut_pl
     PlayerPosition:
       type: object
       properties:
@@ -5723,7 +5726,8 @@ components:
                 {
                   "player_position": {
                     "name": "Skrzydłowy",
-                    "shortcut": "W"
+                    "shortcut": "W",
+                    "shortcut_pl": "W"
                   },
                   "is_main": false
                 }
@@ -7129,7 +7133,7 @@ components:
         type: object
         properties:
           id:
-            type: string
+            type: integer
           name:
             type: string
           shortcut:

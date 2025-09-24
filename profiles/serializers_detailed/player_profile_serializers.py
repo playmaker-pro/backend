@@ -36,9 +36,7 @@ class ProfileViePlayerPositionSerializer(I18nSerializerMixin, serializers.ModelS
             data['shortcut'] = instance.shortcut_pl or instance.shortcut
         else:
             data['shortcut'] = instance.shortcut
-            # Remove the Polish shortcut field for non-Polish languages
-            data.pop('shortcut_pl', None)
-            
+
         return data
 
 
@@ -117,10 +115,6 @@ class PlayerProfileViewSerializer(BaseProfileSerializer):
         required=False,
         model=PlayerProfile,
     )
-    prefered_leg = ProfileEnumChoicesSerializer(
-        required=False,
-        model=PlayerProfile,
-    )
     playermetrics = PlayerMetricsSerializer(read_only=True)
     role = serializers.SerializerMethodField()
 
@@ -155,8 +149,8 @@ class PlayerProfileViewSerializer(BaseProfileSerializer):
             data["slug"] = f"anonymous-{anonymous_uuid}"
             data["uuid"] = anonymous_uuid
             data["user"]["id"] = 0
-            data["user"]["first_name"] = "Anonimowy"
-            data["user"]["last_name"] = "profil"
+            data["user"]["first_name"] = _("Anonimowy")
+            data["user"]["last_name"] = _("profil")
             data["user"]["picture"] = None
             data["external_links"]["links"] = []
             data["profile_video"] = []
@@ -177,8 +171,8 @@ class PlayerProfileViewSerializer(BaseProfileSerializer):
             data["slug"] = f"anonymous-{uuid}"
             data["uuid"] = uuid
             data["user"]["id"] = 0
-            data["user"]["first_name"] = "Anonimowy"
-            data["user"]["last_name"] = "profil"
+            data["user"]["first_name"] = _("Anonimowy")
+            data["user"]["last_name"] = _("profil")
             data["user"]["picture"] = None
             data["external_links"]["links"] = []
             data["profile_video"] = []

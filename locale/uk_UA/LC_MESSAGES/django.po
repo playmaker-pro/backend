@@ -463,26 +463,6 @@ msgstr "Атакувальні тренери"
 msgid "Trenerzy defensywni"
 msgstr "Захисні тренери"
 
-#: inquiries/api/serializers.py:122
-msgid "NOWE"
-msgstr "Нове"
-
-#: inquiries/api/serializers.py:123
-msgid "WYSŁANO"
-msgstr "Надіслано"
-
-#: inquiries/api/serializers.py:124
-msgid "PRZECZYTANE"
-msgstr "Прочитано"
-
-#: inquiries/api/serializers.py:125
-msgid "ZAAKCEPTOWANE"
-msgstr "Прийнято"
-
-#: inquiries/api/serializers.py:126
-msgid "ODRZUCONE"
-msgstr "Відхилено"
-
 msgid "Podstawowy plan"
 msgstr "Базовий план"
 
@@ -2104,3 +2084,14 @@ msgstr "5 запитів"
 
 msgid "10 zapytań"
 msgstr "10 запитів"
+
+# Add missing anonymous translations
+msgid "Anonimowy"
+msgstr "Анонімний"
+
+msgid "profil"
+msgstr "профіль" 
+
+msgid "Anonimowa drużyna"
+msgstr "Анонімна команда"
+

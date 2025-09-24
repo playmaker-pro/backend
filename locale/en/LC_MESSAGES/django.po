@@ -462,26 +462,6 @@ msgstr "Offensive Coaches"
 msgid "Trenerzy defensywni"
 msgstr "Defensive Coaches"
 
-#: inquiries/api/serializers.py:122
-msgid "NOWE"
-msgstr "New"
-
-#: inquiries/api/serializers.py:123
-msgid "WYSŁANO"
-msgstr "Sent"
-
-#: inquiries/api/serializers.py:124
-msgid "PRZECZYTANE"
-msgstr "Read"
-
-#: inquiries/api/serializers.py:125
-msgid "ZAAKCEPTOWANE"
-msgstr "Accepted"
-
-#: inquiries/api/serializers.py:126
-msgid "ODRZUCONE"
-msgstr "Rejected"
-
 msgid "Podstawowy plan"
 msgstr "Basic plan"
 
@@ -2101,3 +2081,14 @@ msgstr "5 inquiries"
 
 msgid "10 zapytań"
 msgstr "10 inquiries"
+
+# Add missing anonymous translations
+msgid "Anonimowy"
+msgstr "Anonymous"
+
+msgid "profil"
+msgstr "profile"
+
+msgid "Anonimowa drużyna"
+msgstr "Anonymous team"
+
