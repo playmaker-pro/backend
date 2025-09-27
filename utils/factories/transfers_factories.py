@@ -16,17 +16,22 @@ class TransferStatusFactory(CustomObjectFactory):
         model = models.ProfileTransferStatus
 
     status = 1
-    additional_info = factory.List([
-        factory.Iterator([
-            info[0] for info in definitions.TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES
-        ])
-    ])
-    number_of_trainings = factory.Iterator([
-        training[0] for training in definitions.TRANSFER_TRAININGS_CHOICES
-    ])
-    salary = factory.Iterator([
-        salary[0] for salary in definitions.TRANSFER_SALARY_CHOICES
-    ])
+    additional_info = factory.List(
+        [
+            factory.Iterator(
+                [
+                    info[0]
+                    for info in definitions.TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES
+                ]
+            )
+        ]
+    )
+    number_of_trainings = factory.Iterator(
+        [training[0] for training in definitions.TRANSFER_TRAININGS_CHOICES]
+    )
+    salary = factory.Iterator(
+        [salary[0] for salary in definitions.TRANSFER_SALARY_CHOICES]
+    )
     meta = factory.SubFactory("utils.factories.profiles_factories.ProfileMetaFactory")
 
     class Params:

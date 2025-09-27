@@ -85,6 +85,8 @@ paths:
         - premium_products
       security:
         - jwtAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '200':
           description: "Premium profile products info."
@@ -110,6 +112,7 @@ paths:
             type: integer
           required: true
           description: "Product ID"
+        - $ref: '#/components/parameters/X-Language'
       responses:
         '201':
           description: "Transaction has been created"
