@@ -3,7 +3,7 @@ from typing import Any, Dict, Set
 
 from django.core.management.base import BaseCommand
 
-from mailing.schemas import Envelope, MailContent
+from mailing.schemas import Envelope, MailContent, MailingPreferenceType
 from profiles.models import ProfileMeta
 
 
@@ -47,6 +47,7 @@ class Command(BaseCommand):
         content = MailContent(
             subject_format=self.args.title,
             template_file=self.args.template_path,
+            mailing_type=MailingPreferenceType.MARKETING.value,
         )
         envelope = Envelope(mail=content(), recipients=list(recipients))
         envelope.send(separate=True)
@@ -103,7 +104,11 @@ class Command(BaseCommand):
 
         if self.args.all:
             recipients.update(
-                set(ProfileMeta.objects.all().values_list("user__email", flat=True))
+                set(
+                    ProfileMeta.objects.filter(
+                        user__mailing__preferences__marketing=True
+                    ).values_list("user__email", flat=True)
+                )
             )
             return recipients
 
@@ -121,7 +126,8 @@ class Command(BaseCommand):
         recipients.update(
             set(
                 ProfileMeta.objects.filter(
-                    _profile_class__in=profile_names_to_fetch
+                    _profile_class__in=profile_names_to_fetch,
+                    user__mailing__preferences__marketing=True,
                 ).values_list("user__email", flat=True)
             )
         )

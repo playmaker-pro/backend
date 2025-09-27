@@ -12,7 +12,9 @@ class MailingPreferences(models.Model):
     Represents user preferences for receiving emails.
     """
 
-    # TODO: Soon
+    uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    system = models.BooleanField(default=True)
+    marketing = models.BooleanField(default=True)
 
 
 class Mailing(models.Model):
@@ -21,6 +23,17 @@ class Mailing(models.Model):
     """
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    preferences = models.OneToOneField(
+        MailingPreferences,
+        on_delete=models.CASCADE,
+        null=False,
+        blank=False,
+    )
+
+    def save(self, *args, **kwargs):
+        if not self.preferences_id:
+            self.preferences = MailingPreferences.objects.create()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return "Mailing of " + str(self.user)

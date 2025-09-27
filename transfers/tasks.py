@@ -44,5 +44,7 @@ def notify_players_about_new_transfer_request(
     for player in PlayerProfile.objects.filter(user__declared_role="P").select_related(
         "user"
     ):
-        context = build_email_context(player.user)
+        context = build_email_context(
+            player.user, mailing_type=mail_schema.mailing_type
+        )
         MailingService(mail_schema(context)).send_mail(player.user)

@@ -361,11 +361,11 @@ class TestRefferalSystem:
 
         assert ref.registered_users.count() == 1
         expected_subject_referrer = (
-            "Gratulacje! Otrzymujesz nagrodę za polecenie nowego użytkownika"
+            "Gratulacje! Otrzymujesz nagrodę za polecenie nowego użytkownika."
         )
         assert last_mails[user.email].subject == expected_subject_referrer
         expected_subject_referred = (
-            "Witaj w PlayMaker.pro! Odbierz swój prezent powitalny"
+            "Witaj w PlayMaker.pro! Odbierz swój prezent powitalny."
         )
         assert last_mails[user_ref.email].subject == expected_subject_referred
 

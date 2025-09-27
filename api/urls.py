@@ -7,6 +7,7 @@ from features.api_urls import urlpatterns as features_urls
 from followers.api.api_urls import urlpatterns as followers_urls
 from inquiries.api.urls import urlpatterns as inquiries_urls
 from labels.api.urls import urlpatterns as labels_urls
+from mailing.api.urls import urlpatterns as mailing_urls
 from notifications.api.urls import urlpatterns as notifications_urls
 from payments.api.urls import urlpatterns as payments_urls
 from premium.api.urls import urlpatterns as premium_urls
@@ -31,6 +32,7 @@ urlpatterns = [
     url(r"^payments/", include((payments_urls, "payments"))),
     url(r"^premium/", include((premium_urls, "premium"))),
     url(r"^transfers/", include((transfers_urls, "transfers"))),
+    url(r"^mailing/", include((mailing_urls, "mailing"))),
     url(
         r"^countries/",
         views.LocaleDataView.as_view({"get": "list_countries"}),

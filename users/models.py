@@ -368,6 +368,12 @@ class User(AbstractUser, UserRoleMixin):
         """
         return self.userpreferences.contact_email or self.email
 
+    @property
+    def mailing_preferences(self):
+        if self.mailing and self.mailing.preferences:
+            return self.mailing.preferences
+        return None
+
     class Meta:
         verbose_name = "User"
         verbose_name_plural = "Users"

@@ -9,6 +9,8 @@ from premium.models import PremiumProduct
 from profiles.models import ClubProfile, CoachProfile, PlayerProfile, ProfileMeta
 from users.models import User
 
+logger = logging.getLogger("mailing")
+
 
 class MailingService:
     """Handles sending templated emails and optionally logging them in the outbox."""
@@ -31,6 +33,25 @@ class MailingService:
         """
         Send the email using the provided schema and recipient.
         """
+        if preferences := recipient.mailing_preferences:
+            if self._schema.mailing_type == "MARKETING" and not preferences.marketing:
+                logger.info(
+                    "Skipping sending marketing email of subject '%s' to %s",
+                    self._schema.subject,
+                    recipient.email,
+                )
+                return
+            if (
+                self._schema.mailing_type == "TRANSACTIONAL"
+                and not preferences.transactional
+            ):
+                logger.info(
+                    "Skipping sending transactional email of subject: '%s' to %s",
+                    self._schema.subject,
+                    recipient.email,
+                )
+                return
+
         envelope = Envelope(mail=self._schema, recipients=[recipient.email])
         envelope.send()
 
@@ -68,7 +89,9 @@ class PostmanService:
         )
 
         for profile in qs:
-            context = build_email_context(profile.user)
+            context = build_email_context(
+                profile.user, mailing_type=mail_schema.mailing_type
+            )
             MailingService(mail_schema(context)).send_mail(profile.user)
             self.logger.info(
                 "Sent incomplete profile reminder to %s", profile.user.email
@@ -91,7 +114,9 @@ class PostmanService:
         )
 
         for profile in qs:
-            context = build_email_context(profile.user)
+            context = build_email_context(
+                profile.user, mailing_type=mail_schema.mailing_type
+            )
             MailingService(mail_schema(context)).send_mail(profile.user)
             self.logger.info(
                 "Sent incomplete profile reminder to %s", profile.user.email
@@ -113,7 +138,9 @@ class PostmanService:
             .select_related("user")
         )
         for profile in qs:
-            context = build_email_context(profile.user)
+            context = build_email_context(
+                profile.user, mailing_type=mail_schema.mailing_type
+            )
             MailingService(mail_schema(context)).send_mail(profile.user)
             self.logger.info(
                 "Sent incomplete profile reminder to %s", profile.user.email
@@ -142,7 +169,9 @@ class PostmanService:
             )
         )
         for user in qs:
-            context = build_email_context(user, days_inactive=30)
+            context = build_email_context(
+                user, days_inactive=30, mailing_type=mail_schema.mailing_type
+            )
             MailingService(mail_schema(context)).send_mail(user)
             self.logger.info("Sent inactive (30 days) user reminder to %s", user.email)
         self.logger.info(
@@ -170,7 +199,9 @@ class PostmanService:
             )
         )
         for user in qs:
-            context = build_email_context(user, days_inactive=90)
+            context = build_email_context(
+                user, days_inactive=90, mailing_type=mail_schema.mailing_type
+            )
             MailingService(mail_schema(context)).send_mail(user)
             self.logger.info("Sent inactive (90 days) user reminder to %s", user.email)
         self.logger.info(
@@ -194,7 +225,9 @@ class PostmanService:
             .select_related("user")
         )
         for pp in qs:
-            context = build_email_context(pp.user)
+            context = build_email_context(
+                pp.user, mailing_type=mail_schema.mailing_type
+            )
             MailingService(mail_schema(context)).send_mail(pp.user)
             self.logger.info("Sent premium encouragement email to %s", pp.user.email)
         self.logger.info(
@@ -228,7 +261,9 @@ class PostmanService:
             .select_related("user")
         )
         for meta in qs:
-            context = build_email_context(meta.user)
+            context = build_email_context(
+                meta.user, mailing_type=mail_schema.mailing_type
+            )
             MailingService(mail_schema(context)).send_mail(meta.user)
             self.logger.info(
                 "Sent profile views milestone email to %s", meta.user.email
@@ -257,7 +292,9 @@ class PostmanService:
         )
 
         for player in qs:
-            context = build_email_context(player.user)
+            context = build_email_context(
+                player.user, mailing_type=mail_schema.mailing_type
+            )
             MailingService(mail_schema(context)).send_mail(player.user)
             self.logger.info("Sent transfer status reminder to %s", player.user.email)
         self.logger.info(
@@ -283,7 +320,9 @@ class PostmanService:
             .select_related("user")
         )
         for meta in qs:
-            context = build_email_context(meta.user)
+            context = build_email_context(
+                meta.user, mailing_type=mail_schema.mailing_type
+            )
             MailingService(mail_schema(context)).send_mail(meta.user)
             self.logger.info("Sent transfer request reminder to %s", meta.user.email)
         self.logger.info(
@@ -301,7 +340,7 @@ class PostmanService:
         ).exclude(date_joined__gt=timezone.now() - timezone.timedelta(days=10))
 
         for user in qs:
-            context = build_email_context(user)
+            context = build_email_context(user, mailing_type=mail_schema.mailing_type)
             MailingService(mail_schema(context)).send_mail(user)
             self.logger.info("Sent invite friends reminder to %s", user.email)
         self.logger.info(

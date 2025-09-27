@@ -43,6 +43,10 @@
               <td align="center" style="padding: 30px; color: #999; font-size: 12px;">
                 <p style="margin: 0 0 10px 0;">
                   Wiadomość została wygenerowana automatycznie. Prosimy na nią nie odpowiadać.<br>
+                  {% if unsubscribe_link %}
+                  Jeżeli nie chcesz otrzymywać podobnych wiadomości, kliknij tutaj: <a href="{{ unsubscribe_link }}"
+                    style="color: #999;" target="_blank">Wypisz się</a>.<br>
+                  {% endif %}
                   W przypadku pytań, jesteśmy dostępni pod adresem: <a href="mailto:biuro@playmaker.pro"
                     style="color: #999;">biuro@playmaker.pro</a>
                 </p>

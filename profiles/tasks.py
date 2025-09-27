@@ -202,10 +202,9 @@ def post_create_player_profile(pk: int) -> None:
     Post-save signal handler for PlayerProfile to ensure metrics exist.
     """
     profile = profile_models.PlayerProfile.objects.get(pk=pk)
-    context = build_email_context(profile.user)
-    MailingService(EmailTemplateRegistry.PLAYER_WELCOME(context)).send_mail(
-        profile.user
-    )
+    template = EmailTemplateRegistry.PLAYER_WELCOME
+    context = build_email_context(profile.user, mailing_type=template.mailing_type)
+    MailingService(template(context)).send_mail(profile.user)
 
 
 @shared_task
@@ -219,7 +218,6 @@ def post_create_other_profile(pk: int, profile_class_name: str) -> None:
     profile_model = getattr(profile_models, profile_class_name)
 
     if profile := profile_model.objects.filter(pk=pk).first():
-        context = build_email_context(profile.user)
-        MailingService(EmailTemplateRegistry.PROFESSIONAL_WELCOME(context)).send_mail(
-            profile.user
-        )
+        template = EmailTemplateRegistry.PROFESSIONAL_WELCOME
+        context = build_email_context(profile.user, mailing_type=template.mailing_type)
+        MailingService(template(context)).send_mail(profile.user)

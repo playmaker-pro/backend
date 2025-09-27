@@ -2,9 +2,9 @@ import logging
 import traceback
 import typing
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
-from django.conf import settings
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
@@ -14,6 +14,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from api.custom_throttling import DefaultThrottle, EmailCheckerThrottle
 from api.views import EndpointView
 from features.models import Feature, FeatureElement
+from notifications.services import NotificationService
 from users.api.serializers import (
     CreateNewPasswordSerializer,
     CustomTokenObtainSerializer,
@@ -295,7 +296,14 @@ class LoginView(TokenObtainPairView):
 
     serializer_class = CustomTokenObtainSerializer
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request: Request, *args, **kwargs):
+        if (
+            request.user.is_authenticated
+            and not request.user.is_email_verified
+            and request.user.profile
+            and (meta := request.user.profile.meta)
+        ):
+            NotificationService(meta).notify_confirm_email()
         return super().post(request, *args, **kwargs)
 
 

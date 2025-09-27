@@ -5,8 +5,9 @@ Module for defining notification templates.
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, Optional
-from django.utils.translation import gettext_lazy as _
+
 from django.utils import translation
+from django.utils.translation import gettext_lazy as _
 
 
 @dataclass
@@ -27,9 +28,11 @@ class NotificationBody:
         For backward compatibility, we still need formatted versions for legacy notifications.
         """
         # Store unformatted templates in Polish for proper translation later
-        with translation.override('pl'):
+        with translation.override("pl"):
             self.formatted_title = str(self.title)  # Store template, not formatted text
-            self.formatted_description = str(self.description)  # Store template, not formatted text
+            self.formatted_description = str(
+                self.description
+            )  # Store template, not formatted text
 
     def to_dict(self) -> Dict[str, Any]:
         """
@@ -50,6 +53,15 @@ class NotificationBody:
 
 
 class NotificationTemplate(Enum):
+    CONFIRM_EMAIL = {
+        "title": _("Potwierdź swój adres email"),
+        "description": _(
+            "Twój adres email nie został przez Ciebie potwierdzony."
+            "Upewnij się, czy adres jest poprawny i potwierdź go."
+        ),
+        "href": "/ustawienia",
+        "icon": "playmaker",
+    }
     CHECK_TRIAL = {
         "title": _("Skorzystaj z wersji próbnej Premium"),
         "description": _("Wypróbuj 3 dni premium za darmo!"),
@@ -64,19 +76,25 @@ class NotificationTemplate(Enum):
     }
     VERIFY_PROFILE = {
         "title": _("Zweryfikuj swój profil"),
-        "description": _("Dodaj linki do profili piłkarskich i zweryfikuj swój profil."),
+        "description": _(
+            "Dodaj linki do profili piłkarskich i zweryfikuj swój profil."
+        ),
         "href": "/ustawienia",
         "icon": "links",
     }
     PROFILE_HIDDEN = {
         "title": _("Profil tymczasowo ukryty"),
-        "description": _("Popraw informacje w profilu (imię, nazwisko, zdjęcie), aby przywrócić widoczność."),
+        "description": _(
+            "Popraw informacje w profilu (imię, nazwisko, zdjęcie), aby przywrócić widoczność."
+        ),
         "href": "?modal=profile-hidden",
         "icon": "hidden",
     }
     PREMIUM_EXPIRED = {
         "title": _("Twoje konto Premium wygasło!"),
-        "description": _("Nie czekaj – wróć do PREMIUM i korzystaj ze wszystkich funkcji!"),
+        "description": _(
+            "Nie czekaj – wróć do PREMIUM i korzystaj ze wszystkich funkcji!"
+        ),
         "href": "/premium",
         "icon": "premium",
     }
@@ -94,7 +112,9 @@ class NotificationTemplate(Enum):
     }
     WELCOME = {
         "title": _("Witaj w PlayMaker!"),
-        "description": _("Dziękujemy za dołączenie do społeczności, Twoja podróż zaczyna się tutaj! Sprawdź, co daje Ci PlayMaker!"),
+        "description": _(
+            "Dziękujemy za dołączenie do społeczności, Twoja podróż zaczyna się tutaj! Sprawdź, co daje Ci PlayMaker!"
+        ),
         "href": "?modal=welcome",
         "icon": "playmaker",
     }
@@ -172,7 +192,9 @@ class NotificationTemplate(Enum):
     }
     PROFILE_VERIFIED = {
         "title": _("Twój profil został zweryfikowany!"),
-        "description": _("Potwierdziliśmy Twoją tożsamość. Korzystaj z PLAYMAKER.pro bez ograniczeń!"),
+        "description": _(
+            "Potwierdziliśmy Twoją tożsamość. Korzystaj z PLAYMAKER.pro bez ograniczeń!"
+        ),
         "href": "/profil",
         "icon": "success",
     }

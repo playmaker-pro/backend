@@ -35,7 +35,7 @@ def send_email_to_confirm_new_user(*args, **kwargs) -> None:
     Send an email to new user to confirm his account.
     """
     user = _get_user(kwargs.get("user_id"))
-    UserService.send_email_to_confirm_new_user(user)
+    UserService.send_email_to_confirm_new_email_address(user)
 
 
 @shared_task

@@ -66,7 +66,7 @@ def send(self, separate: bool = False, track_metrics: bool = True, **data):
                 try:
                     individual_data = data.copy()
                     individual_data["recipient_list"] = [recipient]
-                    send_mail(**individual_data)
+                    send_mail(**individual_data, fail_silently=False)
                     metadata, status = (
                         {
                             "recipients_count": len(recipients),
@@ -94,7 +94,17 @@ def send(self, separate: bool = False, track_metrics: bool = True, **data):
                 ).first():
                     log.update_metadata(metadata, status)
         else:
-            send_mail(**data)
+            status = MailLog.MailStatus.SENT
+            try:
+                send_mail(**data, fail_silently=False)
+            except Exception as err:
+                status = MailLog.MailStatus.FAILED
+                logger.error(f"[{operation_id}] Failed to send BULK email: {err}")
+            else:
+                logger.info(
+                    f"[{operation_id}] Email sent to {len(recipients)} recipients"
+                )
+
             result = {
                 "recipients_count": len(recipients),
                 "duration_seconds": round(time.time() - start_time, 3),
@@ -102,8 +112,7 @@ def send(self, separate: bool = False, track_metrics: bool = True, **data):
             }
 
             for log in mail_logs:
-                log.update_metadata(result, MailLog.MailStatus.SENT)
-            logger.info(f"[{operation_id}] Email sent to {len(recipients)} recipients")
+                log.update_metadata(result, status)
 
             if track_metrics:
                 _update_email_metrics("bulk_success", len(recipients))
