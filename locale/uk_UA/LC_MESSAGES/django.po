@@ -573,30 +573,22 @@ msgid "Powiadomienia użytkowników"
 msgstr "Сповіщення користувачів"
 
 #: notifications/services.py:12
-#, fuzzy
-#| msgid "Piłkarz"
 msgid "Piłkarka"
-msgstr "Гравець"
+msgstr "Гравчиня"
 
 #: notifications/services.py:13 profiles/models.py:1494 roles/definitions.py:7
 msgid "Trener"
 msgstr "Тренер"
 
 #: notifications/services.py:13
-#, fuzzy
-#| msgid "Trener"
 msgid "Trenerka"
 msgstr "Тренерка"
 
 #: notifications/services.py:14
-#, fuzzy
-#| msgid "Działacz klubu"
 msgid "Działacz klubowy"
 msgstr "Діяч клубу"
 
 #: notifications/services.py:14
-#, fuzzy
-#| msgid "Działacz klubu"
 msgid "Działaczka klubowa"
 msgstr "Діячка клубу"
 
@@ -2095,3 +2087,9 @@ msgstr "профіль"
 msgid "Anonimowa drużyna"
 msgstr "Анонімна команда"
 
+# Premium product names for TPay payments - base format for dynamic profile type appending
+msgid "Miesięczne konto premium dla profilu"
+msgstr "Місячний преміум акаунт для профілю"
+
+msgid "Roczne konto premium dla profilu"
+msgstr "Річний преміум акаунт для профілю"

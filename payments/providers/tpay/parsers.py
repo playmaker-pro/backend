@@ -23,9 +23,13 @@ class TpayTransactionParser:
     def transaction_body(self) -> _json:
         """Create new transaction body schema to send to tpay"""
         transaction_uuid = str(self._transaction.uuid)
+
+        # Use localized description (language already activated by I18nViewMixin)
+        description = self._transaction.get_localized_description()
+
         schema = _schemas.TpayTransactionBody(
             amount=self._transaction.amount,
-            description=self._transaction.description,
+            description=description,
             hiddenDescription=transaction_uuid,
             payer=self._payer,
             callbacks=self._config.callbacks,

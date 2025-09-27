@@ -1,3 +1,4 @@
+import uuid
 import factory
 
 from payments.models import Transaction
@@ -14,4 +15,4 @@ class TransactionFactory(factory.django.DjangoModelFactory):
         )
 
     user = factory.SubFactory(UserFactory)
-    transaction_type = factory.SubFactory(ProductFactory)
+    uuid = factory.LazyFunction(uuid.uuid4)
