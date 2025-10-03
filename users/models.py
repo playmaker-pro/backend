@@ -374,7 +374,7 @@ class User(AbstractUser, UserRoleMixin):
         If no preferences are set, we assume that user can receive all types of mailings.
         """
         if self.mailing and self.mailing.preferences:
-            return getattr(self.mailing.preferences, mailing_type, True)
+            return getattr(self.mailing.preferences, mailing_type.lower(), True)
         return True
 
     class Meta:
