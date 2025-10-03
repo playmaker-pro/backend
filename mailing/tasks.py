@@ -7,6 +7,8 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.mail import mail_admins, send_mail
 
+from utils.functions import Timer
+
 User = get_user_model()
 logger = get_task_logger(__name__)
 
@@ -28,7 +30,13 @@ def notify_admins(subject: str, message: str, **kwargs):
 
 
 @shared_task(bind=True, max_retries=3)
-def send(self, separate: bool = False, track_metrics: bool = True, **data):
+def send(
+    self,
+    operation_id: uuid.UUID,
+    separate: bool,
+    track_metrics: bool = True,
+    **data,
+) -> None:
     """
     Enhanced email sending with metrics and better error handling.
     """
@@ -37,9 +45,7 @@ def send(self, separate: bool = False, track_metrics: bool = True, **data):
     recipients = data.get("recipient_list", [])
     subject = data.get("subject", "No subject")
     start_time = time.time()
-    operation_id = uuid.uuid4()
     template_file = data.pop("template_file", None)
-    logger.info(f"[{operation_id}] Sending email to {len(recipients)} recipients")
 
     # Input validation
     if not recipients:
@@ -63,47 +69,46 @@ def send(self, separate: bool = False, track_metrics: bool = True, **data):
     try:
         if separate:
             for recipient in recipients:
-                try:
-                    individual_data = data.copy()
-                    individual_data["recipient_list"] = [recipient]
-                    send_mail(**individual_data, fail_silently=False)
-                    metadata, status = (
-                        {
-                            "recipients_count": len(recipients),
-                            "duration_seconds": round(time.time() - start_time, 3),
-                            "subject": subject,
-                        },
-                        MailLog.MailStatus.SENT,
-                    )
-                    logger.info(f"[{operation_id}] Email sent to {recipient}")
+                metadata, status = {}, MailLog.MailStatus.SENT
 
-                except Exception as err:
-                    logger.error(
-                        f"[{operation_id}] Failed to send email to {recipient}: {err}"
-                    )
-                    metadata, status = (
-                        {
-                            "error": str(err),
-                            "recipients_count": len(recipients),
-                            "duration_seconds": round(time.time() - start_time, 3),
-                        },
-                        MailLog.MailStatus.FAILED,
-                    )
-                if log := mail_logs.filter(
-                    mailing__user__email=recipient, operation_id=operation_id
-                ).first():
+                with Timer() as timer:
+                    try:
+                        individual_data = data.copy()
+                        individual_data["recipient_list"] = [recipient]
+                        send_mail(**individual_data, fail_silently=False)
+                    except Exception as err:
+                        logger.error(
+                            f"[{operation_id}] Failed to send email to {recipient}: {err}"
+                        )
+                        metadata["error"] = str(err)
+                        status = MailLog.MailStatus.FAILED
+                    else:
+                        logger.info(f"[{operation_id}] Email sent to {recipient}")
+
+                metadata.update({
+                    "duration_seconds": timer.duration,
+                    "start_time": timer.start_time,
+                    "end_time": timer.end_time,
+                })
+
+                if log := mail_logs.filter(mailing__user__email=recipient).first():
                     log.update_metadata(metadata, status)
         else:
-            status = MailLog.MailStatus.SENT
-            try:
-                send_mail(**data, fail_silently=False)
-            except Exception as err:
-                status = MailLog.MailStatus.FAILED
-                logger.error(f"[{operation_id}] Failed to send BULK email: {err}")
-            else:
-                logger.info(
-                    f"[{operation_id}] Email sent to {len(recipients)} recipients"
-                )
+            logger.info(
+                f"[{operation_id}] Sending email to {len(recipients)} recipients"
+            )
+            metadata, status = {}, MailLog.MailStatus.SENT
+            with Timer() as timer:
+                try:
+                    send_mail(**data, fail_silently=False)
+                except Exception as err:
+                    status = MailLog.MailStatus.FAILED
+                    metadata["error"] = str(err)
+                    logger.error(f"[{operation_id}] Failed to send BULK email: {err}")
+                else:
+                    logger.info(
+                        f"[{operation_id}] Email sent to {len(recipients)} recipients"
+                    )
 
             result = {
                 "recipients_count": len(recipients),

@@ -2,7 +2,6 @@ from uuid import UUID
 
 from django.http import HttpResponse
 from rest_framework import status
-from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -30,30 +29,34 @@ class MailingAPIEndpoint(EndpointView):
         return Response(serializer.data)
 
 
-@api_view(["GET"])
-def update_preferences_directly(
-    request: Request, preferences_uuid: UUID, mailing_type: str
-) -> HttpResponse:
-    if not preferences_uuid or not mailing_type:
-        return Response(
-            {"detail": "Missing uuid or mailing parameter."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+class MailingNoAuthAPIEndpoint(EndpointView):
+    authentication_classes = []  # Disabled authentication
+    permission_classes = []  # Disabled permission checks
 
-    try:
-        mailing_preferences = MailingPreferences.objects.get(uuid=preferences_uuid)
-    except MailingPreferences.DoesNotExist:
-        return Response(
-            {"detail": "Mailing preferences not found."},
-            status=status.HTTP_404_NOT_FOUND,
-        )
+    def update_preferences_directly(
+        self, request: Request, preferences_uuid: UUID, mailing_type: str
+    ) -> HttpResponse:
+        mailing_type = mailing_type.lower()
+        if not preferences_uuid or not mailing_type:
+            return Response(
+                {"detail": "Missing uuid or mailing parameter."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-    update_data = {mailing_type: False}
-    serializer = MailingPreferencesSerializer(
-        mailing_preferences, data=update_data, partial=True
-    )
-    serializer.is_valid(raise_exception=True)
-    serializer.save()
-    return HttpResponse(
-        "<h1><center>Preferencje zostały zaktualizowane</center></h1>", status=200
-    )
+        try:
+            mailing_preferences = MailingPreferences.objects.get(uuid=preferences_uuid)
+        except MailingPreferences.DoesNotExist:
+            return Response(
+                {"detail": "Mailing preferences not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        update_data = {mailing_type: False}
+        serializer = MailingPreferencesSerializer(
+            mailing_preferences, data=update_data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return HttpResponse(
+            "<h1><center>Preferencje zostały zaktualizowane</center></h1>", status=200
+        )

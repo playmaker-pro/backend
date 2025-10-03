@@ -1,4 +1,5 @@
 import enum
+import uuid
 from enum import Enum
 from typing import List, Optional
 
@@ -122,7 +123,9 @@ class Envelope(BaseModel):
     recipients: List[str] = []
     log_pk: Optional[int] = None
 
-    def send(self, separate: bool = False) -> None:
+    def send(
+        self, operation_id: uuid.UUID = uuid.uuid4(), separate: bool = True
+    ) -> None:
         """
         Sends the email using the provided mail content and recipients.
         """
@@ -134,6 +137,7 @@ class Envelope(BaseModel):
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=list(self.recipients),
             separate=separate,
+            operation_id=operation_id,
         )
 
     def send_to_admins(self) -> None:

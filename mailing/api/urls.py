@@ -12,11 +12,13 @@ urlpatterns = [
             "get": "get_my_preferences",
             "patch": "update_my_preferences",
         }),
-        name="get_user_preferences",
+        name="mailing_preferences",
     ),
     path(
         "<uuid:preferences_uuid>/<str:mailing_type>/unsubscribe/",
-        views.update_preferences_directly,
+        views.MailingNoAuthAPIEndpoint.as_view({
+            "get": "update_preferences_directly",
+        }),
         name="update_preferences_directly",
     ),
 ]

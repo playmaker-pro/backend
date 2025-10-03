@@ -1,5 +1,6 @@
 import collections
 import json
+import time
 import typing
 import uuid
 from datetime import datetime
@@ -14,6 +15,30 @@ from django.utils.html import format_html, strip_tags
 
 from backend.settings import cfg
 from backend.settings.config import Environment
+
+
+class Timer:
+    def __init__(self):
+        self.start_time = None
+        self.end_time = None
+
+    def __enter__(self):
+        self.start_time = time.time()
+        return self
+
+    def __exit__(self, *args):
+        if not self.end_time:
+            self.end_time = time.time()
+
+    @property
+    def duration(self):
+        if self.start_time and self.end_time:
+            return round(self.end_time - self.start_time, 3)
+        return 0
+
+    def stop(self):
+        self.end_time = time.time()
+
 
 def translate_league_name(code, name):
     return settings.LEAGUES_CODES_MAP.get(code, name)

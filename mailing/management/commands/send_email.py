@@ -1,10 +1,17 @@
+import logging
+import uuid
 from dataclasses import dataclass
 from typing import Any, Dict, Set
 
 from django.core.management.base import BaseCommand
+from django.db.models import QuerySet
 
-from mailing.schemas import Envelope, MailContent, MailingPreferenceType
+from mailing.schemas import MailContent, MailingPreferenceType
+from mailing.services import MailingService
+from mailing.utils import build_email_context
 from profiles.models import ProfileMeta
+
+logger = logging.getLogger("commands")
 
 
 @dataclass
@@ -38,19 +45,44 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self._set_args(options)
-        recipients: Set[str] = self._get_recipients()
-
-        if not recipients:
+        recipients: QuerySet[ProfileMeta] = self._get_recipients()
+        others: Set[str] = self._parse_others_recipients()
+        if not (recipients or others):
             self.stdout.write(self.style.WARNING("No recipients found."))
             return
+        operation_id = uuid.uuid4()
 
-        content = MailContent(
-            subject_format=self.args.title,
-            template_file=self.args.template_path,
-            mailing_type=MailingPreferenceType.MARKETING.value,
-        )
-        envelope = Envelope(mail=content(), recipients=list(recipients))
-        envelope.send(separate=True)
+        for recipient_meta in recipients:
+            try:
+                schema = MailContent(
+                    subject_format=self.args.title,
+                    template_file=self.args.template_path,
+                    mailing_type=MailingPreferenceType.MARKETING.value,
+                )
+                context = build_email_context(
+                    user=recipient_meta.user,
+                    mailing_type=schema.mailing_type,
+                )
+                MailingService(schema(context), operation_id).send_mail(
+                    recipient_meta.user
+                )
+            except Exception as e:
+                logger.error(
+                    f"Error preparing email for {recipient_meta.user.email}: {e}"
+                )
+                self.stdout.write(
+                    self.style.ERROR(
+                        f"Error preparing email for {recipient_meta.user.email}: {e}"
+                    )
+                )
+                continue
+
+        for other_email in others:
+            content = MailContent(
+                subject_format=self.args.title,
+                template_file=self.args.template_path,
+            )
+            MailingService(content(), operation_id).send_email_to_non_user(other_email)
 
         self.stdout.write(
             self.style.SUCCESS(
@@ -95,22 +127,16 @@ class Command(BaseCommand):
 
         return {email.strip() for email in self.args.others.split(";") if email.strip()}
 
-    def _get_recipients(self) -> Set[str]:
+    def _get_recipients(self) -> QuerySet[ProfileMeta]:
         """
         Get recipients based on command arguments.
         If `--all` is provided, return all profiles.
         """
-        recipients = set()
-
         if self.args.all:
-            recipients.update(
-                set(
-                    ProfileMeta.objects.filter(
-                        user__mailing__preferences__marketing=True
-                    ).values_list("user__email", flat=True)
-                )
+            return ProfileMeta.objects.filter(
+                user__mailing__preferences__marketing=True,
+                user__is_email_verified=True,
             )
-            return recipients
 
         args_mapper = {
             "playerprofile": self.args.players,
@@ -123,17 +149,11 @@ class Command(BaseCommand):
         profile_names_to_fetch = [
             key for key, arg_state in args_mapper.items() if arg_state
         ]
-        recipients.update(
-            set(
-                ProfileMeta.objects.filter(
-                    _profile_class__in=profile_names_to_fetch,
-                    user__mailing__preferences__marketing=True,
-                ).values_list("user__email", flat=True)
-            )
+        return ProfileMeta.objects.filter(
+            _profile_class__in=profile_names_to_fetch,
+            user__mailing__preferences__marketing=True,
+            user__is_email_verified=True,
         )
-        recipients.update(self._parse_others_recipients())
-
-        return recipients
 
     def _set_args(self, arguments: Dict[str, Any]) -> None:
         """

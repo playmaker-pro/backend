@@ -1,4 +1,5 @@
 import logging
+import uuid
 
 from django.db.models import Count, F, Q
 from django.utils import timezone
@@ -18,6 +19,7 @@ class MailingService:
     def __init__(
         self,
         schema: MailContent,
+        operation_id: uuid.UUID = uuid.uuid4(),
     ) -> None:
         """
         Initialize the mailing service.
@@ -28,32 +30,29 @@ class MailingService:
         if schema is None:
             raise ValueError("Schema cannot be None")
         self._schema = schema
+        self._operation_id = operation_id
 
     def send_mail(self, recipient: User) -> None:
         """
         Send the email using the provided schema and recipient.
         """
-        if preferences := recipient.mailing_preferences:
-            if self._schema.mailing_type == "MARKETING" and not preferences.marketing:
-                logger.info(
-                    "Skipping sending marketing email of subject '%s' to %s",
-                    self._schema.subject,
-                    recipient.email,
-                )
-                return
-            if (
-                self._schema.mailing_type == "TRANSACTIONAL"
-                and not preferences.transactional
-            ):
-                logger.info(
-                    "Skipping sending transactional email of subject: '%s' to %s",
-                    self._schema.subject,
-                    recipient.email,
-                )
-                return
+        if self._schema.mailing_type and not recipient.can_send_email(
+            self._schema.mailing_type
+        ):
+            logger.info(
+                "Skipping sending {self._schema.mailing_type} email of subject '{self._schema.subject}' to {recipient.email} due to user preferences",
+            )
+            return
 
         envelope = Envelope(mail=self._schema, recipients=[recipient.email])
-        envelope.send()
+        envelope.send(operation_id=self._operation_id)
+
+    def send_email_to_non_user(self, email: str) -> None:
+        """
+        Send the email to a non-registered user using the provided schema.
+        """
+        envelope = Envelope(mail=self._schema, recipients=[email])
+        envelope.send(operation_id=self._operation_id)
 
     def send_mail_to_admins(self) -> None:
         """
@@ -79,6 +78,9 @@ class PostmanService:
                 Q(team_object__isnull=True)
                 | Q(user__user_video__isnull=True)
                 | Q(user__display_status=User.DisplayStatus.NOT_SHOWN)
+            )
+            .exclude(
+                user__is_email_verified=False,
             )
             .exclude(
                 user__mailing__mailbox__sent_at__gt=thirty_days_ago,
@@ -109,6 +111,9 @@ class PostmanService:
                 user__mailing__mailbox__sent_at__gt=thirty_days_ago,
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
+            .exclude(
+                user__is_email_verified=False,
+            )
             .exclude(user__date_joined__gt=timezone.now() - timezone.timedelta(days=3))
             .select_related("user")
         )
@@ -133,6 +138,9 @@ class PostmanService:
             .exclude(
                 user__mailing__mailbox__sent_at__gt=thirty_days_ago,
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
+            )
+            .exclude(
+                user__is_email_verified=False,
             )
             .exclude(user__date_joined__gt=timezone.now() - timezone.timedelta(days=3))
             .select_related("user")
@@ -167,6 +175,9 @@ class PostmanService:
                 mailing__mailbox__sent_at__gt=F("last_activity"),
                 mailing__mailbox__mail_template=mail_schema.template_file,
             )
+            .exclude(
+                is_email_verified=False,
+            )
         )
         for user in qs:
             context = build_email_context(
@@ -197,6 +208,9 @@ class PostmanService:
                 mailing__mailbox__sent_at__gt=F("last_activity"),
                 mailing__mailbox__mail_template=mail_schema.template_file,
             )
+            .exclude(
+                is_email_verified=False,
+            )
         )
         for user in qs:
             context = build_email_context(
@@ -220,6 +234,9 @@ class PostmanService:
                 user__mailing__mailbox__sent_at__gt=timezone.now()
                 - timezone.timedelta(days=30),
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
+            )
+            .exclude(
+                user__is_email_verified=False,
             )
             .exclude(user__date_joined__gt=timezone.now() - timezone.timedelta(days=5))
             .select_related("user")
@@ -258,6 +275,9 @@ class PostmanService:
                 - timezone.timedelta(days=14),
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
+            .exclude(
+                user__is_email_verified=False,
+            )
             .select_related("user")
         )
         for meta in qs:
@@ -286,6 +306,9 @@ class PostmanService:
                 user__mailing__mailbox__sent_at__gt=timezone.now()
                 - timezone.timedelta(days=60),
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
+            )
+            .exclude(
+                user__is_email_verified=False,
             )
             .exclude(user__date_joined__gt=timezone.now() - timezone.timedelta(days=7))
             .select_related("user")
@@ -316,6 +339,9 @@ class PostmanService:
                 - timezone.timedelta(days=60),
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
+            .exclude(
+                user__is_email_verified=False,
+            )
             .exclude(user__date_joined__gt=timezone.now() - timezone.timedelta(days=7))
             .select_related("user")
         )
@@ -334,10 +360,17 @@ class PostmanService:
         Invite friends to join the platform.
         """
         mail_schema = EmailTemplateRegistry.INVITE_FRIENDS_REMINDER
-        qs = User.objects.exclude(
-            mailing__mailbox__sent_at__gt=timezone.now() - timezone.timedelta(days=60),
-            mailing__mailbox__mail_template=mail_schema.template_file,
-        ).exclude(date_joined__gt=timezone.now() - timezone.timedelta(days=10))
+        qs = (
+            User.objects.exclude(
+                mailing__mailbox__sent_at__gt=timezone.now()
+                - timezone.timedelta(days=60),
+                mailing__mailbox__mail_template=mail_schema.template_file,
+            )
+            .exclude(
+                is_email_verified=False,
+            )
+            .exclude(date_joined__gt=timezone.now() - timezone.timedelta(days=10))
+        )
 
         for user in qs:
             context = build_email_context(user, mailing_type=mail_schema.mailing_type)

@@ -9,7 +9,6 @@ from utils import GENDER_BASED_ROLES, OBJECTIVE_GENDER_BASED_ROLES
 def build_email_context(
     user: settings.AUTH_USER_MODEL,
     user2: settings.AUTH_USER_MODEL = None,
-    context: dict = dict(),
     **kwargs,
 ) -> dict:
     """Builds a dictionary with context for email templates."""
@@ -19,8 +18,12 @@ def build_email_context(
         "current_year": timezone.now().year,
         **kwargs,
     }
-
-    if kwargs.get("mailing_type") and user.mailing and user.mailing.preferences:
+    context = kwargs.pop("context", {})
+    if (
+        kwargs.get("mailing_type") is not None
+        and user.mailing
+        and user.mailing.preferences
+    ):
         context["unsubscribe_link"] = build_unsubscribe_link(
             user, kwargs["mailing_type"]
         )
