@@ -40,7 +40,7 @@ class MailingService:
             self._schema.mailing_type
         ):
             logger.info(
-                "Skipping sending {self._schema.mailing_type} email of subject '{self._schema.subject}' to {recipient.email} due to user preferences",
+                f"Skipping sending {self._schema.mailing_type} email of subject '{self._schema.subject}' to {recipient.email} due to user preferences",
             )
             return
 
