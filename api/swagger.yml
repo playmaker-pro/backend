@@ -4829,6 +4829,42 @@ paths:
         '403':
           description: "action is not allwoed."
 
+  /mailing/preferences/:
+    get:
+      operationId: get_mailing_preferences
+      description: Get user mailing preferences
+      summary: Get user mailing preferences
+      tags:
+        - mailing
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MailingPreferences'
+          description: Get user mailing preferences
+    patch:
+      operationId: update_mailing_preferences
+      description: Update user mailing preferences
+      summary: Update user mailing preferences
+      tags:
+        - mailing
+      security:
+        - jwtAuth: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MailingPreferences'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MailingPreferences'
+          description: Updated user mailing preferences
 components:
   schemas:
     AccessEnum:
@@ -4862,6 +4898,16 @@ components:
             * `own` - own
       required:
         - role
+    MailingPreferences:
+      type: object
+      description: User mailing preferences.
+      properties:
+        system:
+          type: boolean
+          description: System emails 
+        marketing:
+          type: boolean
+          description: Marketing emails
     FeatureElement:
       type: object
       description: Serializer for feature element.

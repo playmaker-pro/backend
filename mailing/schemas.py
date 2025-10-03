@@ -1,3 +1,5 @@
+import enum
+import uuid
 from enum import Enum
 from typing import List, Optional
 
@@ -39,10 +41,17 @@ class EmailTemplateFileNames(Enum):
     TRANSFER_STATUS_REMINDER = "transfer_status_reminder.html"
     TRANSFER_REQUEST_REMINDER = "transfer_request_reminder.html"
     INVITE_FRIENDS_REMINDER = "invite_friends_reminder.html"
+    CONFIRM_EMAIL = "confirm_email.html"
+
+
+class MailingPreferenceType(str, enum.Enum):
+    SYSTEM = "system"
+    MARKETING = "marketing"
 
 
 class MailContent(BaseModel):
     subject: str = ""
+    mailing_type: Optional[str] = None
 
     html_content: Optional[str] = None
     text_content: Optional[str] = None
@@ -114,7 +123,9 @@ class Envelope(BaseModel):
     recipients: List[str] = []
     log_pk: Optional[int] = None
 
-    def send(self, separate: bool = False) -> None:
+    def send(
+        self, operation_id: uuid.UUID = uuid.uuid4(), separate: bool = True
+    ) -> None:
         """
         Sends the email using the provided mail content and recipients.
         """
@@ -126,6 +137,7 @@ class Envelope(BaseModel):
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=list(self.recipients),
             separate=separate,
+            operation_id=operation_id,
         )
 
     def send_to_admins(self) -> None:
@@ -139,10 +151,15 @@ class EmailTemplateRegistry:
     INQUIRY_LIMIT = MailContent(
         subject_format="Rozbuduj swoje transferowe możliwości – Rozszerz limit zapytań!",
         template_file=EmailTemplateFileNames.INQUIRY_LIMIT.value,
+        mailing_type=MailingPreferenceType.SYSTEM.value,
     )
     NEW_USER = MailContent(
         subject_format="Witaj na PlayMaker.pro. Potwierdź rejestrację konta.",
         template_file=EmailTemplateFileNames.NEW_USER.value,
+    )
+    CONFIRM_EMAIL = MailContent(
+        subject_format="Potwierdź swój adres email na PlayMaker.pro.",
+        template_file=EmailTemplateFileNames.CONFIRM_EMAIL.value,
     )
     PASSWORD_CHANGE = MailContent(
         subject_format="Zmiana hasła do Twojego konta.",
@@ -151,46 +168,57 @@ class EmailTemplateRegistry:
     PREMIUM_EXPIRED = MailContent(
         subject_format="⚠️ Twoje Premium wygasło – odnów je teraz!",
         template_file=EmailTemplateFileNames.PREMIUM_EXPIRED.value,
+        mailing_type=MailingPreferenceType.SYSTEM.value,
     )
     REFERRAL_REWARD_REFERRED = MailContent(
-        subject_format="Witaj w PlayMaker.pro! Odbierz swój prezent powitalny",
+        subject_format="Witaj w PlayMaker.pro! Odbierz swój prezent powitalny.",
         template_file=EmailTemplateFileNames.REFERRAL_REWARD_REFERRED.value,
+        mailing_type=MailingPreferenceType.SYSTEM.value,
     )
     REFERRAL_REWARD_REFERRER_1 = MailContent(
-        subject_format="Gratulacje! Otrzymujesz nagrodę za polecenie nowego użytkownika",
+        subject_format="Gratulacje! Otrzymujesz nagrodę za polecenie nowego użytkownika.",
         template_file=EmailTemplateFileNames.REFERRAL_REWARD_REFERRER_1.value,
+        mailing_type=MailingPreferenceType.SYSTEM.value,
     )
     REFERRAL_REWARD_REFERRER_3 = MailContent(
         subject_format="Gratulacje! Nagroda za 3 skuteczne polecenia PlayMaker.pro",
         template_file=EmailTemplateFileNames.REFERRAL_REWARD_REFERRER_3.value,
+        mailing_type=MailingPreferenceType.SYSTEM.value,
     )
     REFERRAL_REWARD_REFERRER_5 = MailContent(
         subject_format="Gratulacje! Otrzymujesz miesiąc Premium i treningi za 5 poleceń PlayMaker.pro",
         template_file=EmailTemplateFileNames.REFERRAL_REWARD_REFERRER_5.value,
+        mailing_type=MailingPreferenceType.SYSTEM.value,
     )
     REFERRAL_REWARD_REFERRER_15 = MailContent(
         subject_format="Gratulacje! 6 miesięcy Premium za 15 poleceń PlayMaker.pro",
         template_file=EmailTemplateFileNames.REFERRAL_REWARD_REFERRER_15.value,
+        mailing_type=MailingPreferenceType.SYSTEM.value,
     )
     ACCEPTED_INQUIRY = MailContent(
         subject_format="{related_role} {related_full_name} {verb} Twoje zapytanie o piłkarski kontakt!",
         template_file=EmailTemplateFileNames.ACCEPTED_INQUIRY.value,
+        mailing_type=MailingPreferenceType.SYSTEM.value,
     )
     REJECTED_INQUIRY = MailContent(
         subject_format="{related_role} {related_full_name} {verb} Twoje zapytanie o piłkarski kontakt!",
         template_file=EmailTemplateFileNames.REJECTED_INQUIRY.value,
+        mailing_type=MailingPreferenceType.SYSTEM.value,
     )
     NEW_INQUIRY = MailContent(
         subject_format="Masz nowe zapytanie o piłkarski kontakt!",
         template_file=EmailTemplateFileNames.NEW_INQUIRY.value,
+        mailing_type=MailingPreferenceType.SYSTEM.value,
     )
     OUTDATED_INQUIRY = MailContent(
         subject_format="Zwiększamy Twoją pulę zapytań o piłkarski kontakt!",
         template_file=EmailTemplateFileNames.OUTDATED_INQUIRY.value,
+        mailing_type=MailingPreferenceType.SYSTEM.value,
     )
     OUTDATED_REMINDER = MailContent(
         subject_format="Masz zapytanie o piłkarski kontakt czekające na decyzję.",
         template_file=EmailTemplateFileNames.OUTDATED_REMINDER.value,
+        mailing_type=MailingPreferenceType.SYSTEM.value,
     )
     SYSTEM_ERROR = MailContent(
         subject_format="{subject}",
@@ -203,48 +231,60 @@ class EmailTemplateRegistry:
     NO_RESPONSE_REMINDER = MailContent(
         subject_format="⏳ Masz zapytanie – czas odpowiedzieć",
         template_file=EmailTemplateFileNames.NO_RESPONSE_REMINDER.value,
+        mailing_type=MailingPreferenceType.SYSTEM.value,
     )
     PLAYER_WELCOME = MailContent(
         subject_format="👋 Witaj na PlayMaker.pro – pokaż, co potrafisz",
         template_file=EmailTemplateFileNames.PLAYER_WELCOME.value,
+        mailing_type=MailingPreferenceType.SYSTEM.value,
     )
     PROFESSIONAL_WELCOME = MailContent(
         subject_format="👋 Witaj w PlayMaker.pro – znajdź zawodników szybciej",
         template_file=EmailTemplateFileNames.PROFESSIONAL_WELCOME.value,
+        mailing_type=MailingPreferenceType.SYSTEM.value,
     )
     INCOMPLETE_PROFILE_REMINDER = MailContent(
         subject_format="🔧 Twój profil to wciąż wersja demo",
         template_file=EmailTemplateFileNames.INCOMPLETE_PROFILE_REMINDER.value,
+        mailing_type=MailingPreferenceType.SYSTEM.value,
     )
     INACTIVE_USER_REMINDER = MailContent(
         subject_format="👀 PlayMaker gra dalej – a Ty?",
         template_file=EmailTemplateFileNames.INACTIVE_USER_REMINDER.value,
+        mailing_type=MailingPreferenceType.SYSTEM.value,
     )
     PREMIUM_ENCOURAGEMENT = MailContent(
         subject_format="🚀 Czas na awans – przejdź na Premium",
         template_file=EmailTemplateFileNames.PREMIUM_ENCOURAGEMENT.value,
+        mailing_type=MailingPreferenceType.SYSTEM.value,
     )
     TRIAL_END = MailContent(
         subject_format="🕒 Koniec próbnej rundy – co dalej?",
         template_file=EmailTemplateFileNames.TRIAL_END.value,
+        mailing_type=MailingPreferenceType.SYSTEM.value,
     )
     PROFILE_VIEWS_MILESTONE = MailContent(
         subject_format="🔥 Twój profil robi szum",
         template_file=EmailTemplateFileNames.PROFILE_VIEWS_MILESTONE.value,
+        mailing_type=MailingPreferenceType.SYSTEM.value,
     )
     NEW_CLUB_OFFER = MailContent(
         subject_format="⚽ Nowa szansa na transfer – sprawdź teraz",
         template_file=EmailTemplateFileNames.NEW_CLUB_OFFER.value,
+        mailing_type=MailingPreferenceType.SYSTEM.value,
     )
     TRANSFER_STATUS_REMINDER = MailContent(
         subject_format="📣 Pokaż, że jesteś dostępny na rynku",
         template_file=EmailTemplateFileNames.TRANSFER_STATUS_REMINDER.value,
+        mailing_type=MailingPreferenceType.SYSTEM.value,
     )
     TRANSFER_REQUEST_REMINDER = MailContent(
         subject_format="🔎 Kogo szukasz? Pokaż to innym",
         template_file=EmailTemplateFileNames.TRANSFER_REQUEST_REMINDER.value,
+        mailing_type=MailingPreferenceType.SYSTEM.value,
     )
     INVITE_FRIENDS_REMINDER = MailContent(
         subject_format="🎁 Zapraszaj znajomych i odbieraj nagrody",
         template_file=EmailTemplateFileNames.INVITE_FRIENDS_REMINDER.value,
+        mailing_type=MailingPreferenceType.SYSTEM.value,
     )

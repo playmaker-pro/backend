@@ -7,7 +7,7 @@ from django.dispatch import receiver
 
 from mailing.tasks import notify_admins
 from users.models import UserRef
-from users.services import ReferralRewardService
+from users.services import ReferralRewardService, UserService
 from users.tasks import prepare_new_user, send_email_to_confirm_new_user
 
 logger = logging.getLogger("project")
@@ -26,13 +26,19 @@ def pre_save_user(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender=User)
-def post_create_user(sender, instance, created, **kwargs) -> None:
+def post_save_user(sender, instance, created, **kwargs) -> None:
     """Create UserPreferences object for each new user"""
     if created:
         chain(
             prepare_new_user.s(user_id=instance.pk),
             send_email_to_confirm_new_user.s(user_id=instance.pk),
         ).apply_async()
+    else:
+        old_object = User.objects.get(pk=instance.pk)
+
+        if old_object.email != instance.email:
+            instance.is_email_verified = False
+            UserService.send_email_to_confirm_new_email_address(instance)
 
 
 @receiver(post_save, sender=UserRef)

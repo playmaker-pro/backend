@@ -3,7 +3,7 @@ from celery.utils.log import get_task_logger
 
 from inquiries.constants import INQUIRY_EMAIL_TEMPLATE, InquiryLogType
 from inquiries.models import InquiryRequest, UserInquiry, UserInquiryLog
-from mailing.schemas import EmailTemplateRegistry, Envelope
+from mailing.schemas import EmailTemplateRegistry
 from mailing.services import MailingService
 from mailing.utils import build_email_context
 from utils.constants import INQUIRY_LIMIT_INCREASE_URL
@@ -22,9 +22,14 @@ def notify_limit_reached(user_inquiry_id: int):
     if not user_inquiry.can_sent_inquiry_limit_reached_email():
         return
 
-    MailingService(
-        EmailTemplateRegistry.INQUIRY_LIMIT(context={"url": INQUIRY_LIMIT_INCREASE_URL})
-    ).send_mail(user_inquiry.user)
+    template = EmailTemplateRegistry.INQUIRY_LIMIT
+    context = build_email_context(
+        user=user_inquiry.user,
+        mailing_type=template.mailing_type,
+        url=INQUIRY_LIMIT_INCREASE_URL,
+    )
+
+    MailingService(template(context=context)).send_mail(user_inquiry.user)
     user_inquiry.update_last_limit_notification()
 
 
@@ -37,15 +42,6 @@ def send_inquiry_update_email(user_inquiry_log_id: int):
     user_inquiry_log = UserInquiryLog.objects.get(pk=user_inquiry_log_id)
     gender_index = int(user_inquiry_log.related_with.user.userpreferences.gender == "K")
 
-    context = build_email_context(
-        user=(user := user_inquiry_log.log_owner.user),
-        user2=user_inquiry_log.related_with.user,
-    )
-    if user_inquiry_log.log_type == InquiryLogType.ACCEPTED:
-        context.update({"verb": ["zaakceptował", "zaakceptowała"][gender_index]})
-    elif user_inquiry_log.log_type == InquiryLogType.REJECTED:
-        context.update({"verb": ["odrzucił", "odrzuciła"][gender_index]})
-
     try:
         template = INQUIRY_EMAIL_TEMPLATE[user_inquiry_log.log_type]
     except KeyError as e:
@@ -54,8 +50,17 @@ def send_inquiry_update_email(user_inquiry_log_id: int):
         )
         return
 
-    envelope = Envelope(mail=template(context), recipients=[user.email])
-    envelope.send()
+    context = build_email_context(
+        user=(user := user_inquiry_log.log_owner.user),
+        user2=user_inquiry_log.related_with.user,
+        mailing_type=template.mailing_type,
+    )
+    if user_inquiry_log.log_type == InquiryLogType.ACCEPTED:
+        context.update({"verb": ["zaakceptował", "zaakceptowała"][gender_index]})
+    elif user_inquiry_log.log_type == InquiryLogType.REJECTED:
+        context.update({"verb": ["odrzucił", "odrzuciła"][gender_index]})
+
+    MailingService(template(context)).send_mail(user)
 
 
 @shared_task
@@ -71,5 +76,6 @@ def check_inquiry_response(inquiry_request_id: int):
         context = build_email_context(
             user=inquiry_request.sender.user,
             user2=inquiry_request.recipient.user,
+            mailing_type=mail_schema.mailing_type,
         )
         MailingService(mail_schema(context)).send_mail(inquiry_request.sender)

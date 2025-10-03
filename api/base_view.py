@@ -4,8 +4,8 @@ from django.db.models import QuerySet
 from django_filters import rest_framework as filters
 from rest_framework import viewsets
 
-from api.pagination import PagePagination
 from api.i18n import I18nViewMixin
+from api.pagination import PagePagination
 
 
 class EndpointView(I18nViewMixin, viewsets.GenericViewSet):

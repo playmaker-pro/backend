@@ -1,4 +1,5 @@
 import logging
+import uuid
 
 from django.db.models import Count, F, Q
 from django.utils import timezone
@@ -9,6 +10,8 @@ from premium.models import PremiumProduct
 from profiles.models import ClubProfile, CoachProfile, PlayerProfile, ProfileMeta
 from users.models import User
 
+logger = logging.getLogger("mailing")
+
 
 class MailingService:
     """Handles sending templated emails and optionally logging them in the outbox."""
@@ -16,6 +19,7 @@ class MailingService:
     def __init__(
         self,
         schema: MailContent,
+        operation_id: uuid.UUID = uuid.uuid4(),
     ) -> None:
         """
         Initialize the mailing service.
@@ -26,13 +30,29 @@ class MailingService:
         if schema is None:
             raise ValueError("Schema cannot be None")
         self._schema = schema
+        self._operation_id = operation_id
 
     def send_mail(self, recipient: User) -> None:
         """
         Send the email using the provided schema and recipient.
         """
+        if self._schema.mailing_type and not recipient.can_send_email(
+            self._schema.mailing_type
+        ):
+            logger.info(
+                "Skipping sending {self._schema.mailing_type} email of subject '{self._schema.subject}' to {recipient.email} due to user preferences",
+            )
+            return
+
         envelope = Envelope(mail=self._schema, recipients=[recipient.email])
-        envelope.send()
+        envelope.send(operation_id=self._operation_id)
+
+    def send_email_to_non_user(self, email: str) -> None:
+        """
+        Send the email to a non-registered user using the provided schema.
+        """
+        envelope = Envelope(mail=self._schema, recipients=[email])
+        envelope.send(operation_id=self._operation_id)
 
     def send_mail_to_admins(self) -> None:
         """
@@ -60,6 +80,9 @@ class PostmanService:
                 | Q(user__display_status=User.DisplayStatus.NOT_SHOWN)
             )
             .exclude(
+                user__is_email_verified=False,
+            )
+            .exclude(
                 user__mailing__mailbox__sent_at__gt=thirty_days_ago,
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
@@ -68,7 +91,9 @@ class PostmanService:
         )
 
         for profile in qs:
-            context = build_email_context(profile.user)
+            context = build_email_context(
+                profile.user, mailing_type=mail_schema.mailing_type
+            )
             MailingService(mail_schema(context)).send_mail(profile.user)
             self.logger.info(
                 "Sent incomplete profile reminder to %s", profile.user.email
@@ -86,12 +111,17 @@ class PostmanService:
                 user__mailing__mailbox__sent_at__gt=thirty_days_ago,
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
+            .exclude(
+                user__is_email_verified=False,
+            )
             .exclude(user__date_joined__gt=timezone.now() - timezone.timedelta(days=3))
             .select_related("user")
         )
 
         for profile in qs:
-            context = build_email_context(profile.user)
+            context = build_email_context(
+                profile.user, mailing_type=mail_schema.mailing_type
+            )
             MailingService(mail_schema(context)).send_mail(profile.user)
             self.logger.info(
                 "Sent incomplete profile reminder to %s", profile.user.email
@@ -109,11 +139,16 @@ class PostmanService:
                 user__mailing__mailbox__sent_at__gt=thirty_days_ago,
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
+            .exclude(
+                user__is_email_verified=False,
+            )
             .exclude(user__date_joined__gt=timezone.now() - timezone.timedelta(days=3))
             .select_related("user")
         )
         for profile in qs:
-            context = build_email_context(profile.user)
+            context = build_email_context(
+                profile.user, mailing_type=mail_schema.mailing_type
+            )
             MailingService(mail_schema(context)).send_mail(profile.user)
             self.logger.info(
                 "Sent incomplete profile reminder to %s", profile.user.email
@@ -140,9 +175,14 @@ class PostmanService:
                 mailing__mailbox__sent_at__gt=F("last_activity"),
                 mailing__mailbox__mail_template=mail_schema.template_file,
             )
+            .exclude(
+                is_email_verified=False,
+            )
         )
         for user in qs:
-            context = build_email_context(user, days_inactive=30)
+            context = build_email_context(
+                user, days_inactive=30, mailing_type=mail_schema.mailing_type
+            )
             MailingService(mail_schema(context)).send_mail(user)
             self.logger.info("Sent inactive (30 days) user reminder to %s", user.email)
         self.logger.info(
@@ -168,9 +208,14 @@ class PostmanService:
                 mailing__mailbox__sent_at__gt=F("last_activity"),
                 mailing__mailbox__mail_template=mail_schema.template_file,
             )
+            .exclude(
+                is_email_verified=False,
+            )
         )
         for user in qs:
-            context = build_email_context(user, days_inactive=90)
+            context = build_email_context(
+                user, days_inactive=90, mailing_type=mail_schema.mailing_type
+            )
             MailingService(mail_schema(context)).send_mail(user)
             self.logger.info("Sent inactive (90 days) user reminder to %s", user.email)
         self.logger.info(
@@ -190,11 +235,16 @@ class PostmanService:
                 - timezone.timedelta(days=30),
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
+            .exclude(
+                user__is_email_verified=False,
+            )
             .exclude(user__date_joined__gt=timezone.now() - timezone.timedelta(days=5))
             .select_related("user")
         )
         for pp in qs:
-            context = build_email_context(pp.user)
+            context = build_email_context(
+                pp.user, mailing_type=mail_schema.mailing_type
+            )
             MailingService(mail_schema(context)).send_mail(pp.user)
             self.logger.info("Sent premium encouragement email to %s", pp.user.email)
         self.logger.info(
@@ -225,10 +275,15 @@ class PostmanService:
                 - timezone.timedelta(days=14),
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
+            .exclude(
+                user__is_email_verified=False,
+            )
             .select_related("user")
         )
         for meta in qs:
-            context = build_email_context(meta.user)
+            context = build_email_context(
+                meta.user, mailing_type=mail_schema.mailing_type
+            )
             MailingService(mail_schema(context)).send_mail(meta.user)
             self.logger.info(
                 "Sent profile views milestone email to %s", meta.user.email
@@ -252,12 +307,17 @@ class PostmanService:
                 - timezone.timedelta(days=60),
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
+            .exclude(
+                user__is_email_verified=False,
+            )
             .exclude(user__date_joined__gt=timezone.now() - timezone.timedelta(days=7))
             .select_related("user")
         )
 
         for player in qs:
-            context = build_email_context(player.user)
+            context = build_email_context(
+                player.user, mailing_type=mail_schema.mailing_type
+            )
             MailingService(mail_schema(context)).send_mail(player.user)
             self.logger.info("Sent transfer status reminder to %s", player.user.email)
         self.logger.info(
@@ -279,11 +339,16 @@ class PostmanService:
                 - timezone.timedelta(days=60),
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
+            .exclude(
+                user__is_email_verified=False,
+            )
             .exclude(user__date_joined__gt=timezone.now() - timezone.timedelta(days=7))
             .select_related("user")
         )
         for meta in qs:
-            context = build_email_context(meta.user)
+            context = build_email_context(
+                meta.user, mailing_type=mail_schema.mailing_type
+            )
             MailingService(mail_schema(context)).send_mail(meta.user)
             self.logger.info("Sent transfer request reminder to %s", meta.user.email)
         self.logger.info(
@@ -295,13 +360,20 @@ class PostmanService:
         Invite friends to join the platform.
         """
         mail_schema = EmailTemplateRegistry.INVITE_FRIENDS_REMINDER
-        qs = User.objects.exclude(
-            mailing__mailbox__sent_at__gt=timezone.now() - timezone.timedelta(days=60),
-            mailing__mailbox__mail_template=mail_schema.template_file,
-        ).exclude(date_joined__gt=timezone.now() - timezone.timedelta(days=10))
+        qs = (
+            User.objects.exclude(
+                mailing__mailbox__sent_at__gt=timezone.now()
+                - timezone.timedelta(days=60),
+                mailing__mailbox__mail_template=mail_schema.template_file,
+            )
+            .exclude(
+                is_email_verified=False,
+            )
+            .exclude(date_joined__gt=timezone.now() - timezone.timedelta(days=10))
+        )
 
         for user in qs:
-            context = build_email_context(user)
+            context = build_email_context(user, mailing_type=mail_schema.mailing_type)
             MailingService(mail_schema(context)).send_mail(user)
             self.logger.info("Sent invite friends reminder to %s", user.email)
         self.logger.info(

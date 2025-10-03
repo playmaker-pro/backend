@@ -37,6 +37,7 @@ class UserFactory(CustomObjectFactory):
     mailing = factory.RelatedFactory(
         "utils.factories.mailing_factories.MailingFactory", "user"
     )
+    is_email_verified = True
 
     @classmethod
     def create_admin_user(
