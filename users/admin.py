@@ -174,6 +174,7 @@ class UserAdminPanel(UserAdmin):
                     "first_name",
                     "last_name",
                     "email",
+                    "is_email_verified",
                     "userpreferences",
                     "profile",
                 )
