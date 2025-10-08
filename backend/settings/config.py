@@ -115,6 +115,7 @@ class MailingConfig(BaseModel):
 
     host: str
     port: int
+    host_username: str
     outgoing_address: str
     password: SecretStr
     use_tls: bool = True
@@ -141,6 +142,15 @@ class SlackConfig(BaseModel):
     enabled: bool = False
 
 
+class AmazonSESConfig(BaseModel):
+    host: str
+    port: int
+    username: str
+    password: SecretStr
+    use_tls: bool = True
+    enabled: bool = False
+
+
 class Config(BaseSettings):
     """General settings for webapp"""
 
@@ -153,6 +163,7 @@ class Config(BaseSettings):
     smtp: MailingConfig
     mongodb: MongoDBConfig
     slack: SlackConfig
+    ses: AmazonSESConfig
 
     # add the rest of settings that should fit here
     class Config:
