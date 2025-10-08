@@ -6,11 +6,26 @@ from celery.utils.log import get_task_logger
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.mail import mail_admins, send_mail
+from django.core.mail.backends.smtp import EmailBackend
 
+from backend.settings import cfg
 from utils.functions import Timer
 
 User = get_user_model()
 logger = get_task_logger(__name__)
+
+connection = (
+    EmailBackend(
+        host=cfg.ses.host,
+        port=cfg.ses.port,
+        username=cfg.ses.username,
+        password=cfg.ses.password.get_secret_value(),
+        use_tls=cfg.ses.use_tls,
+        fail_silently=False,
+    )
+    if cfg.ses.enabled
+    else None
+)
 
 
 @shared_task
@@ -21,7 +36,7 @@ def notify_admins(subject: str, message: str, **kwargs):
         return
 
     try:
-        mail_admins(subject=subject, message=message, **kwargs)
+        mail_admins(subject=subject, message=message, connection=connection, **kwargs)
         logger.info(f"Admin notification sent: {subject}")
         cache.set(subject, message, 3600)
     except Exception as err:
@@ -75,7 +90,11 @@ def send(
                     try:
                         individual_data = data.copy()
                         individual_data["recipient_list"] = [recipient]
-                        send_mail(**individual_data, fail_silently=False)
+                        send_mail(
+                            **individual_data,
+                            fail_silently=False,
+                            connection=connection,
+                        )
                     except Exception as err:
                         logger.error(
                             f"[{operation_id}] Failed to send email to {recipient}: {err}"
@@ -100,7 +119,7 @@ def send(
             metadata, status = {}, MailLog.MailStatus.SENT
             with Timer() as timer:
                 try:
-                    send_mail(**data, fail_silently=False)
+                    send_mail(**data, fail_silently=False, connection=connection)
                 except Exception as err:
                     status = MailLog.MailStatus.FAILED
                     metadata["error"] = str(err)
