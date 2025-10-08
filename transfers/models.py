@@ -111,6 +111,8 @@ class ProfileTransferRequest(TransferBaseModel):
         on_delete=models.CASCADE,
         related_name="transfer_requests",
         help_text="The team that is requesting the transfer.",
+        null=True,
+        blank=True,
     )
     gender = models.CharField(
         max_length=10, choices=(("M", "M"), ("F", "F")), help_text="Define team gender"
@@ -163,4 +165,6 @@ class ProfileTransferRequest(TransferBaseModel):
     @property
     def team(self):
         """Returns the requesting team."""
+        if self.requesting_team is None:
+            return None
         return self.requesting_team.team_history.first()

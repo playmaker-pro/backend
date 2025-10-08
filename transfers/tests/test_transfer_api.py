@@ -233,15 +233,15 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
 
     def setUp(self):
         self.client = APIClient()
-        user = UserFactory(password="test_password")
-        self.profile: BaseProfile = PlayerProfileFactory.create(user=user)
+        self.user = UserFactory(password="test_password")
+        self.profile: BaseProfile = PlayerProfileFactory.create(user=self.user)
         self.url = reverse(
             "api:transfers:manage_transfer_request",
         )
         self.get_url = GET_TRANSFER_REQUEST_URL
         self.user_manager = UserManager(self.client)
         self.headers = self.user_manager.custom_user_headers(
-            email=user.email, password="test_password"
+            email=self.user.email, password="test_password"
         )
         team_contributor: TeamContributor = TeamContributorFactory.create(
             profile_uuid=self.profile.uuid
@@ -549,6 +549,21 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
         assert isinstance(response.json(), dict)
         expected_response = PhoneNumberMustBeADictionaryHTTPException.default_detail
         assert response.json().get("detail") == expected_response
+
+    def test_create_transfer_request_without_team_contributor(self):
+        """
+        Test create profile transfer status without team contributor.
+        Expected status code 400.
+        """
+        self.data.pop("requesting_team")
+        response: Response = self.client.post(
+            self.url, json.dumps(self.data), **self.headers
+        )
+
+        assert response.status_code == 201
+        assert isinstance(response.json(), dict)
+        assert "requesting_team" in response.json()
+        assert self.user.profile.meta.transfer_object.requesting_team is None
 
 
 def test_profile_transfer_request_teams_endpoint(
