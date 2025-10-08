@@ -143,10 +143,10 @@ class SlackConfig(BaseModel):
 
 
 class AmazonSESConfig(BaseModel):
-    host: str
-    port: int
-    username: str
-    password: SecretStr
+    host: str = ""
+    port: int = 587
+    username: str = ""
+    password: SecretStr = ""
     use_tls: bool = True
     enabled: bool = False
 
@@ -163,7 +163,7 @@ class Config(BaseSettings):
     smtp: MailingConfig
     mongodb: MongoDBConfig
     slack: SlackConfig
-    ses: AmazonSESConfig
+    ses: AmazonSESConfig = Field(default_factory=AmazonSESConfig)
 
     # add the rest of settings that should fit here
     class Config:
