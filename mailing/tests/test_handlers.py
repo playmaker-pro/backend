@@ -179,7 +179,7 @@ class TestEmailHandlerEndToEnd:
         }
 
         notify_admins(**test_data)
-        mock_mail_admins.assert_called_once_with(**test_data)
+        mock_mail_admins.assert_called_once_with(**test_data, connection=None)
 
     @override_settings(
         ADMINS=[("Test Admin", "admin@test.com")],
