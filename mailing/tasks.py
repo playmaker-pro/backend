@@ -12,7 +12,7 @@ from backend.settings import cfg
 from utils.functions import Timer
 
 User = get_user_model()
-logger = get_task_logger(__name__)
+logger = get_task_logger("mailing")
 
 connection = (
     EmailBackend(
