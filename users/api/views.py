@@ -3,9 +3,9 @@ import traceback
 import typing
 
 from django.conf import settings
-from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -253,6 +253,9 @@ class UsersAPI(EndpointView):
             raise NoUserCredentialFetchedException(
                 details="No user data fetched from Google or data is not valid. Please try again."  # noqa
             )
+        except Exception as e:
+            logger.exception(str(e))
+            raise ValidationError from e
 
         return Response(response, status=status.HTTP_200_OK)
 
@@ -268,6 +271,9 @@ class UsersAPI(EndpointView):
             raise NoUserCredentialFetchedException(details="User email not valid")
         except SocialAccountInstanceNotCreatedException:
             raise NoUserCredentialFetchedException(details="User instance not created")
+        except Exception as e:
+            logger.exception(str(e))
+            raise ValidationError from e
 
         return Response(response)
 
