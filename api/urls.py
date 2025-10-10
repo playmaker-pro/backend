@@ -15,6 +15,7 @@ from profiles.api.urls import urlpatterns as profiles_urls
 from roles.api_urls import urlpatterns as roles_urls
 from transfers.api.urls import urlpatterns as transfers_urls
 from users.api.urls import urlpatterns as users_urls
+from api.internal_urls import urlpatterns as internal_urls
 
 app_name = "api"
 
@@ -63,4 +64,6 @@ urlpatterns = [
         views.SwaggerView.as_view({"get": "get_swagger_body"}),
         name="get_swagger_body",
     ),
+    # Internal endpoints (secured with API key)
+    url(r"^internal/", include((internal_urls, "internal"))),
 ]
