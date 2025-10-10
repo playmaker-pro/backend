@@ -195,7 +195,7 @@ class UsersAPI(EndpointView):
             ]
             user_info = manager.get_user_info()
         except ValueError as e:
-            logger.error(str(traceback.format_exc()) + f"\n{str(e)}")
+            logger.exception(str(traceback.format_exc()) + f"\n{str(e)}")
             raise ApplicationError(details=str(e))
 
         user_email: str = user_info.email
@@ -254,7 +254,6 @@ class UsersAPI(EndpointView):
                 details="No user data fetched from Google or data is not valid. Please try again."  # noqa
             )
         except Exception as e:
-            logger.exception(str(e))
             raise ValidationError from e
 
         return Response(response, status=status.HTTP_200_OK)
@@ -272,7 +271,6 @@ class UsersAPI(EndpointView):
         except SocialAccountInstanceNotCreatedException:
             raise NoUserCredentialFetchedException(details="User instance not created")
         except Exception as e:
-            logger.exception(str(e))
             raise ValidationError from e
 
         return Response(response)
