@@ -3,6 +3,7 @@ import traceback
 import typing
 
 from django.conf import settings
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import validate_email
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
@@ -335,7 +336,7 @@ class EmailAvailability(EndpointView):
         email: str = request.data.get("email")
         try:
             validate_email(email)
-        except ValidationError as e:
+        except DjangoValidationError as e:
             raise EmailNotValid(details=e)
 
         response: bool = user_service.email_available(email)
