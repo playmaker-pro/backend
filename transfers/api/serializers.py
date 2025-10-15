@@ -2,6 +2,7 @@ import logging
 from functools import partial
 from typing import Optional, Type, Union
 
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -264,7 +265,7 @@ class ProfileTransferRequestSerializer(
             data["salary"] = salary_serialized.data
         if data["is_anonymous"] and not self.context.get("expose", False):
             data["requesting_team"]["id"] = 0
-            data["requesting_team"]["team"]["team_name"] = "Anonimowa drużyna"
+            data["requesting_team"]["team"]["team_name"] = _("Anonimowa drużyna")
             data["requesting_team"]["team"]["id"] = 0
             data["requesting_team"]["team"]["team_contributor_id"] = 0
             data["requesting_team"]["team"]["picture_url"] = None

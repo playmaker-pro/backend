@@ -4,8 +4,9 @@ from typing import List
 import pytest
 from django.utils import timezone
 
-from mailing.schemas import EmailTemplateRegistry
-from mailing.services import PostmanService
+from mailing.schemas import EmailTemplateRegistry, MailContent
+from mailing.services import MailingService, PostmanService
+from mailing.utils import build_email_context
 from premium.models import PremiumType
 from users.models import User
 from utils.factories import PlayerProfileFactory
@@ -342,6 +343,7 @@ class TestPostmanService:
         recipients = self._get_recipients_list(
             outbox, EmailTemplateRegistry.TRANSFER_REQUEST_REMINDER.subject
         )
+
         assert len(recipients) == 2
         assert c1.user.email in recipients
         assert t1.user.email in recipients
@@ -399,3 +401,45 @@ class TestPostmanService:
 
         assert recipients.count(player_profile.user.email) == 2
         assert recipients.count(coach_profile.user.email) == 2
+
+
+class TestMailing:
+    @pytest.mark.parametrize("mail_type", ("SYSTEM", "MARKETING"))
+    def test_email_has_unsubscribe_link(
+        self, outbox, player_profile, mail_type
+    ) -> None:
+        outbox.clear()
+        mail_schema = MailContent(
+            subject_format="Test Unsubscribe Link",
+            template_file="test.html",
+            mailing_type=mail_type,
+        )
+        context = build_email_context(player_profile.user, mailing_type=mail_type)
+        link = context["unsubscribe_link"]
+        link_split = link.split("/")
+        MailingService(mail_schema(context)).send_mail(player_profile.user)
+
+        assert outbox[0].subject == "Test Unsubscribe Link"
+        assert (
+            f'Jeżeli nie chcesz otrzymywać podobnych wiadomości, kliknij tutaj: <a href="{link}'
+            in str(outbox[0].alternatives)
+        )
+        assert link_split[-3] == mail_type
+        assert link_split[-4] == str(player_profile.user.mailing.preferences.uuid)
+
+    def test_email_has_no_unsubscribe_link(self, outbox, player_profile) -> None:
+        outbox.clear()
+        mail_schema = MailContent(
+            subject_format="Test No Unsubscribe Link",
+            template_file="test.html",
+        )
+        context = build_email_context(
+            player_profile.user,
+        )
+        MailingService(mail_schema(context)).send_mail(player_profile.user)
+
+        assert outbox[0].subject == "Test No Unsubscribe Link"
+        assert (
+            "Jeżeli nie chcesz otrzymywać podobnych wiadomości, kliknij tutaj"
+            not in str(outbox[0].alternatives)
+        )

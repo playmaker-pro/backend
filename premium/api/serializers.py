@@ -14,16 +14,8 @@ class ProductSerializer(I18nSerializerMixin, serializers.ModelSerializer):
         exclude = ("visible",)
 
     def get_name_readable(self, obj):
-        """Return translated name_readable based on the original value"""
-        # Map of original Polish values to translation keys
-        translation_map = {
-            "3 zapytań": _("3 zapytań"),
-            "5 zapytań": _("5 zapytań"),
-            "10 zapytań": _("10 zapytań"),
-        }
-
-        # For other languages, return the translated version
-        return translation_map.get(obj.name_readable, obj.name_readable)
+        """Return translated name_readable"""
+        return _(obj.name_readable)
 
 
 class PromoteProfileProductSerializer(serializers.ModelSerializer):

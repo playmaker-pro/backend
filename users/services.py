@@ -14,6 +14,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from features.models import AccessPermission, Feature, FeatureElement
 from mailing.schemas import EmailTemplateRegistry
 from mailing.services import MailingService
+from mailing.utils import build_email_context
 from premium.models import PremiumType
 from users.errors import CityDoesNotExistException, InvalidUIDServiceException
 from users.managers import UserTokenManager
@@ -190,13 +191,21 @@ class UserService:
         return not User.objects.filter(email=email).exists()
 
     @staticmethod
-    def send_email_to_confirm_new_user(user: User) -> None:
+    def send_email_to_confirm_new_email_address(
+        user: User, new_user: bool = True
+    ) -> None:
         """Sends an email to a newly registered user to confirm their email address."""
         verification_url = UserTokenManager.create_email_verification_url(user)
 
-        MailingService(
-            EmailTemplateRegistry.NEW_USER(context={"url": verification_url})
-        ).send_mail(user)
+        if new_user:
+            template = EmailTemplateRegistry.NEW_USER
+        else:
+            template = EmailTemplateRegistry.CONFIRM_EMAIL
+        context = build_email_context(
+            user, url=verification_url, mailing_type=template.mailing_type
+        )
+
+        MailingService(template(context=context)).send_mail(user)
 
     @staticmethod
     def change_email_verify_flag(user: User) -> None:

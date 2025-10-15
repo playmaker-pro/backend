@@ -127,8 +127,9 @@ class MainProfileDataSerializer(serializers.ModelSerializer):
         a gender code to its corresponding descriptive name).
         """
         # Ensure the userpreferences relation exists
-        if obj.userpreferences:
-            gender_value = obj.userpreferences.gender
+        userpreferences = getattr(obj, "userpreferences", None)
+        if userpreferences:
+            gender_value = userpreferences.gender
             if gender_value is not None:
                 # Using ProfileEnumChoicesSerializer for the gender field
                 serializer = ProfileEnumChoicesSerializer(
@@ -566,8 +567,9 @@ class MainUserDataSerializer(serializers.ModelSerializer):
         a gender code to its corresponding descriptive name).
         """
         # Ensure the userpreferences relation exists
-        if obj.userpreferences:
-            gender_value = obj.userpreferences.gender
+        userpreferences = getattr(obj, "userpreferences", None)
+        if userpreferences:
+            gender_value = userpreferences.gender
             if gender_value is not None:
                 # Using ProfileEnumChoicesSerializer for the gender field
                 serializer = ProfileEnumChoicesSerializer(
@@ -582,9 +584,10 @@ class MainUserDataSerializer(serializers.ModelSerializer):
 
         # Custom handling for gender update
         gender_code = validated_data.get("gender", None)
-        if gender_code is not None:
-            instance.userpreferences.gender = gender_code
-            instance.userpreferences.save()
+        userpreferences = getattr(instance, "userpreferences", None)
+        if gender_code is not None and userpreferences:
+            userpreferences.gender = gender_code
+            userpreferences.save()
 
         # display_status update
         instance.display_status = User.DisplayStatus.UNDER_REVIEW

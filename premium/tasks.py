@@ -1,10 +1,11 @@
-import logging
-
 from celery import shared_task
+from celery.utils.log import get_task_logger
 from django.utils import timezone
 from django_celery_beat.models import ClockedSchedule, PeriodicTask
 
-logger = logging.getLogger("celery")
+from mailing.utils import build_email_context
+
+logger = get_task_logger(__name__)
 
 
 @shared_task
@@ -45,7 +46,9 @@ def premium_expired(premium_products_id: int):
         pp_object.profile.meta.transfer_object.is_anonymous = False
         pp_object.profile.meta.transfer_object.save()
 
-    context = build_email_context(pp_object.profile.user)
+    context = build_email_context(
+        pp_object.profile.user, mailing_type=mail_content.mailing_type
+    )
     MailingService(mail_content(context)).send_mail(pp_object.profile.user)
     NotificationService(pp_object.profile.meta).notify_premium_just_expired()
 
@@ -72,9 +75,9 @@ def encourage_to_try_premium(premium_products_id: int):
         return
 
     if user := pp_object.user:
-        context = build_email_context(user)
-        mail_content = EmailTemplateRegistry.GO_PREMIUM_AFTER_TRIAL(context)
-        MailingService(mail_content).send_mail(user)
+        mail_content = EmailTemplateRegistry.TRIAL_END
+        context = build_email_context(user, mailing_type=mail_content.mailing_type)
+        MailingService(mail_content(context)).send_mail(user)
     else:
         logger.error(
             f"PremiumProduct with id {premium_products_id} has no associated user. Unable to send encouragement email."

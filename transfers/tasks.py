@@ -1,6 +1,5 @@
-import logging
-
 from celery import shared_task
+from celery.utils.log import get_task_logger
 
 from mailing.schemas import EmailTemplateRegistry
 from mailing.services import MailingService
@@ -13,7 +12,7 @@ from utils.cache import (
     clear_cache_for_key,
 )
 
-logger = logging.getLogger("celery")
+logger = get_task_logger(__name__)
 
 
 @shared_task
@@ -45,5 +44,7 @@ def notify_players_about_new_transfer_request(
     for player in PlayerProfile.objects.filter(user__declared_role="P").select_related(
         "user"
     ):
-        context = build_email_context(player.user)
+        context = build_email_context(
+            player.user, mailing_type=mail_schema.mailing_type
+        )
         MailingService(mail_schema(context)).send_mail(player.user)

@@ -368,6 +368,15 @@ class User(AbstractUser, UserRoleMixin):
         """
         return self.userpreferences.contact_email or self.email
 
+    def can_send_email(self, mailing_type: str) -> bool:
+        """
+        Check if user can receive given mailing type based on his preferences.
+        If no preferences are set, we assume that user can receive all types of mailings.
+        """
+        if self.mailing and self.mailing.preferences:
+            return getattr(self.mailing.preferences, mailing_type.lower(), True)
+        return True
+
     class Meta:
         verbose_name = "User"
         verbose_name_plural = "Users"

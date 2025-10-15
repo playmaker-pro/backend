@@ -100,3 +100,4 @@ custom_script_*.py
 
 *.http
 .python-version
+supervisord.pid

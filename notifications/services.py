@@ -3,6 +3,7 @@ Service for sending notifications to users.
 """
 
 from django.db.models import QuerySet
+from django.utils import translation
 from django.utils.translation import gettext as _
 
 from notifications.tasks import create_notification
@@ -48,25 +49,31 @@ class NotificationService:
     ) -> NotificationBody:
         """
         Parse body of the notification.
+        Always store parameters in Polish (default language) for later translation.
         """
-        if profile := kwargs.pop("profile", None):
-            hide_profile = kwargs.pop("hide_profile", False)
-            full_name = profile.user.get_full_name()
+        # Force Polish for parameter generation to ensure consistent storage
+        with translation.override("pl"):
+            if profile := kwargs.pop("profile", None):
+                hide_profile = kwargs.pop("hide_profile", False)
+                full_name = profile.user.get_full_name()
 
-            try:
-                if hide_profile:
-                    kwargs["profile"] = _("Anonimowy profil")
-                else:
-                    role_short = profile.user.declared_role
-                    gender_index = int(profile.user.userpreferences.gender == "K")
-                    subject = GENDER_BASED_ROLES[role_short][gender_index]
-                    kwargs["profile"] = f"{subject} {full_name}"
-                    kwargs["picture"] = profile.user.picture.name
-                    kwargs["picture_profile_role"] = role_short
-            except (KeyError, IndexError):
-                kwargs["profile"] = full_name
+                try:
+                    if hide_profile:
+                        kwargs["profile"] = str(_("Anonimowy profil"))
+                    else:
+                        role_short = profile.user.declared_role
+                        gender_index = int(profile.user.userpreferences.gender == "K")
+                        # Get role name in Polish for storage
+                        subject = GENDER_BASED_ROLES[role_short][gender_index]
+                        kwargs["profile"] = f"{str(subject)} {full_name}"
+                        kwargs["picture"] = profile.user.picture.name
+                        kwargs["picture_profile_role"] = role_short
+                except (KeyError, IndexError):
+                    kwargs["profile"] = full_name
 
-        return NotificationBody(**template.value, template_name=template.name, kwargs=kwargs)
+        return NotificationBody(
+            **template.value, template_name=template.name, kwargs=kwargs
+        )
 
     @classmethod
     def bulk_notify_check_trial(cls) -> None:
@@ -387,6 +394,15 @@ class NotificationService:
         """
         body = self.parse_body(
             NotificationTemplate.PROFILE_VERIFIED,
+        )
+        self.create_notification(body)
+
+    def notify_confirm_email(self) -> None:
+        """
+        Send notifications for email confirmation.
+        """
+        body = self.parse_body(
+            NotificationTemplate.CONFIRM_EMAIL,
         )
         self.create_notification(body)
 

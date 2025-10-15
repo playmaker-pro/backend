@@ -175,10 +175,10 @@ class TestNotifications:
         ProfileVisitation.upsert(guest_profile, scout_profile)
         ProfileVisitation.upsert(scout_profile, player_profile)
         NotificationService.bulk_notify_visits_summary()
-        # dynamic title for visits_summary
+
         assert Notification.objects.filter(
             target=player_profile.meta,
-            title="Już 2 osób wyświetliło Twój profil!",
+            title="Już {visited_by_count} osób wyświetliło Twój profil!",
             description="Kliknij tutaj, aby zobaczyc kto to.",
             href="/wyswietlenia",
             icon="eye",
@@ -189,14 +189,14 @@ class TestNotifications:
         ).exists()
         assert Notification.objects.filter(
             target=guest_profile.meta,
-            title="Już 3 osób wyświetliło Twój profil!",
+            title="Już {visited_by_count} osób wyświetliło Twój profil!",
             description="Kliknij tutaj, aby zobaczyc kto to.",
             href="/wyswietlenia",
             icon="eye",
         ).exists()
         assert Notification.objects.filter(
             target=scout_profile.meta,
-            title="Już 1 osób wyświetliło Twój profil!",
+            title="Już {visited_by_count} osób wyświetliło Twój profil!",
             description="Kliknij tutaj, aby zobaczyc kto to.",
             href="/wyswietlenia",
             icon="eye",

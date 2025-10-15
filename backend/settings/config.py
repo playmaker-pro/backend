@@ -1,10 +1,27 @@
 import os
 from enum import Enum
+from typing import Union
 
-from pm_core.config import APIAuthorization, ServiceSettings
-from pydantic import BaseModel, BaseSettings, Field, SecretStr
+from pydantic import BaseModel, BaseSettings, Field, HttpUrl, IPvAnyAddress, SecretStr
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
+class APIAuthorization(BaseModel):
+    """Api auth model"""
+
+    username: str
+    password: str
+
+    def get_authentication_headers(self) -> dict:
+        return {"Authorization": f"{self.username} {self.password}"}
+
+
+class ServiceSettings(BaseModel):
+    """Service settings"""
+
+    address: Union[HttpUrl, IPvAnyAddress, str] = "127.0.0.1"
+    name: str
 
 
 class ScrapperConfig(BaseModel):
@@ -98,6 +115,7 @@ class MailingConfig(BaseModel):
 
     host: str
     port: int
+    host_username: str
     outgoing_address: str
     password: SecretStr
     use_tls: bool = True
@@ -124,6 +142,15 @@ class SlackConfig(BaseModel):
     enabled: bool = False
 
 
+class AmazonSESConfig(BaseModel):
+    host: str = ""
+    port: int = 587
+    username: str = ""
+    password: SecretStr = ""
+    use_tls: bool = True
+    enabled: bool = False
+
+
 class Config(BaseSettings):
     """General settings for webapp"""
 
@@ -136,6 +163,7 @@ class Config(BaseSettings):
     smtp: MailingConfig
     mongodb: MongoDBConfig
     slack: SlackConfig
+    ses: AmazonSESConfig = Field(default_factory=AmazonSESConfig)
 
     # add the rest of settings that should fit here
     class Config:

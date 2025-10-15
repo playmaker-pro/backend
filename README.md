@@ -1,18 +1,18 @@
 
-# Project bootstrap PlayMaker WebApp
+# PlayMaker API
 
-Backend side for PlayMaker project.
-
-# Installation
+## Installation
 
 To set up a development environment quickly you need to have following prerequisits:
 - Python ^3.8
-- poetry in version `1.6.1`
+- poetry in version `1.8.2`
 - makefile (NOTE: Windows users have to install it manually via chocolatey. See: https://chocolatey.org/install#individual)
-- PostgreSQL (latest) / docker deamon
+- PostgreSQL (16)
+- Redis (6)
+- MongoDB (6)
+- Docker & Docker-compose (to run PostgreSQL, Redis and MongoDB in containers)
 
 ## Bootstrap project:
-
 
 1. `make setup python_path={python interpreter system path}` - to initialize poetry and create an virtual environment
 2. `make start-db` - to start postgresql docker container
@@ -30,11 +30,6 @@ for other commands see `Makefile`
 - Fill DB with voivodeships.
 ```bash
 python manage.py add_voivodeships
-```
-
-- Migrate old voivodeship field to new one (Voivodeships model)
-```bash
-python manage.py map_vivos
 ```
 
 - Migrate the cities_light app
@@ -62,10 +57,36 @@ python manage.py compilemessages
 python manage.py populate_club_address_details
 ```
 
-## Standalone scripts:
-Scripts from *tools/scripts*. Respectively as .sh (linux) and .bat (windows).
-- **initialize_db** - run initial scripts on unmodified database created from dump.
+## Docker
+To run the application in docker container, run:
+```bash
+docker compose up --build
+```
 
+To execute commands inside the container, run:
+```bash
+docker compose exec playmaker YOUR_COMMAND
+```
+
+To import database dump, run:
+```bash
+docker cp dump.sql playmaker-postgres:/dump.sql
+docker exec -i playmaker-postgres psql -U DB_USER -d DB_NAME -f /dump.sql
+```
+
+## Celery
+
+To use Celery for background task processing, you have two options:
+
+1. Run the Django development server with Celery integrated:
+```bash
+python manage.py runserver --celery
+```
+
+2. Run Celery in a separate terminal:
+```bash
+python manage.py celery
+```
 
 ## Additional tools:
 

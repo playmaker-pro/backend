@@ -2,10 +2,11 @@ import logging
 import traceback
 import typing
 
-from django.core.exceptions import ValidationError
-from django.core.validators import validate_email
 from django.conf import settings
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.validators import validate_email
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -14,6 +15,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from api.custom_throttling import DefaultThrottle, EmailCheckerThrottle
 from api.views import EndpointView
 from features.models import Feature, FeatureElement
+from notifications.services import NotificationService
 from users.api.serializers import (
     CreateNewPasswordSerializer,
     CustomTokenObtainSerializer,
@@ -194,7 +196,7 @@ class UsersAPI(EndpointView):
             ]
             user_info = manager.get_user_info()
         except ValueError as e:
-            logger.error(str(traceback.format_exc()) + f"\n{str(e)}")
+            logger.exception(str(traceback.format_exc()) + f"\n{str(e)}")
             raise ApplicationError(details=str(e))
 
         user_email: str = user_info.email
@@ -252,6 +254,8 @@ class UsersAPI(EndpointView):
             raise NoUserCredentialFetchedException(
                 details="No user data fetched from Google or data is not valid. Please try again."  # noqa
             )
+        except Exception as e:
+            raise ValidationError from e
 
         return Response(response, status=status.HTTP_200_OK)
 
@@ -267,6 +271,8 @@ class UsersAPI(EndpointView):
             raise NoUserCredentialFetchedException(details="User email not valid")
         except SocialAccountInstanceNotCreatedException:
             raise NoUserCredentialFetchedException(details="User instance not created")
+        except Exception as e:
+            raise ValidationError from e
 
         return Response(response)
 
@@ -295,7 +301,14 @@ class LoginView(TokenObtainPairView):
 
     serializer_class = CustomTokenObtainSerializer
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request: Request, *args, **kwargs):
+        if (
+            request.user.is_authenticated
+            and not request.user.is_email_verified
+            and request.user.profile
+            and (meta := request.user.profile.meta)
+        ):
+            NotificationService(meta).notify_confirm_email()
         return super().post(request, *args, **kwargs)
 
 
@@ -323,7 +336,7 @@ class EmailAvailability(EndpointView):
         email: str = request.data.get("email")
         try:
             validate_email(email)
-        except ValidationError as e:
+        except DjangoValidationError as e:
             raise EmailNotValid(details=e)
 
         response: bool = user_service.email_available(email)

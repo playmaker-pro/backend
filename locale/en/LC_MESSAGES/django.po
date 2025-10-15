@@ -129,8 +129,6 @@ msgid "Stypendia"
 msgstr ""
 
 #: clubs/models.py:977
-#, fuzzy
-#| msgid "Zwrot za buty lub rękawice"
 msgid "Zwroty za buty/rękawice"
 msgstr "Boots or gloves reimbursement"
 
@@ -462,26 +460,6 @@ msgstr "Offensive Coaches"
 msgid "Trenerzy defensywni"
 msgstr "Defensive Coaches"
 
-#: inquiries/api/serializers.py:122
-msgid "NOWE"
-msgstr "New"
-
-#: inquiries/api/serializers.py:123
-msgid "WYSŁANO"
-msgstr "Sent"
-
-#: inquiries/api/serializers.py:124
-msgid "PRZECZYTANE"
-msgstr "Read"
-
-#: inquiries/api/serializers.py:125
-msgid "ZAAKCEPTOWANE"
-msgstr "Accepted"
-
-#: inquiries/api/serializers.py:126
-msgid "ODRZUCONE"
-msgstr "Rejected"
-
 msgid "Podstawowy plan"
 msgstr "Basic plan"
 
@@ -502,6 +480,13 @@ msgstr "Additional 5 inquiries available for premium profiles"
 
 msgid "Dodatkowe 10 zapytań dostępne dla profilów premium"
 msgstr "Additional 10 inquiries available for premium profiles"
+
+# Premium product names for TPay payments - base format for dynamic profile type appending
+msgid "Miesięczne konto premium dla profilu"
+msgstr "Monthly premium account for profile"
+
+msgid "Roczne konto premium dla profilu"
+msgstr "Yearly premium account for profile"
 
 #: mailing/models.py:108
 msgid ""
@@ -604,14 +589,10 @@ msgid "Trenerka"
 msgstr "Coach"
 
 #: notifications/services.py:14
-#, fuzzy
-#| msgid "Działacz klubu"
 msgid "Działacz klubowy"
 msgstr "Club Official"
 
 #: notifications/services.py:14
-#, fuzzy
-#| msgid "Działacz klubu"
 msgid "Działaczka klubowa"
 msgstr "Club Official"
 
@@ -2101,3 +2082,14 @@ msgstr "5 inquiries"
 
 msgid "10 zapytań"
 msgstr "10 inquiries"
+
+# Add missing anonymous translations
+msgid "Anonimowy"
+msgstr "Anonymous"
+
+msgid "profil"
+msgstr "profile"
+
+msgid "Anonimowa drużyna"
+msgstr "Anonymous team"
+

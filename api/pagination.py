@@ -32,3 +32,13 @@ class ProfileSearchPagination(PagePagination):
     """
 
     page_size: int = 5
+
+
+class InternalMappingPagination(PagePagination):
+    """
+    Custom pagination class for internal mapping endpoints.
+    No default page size - returns all data unless limit is specified.
+    """
+    page_size = None  # No default limit
+    page_size_query_param = 'limit'
+    max_page_size = 10000  # Hard cap at 10k items

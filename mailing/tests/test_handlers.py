@@ -66,7 +66,7 @@ class TestAsyncAdminEmailHandler:
     def override_settings(self):
         with patch("mailing.handlers.settings") as mock_settings:
             mock_settings.ADMINS = [("Test Admin", "admin@test.com")]
-            mock_settings.CONFIGURATION = Environment.STAGING
+            mock_settings.CONFIGURATION = Environment.STAGING.value
             yield mock_settings
 
     @pytest.fixture(autouse=True)
@@ -134,7 +134,7 @@ class TestAsyncAdminEmailHandler:
 
 
 @override_settings(
-    ADMINS=[("Test Admin", "admin@test.com")], CONFIGURATION=Environment.STAGING
+    ADMINS=[("Test Admin", "admin@test.com")], CONFIGURATION=Environment.STAGING.value
 )
 class TestAsyncAdminEmailHandlerIntegration(TestCase):
     """Integration tests for AsyncAdminEmailHandler with Django logging."""
@@ -179,7 +179,7 @@ class TestEmailHandlerEndToEnd:
         }
 
         notify_admins(**test_data)
-        mock_mail_admins.assert_called_once_with(**test_data)
+        mock_mail_admins.assert_called_once_with(**test_data, connection=None)
 
     @override_settings(
         ADMINS=[("Test Admin", "admin@test.com")],
@@ -205,7 +205,7 @@ class TestEmailHandlerEndToEnd:
     @override_settings(
         ADMINS=[("Test Admin", "admin@test.com")],
         EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
-        CONFIGURATION=Environment.STAGING,
+        CONFIGURATION=Environment.STAGING.value,
     )
     @patch("mailing.handlers.send_error_message.delay")
     def test_handler_integration_with_slack_fallback(self, mock_send_error):
@@ -229,7 +229,9 @@ class TestEmailHandlerEndToEnd:
         )
         record.getMessage = lambda: "Integration test error: database connection failed"
 
-        with patch("mailing.handlers.settings.CONFIGURATION", Environment.STAGING):
+        with patch(
+            "mailing.handlers.settings.CONFIGURATION", Environment.STAGING.value
+        ):
             handler.emit(record)
 
         # Should fallback to email when Slack fails

@@ -18,7 +18,10 @@ class AsyncAdminEmailHandler(AdminEmailHandler):
         using the notify_admins Celery task instead of sending
         the email synchronously.
         """
-        if settings.CONFIGURATION in [Environment.STAGING, Environment.PRODUCTION]:
+        if settings.CONFIGURATION in [
+            Environment.STAGING.value,
+            Environment.PRODUCTION.value,
+        ]:
             try:
                 logger_name = record.name  # This gets the logger name
                 subject = self.format_subject(

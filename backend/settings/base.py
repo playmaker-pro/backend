@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "transfers",
     "followers",
     "inquiries",
+    "marketplace",
     "clubs",
     "external_links",
     "soccerbase",
@@ -507,6 +508,9 @@ DATETIME_FORMAT = "H:i:s d-m-Y"
 # Loading of locally stored settings.
 SWAGGER_PATH = os.path.join(BASE_DIR, "api", "swagger.yml")
 
+# Internal API Secret Key - for securing internal endpoints
+INTERNAL_API_SECRET_KEY = os.getenv("INTERNAL_API_SECRET_KEY")
+
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
@@ -520,7 +524,8 @@ CACHES = {
 EMAIL_USE_TLS = cfg.smtp.use_tls
 EMAIL_HOST = cfg.smtp.host
 EMAIL_PORT = cfg.smtp.port
-EMAIL_HOST_USER = DEFAULT_FROM_EMAIL = SERVER_EMAIL = cfg.smtp.outgoing_address
+EMAIL_HOST_USER = cfg.smtp.host_username
+DEFAULT_FROM_EMAIL = SERVER_EMAIL = cfg.smtp.outgoing_address
 EMAIL_HOST_PASSWORD = cfg.smtp.password.get_secret_value()
 
 

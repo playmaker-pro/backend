@@ -2378,10 +2378,10 @@ class ProfileMeta(models.Model, VisitationMixin):
     _slug = models.CharField(max_length=255, null=False, blank=False, unique=True)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         related_name="meta_profile",
-        null=True,
-        blank=True,
+        null=False,
+        blank=False,
     )
 
     @property
@@ -2415,7 +2415,7 @@ class ProfileMeta(models.Model, VisitationMixin):
         return transfer_obj is not None and transfer_obj.is_anonymous
 
     def __str__(self) -> None:
-        return f"Meta of {self.profile}"
+        return f"Meta of [{self._profile_class}] {self.user.get_full_name()}"
 
     class Meta:
         verbose_name = "Meta"

@@ -7,8 +7,10 @@ from django.db import models as models
 from django_fsm import FSMField as _FSMField
 from django_fsm import transition as _transition
 
+from roles.definitions import PROFILE_TYPE_FULL_MAP, PROFILE_TYPE_OTHER
 from payments.logging import logger as _logger
 from payments.providers.tpay import schemas as _tpay_schemas
+from django.utils.translation import gettext as _
 
 
 class Transaction(models.Model):
@@ -91,6 +93,27 @@ class Transaction(models.Model):
         """Update a transaction object from dictionary"""
         self.__dict__.update(**data)
         self.save()
+
+    def get_localized_description(self) -> str:
+        """Prepare localized description using the currently activated language"""
+        # Get profile type from user
+        user_profile = getattr(self.user, "profile", None)
+
+        # map profile types to their translatable display names from definitions
+        if user_profile:
+            profile_type_key = user_profile.PROFILE_TYPE
+            profile_display_name = PROFILE_TYPE_FULL_MAP.get(
+                profile_type_key, PROFILE_TYPE_FULL_MAP[PROFILE_TYPE_OTHER]
+            )
+        else:
+            profile_display_name = PROFILE_TYPE_FULL_MAP[PROFILE_TYPE_OTHER]
+
+        # Get the base name and append the profile type
+        base_description = _(self.product.name_readable)
+        profile_type_translated = _(profile_display_name)
+        full_description = f"{base_description} {profile_type_translated}"
+
+        return f"PLAYMAKER.PRO | {full_description}"
 
     def resolve_from_tpay_schema(
         self, schema: _tpay_schemas.TpayTransactionResult, errors: _List[str]

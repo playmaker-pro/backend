@@ -1,20 +1,79 @@
-version: '3.8'
-name: pm-webapp
+name: playmaker
+
 services:
-  pmdb:
-    container_name: pm-webapp-db
-    image: postgres:14.1-alpine
+  postgres:
+    container_name: playmaker-postgres
+    image: postgres:16.3-alpine
     restart: always
+    env_file:
+      - ./.env
     environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
+      POSTGRES_DB: ${POSTGRES__DB:-playmaker}
+      POSTGRES_USER: ${POSTGRES__USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES__PASSWORD:-password}
     ports:
-      - '${POSTGRES_PORT}:5432'
-    expose:
-      - '${POSTGRES_PORT}'
-    volumes: 
-      - db:/var/lib/postgresql/data
+      - "54321:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES__USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    container_name: playmaker-redis
+    image: redis:7.4.2-alpine
+    env_file:
+      - ./.env
+    environment:
+      REDIS_PASSWORD: ${REDIS__PASSWORD:-password}
+      REDIS_LOGLEVEL: error
+    restart: always
+    ports:
+      - "63791:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MongoDB
+  mongodb:
+    container_name: playmaker-mongodb
+    image: mongo:8.0.5
+    restart: always
+    env_file:
+      - ./.env
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb_data:/mongo/db
+    command: mongod --quiet --logpath /dev/null 
+
+
+  playmaker:
+    container_name: playmaker
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      REDIS__HOST: redis
+      POSTGRES__HOST: postgres
+    volumes:
+      - .:/app
+      - ./media:/app/media
+      - ./_logs:/app/_logs
+
 volumes:
-  db:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  mongodb_data:
     driver: local

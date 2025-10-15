@@ -152,8 +152,8 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
             
             # Anonymize other recipient data
             recipient["id"] = 0
-            recipient["first_name"] = "Anonimowy"
-            recipient["last_name"] = "profil"
+            recipient["first_name"] = _("Anonimowy")
+            recipient["last_name"] = _("profil")
             recipient["picture"] = None
             recipient["team_history_object"] = None
             recipient["contact"] = {
