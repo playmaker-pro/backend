@@ -205,7 +205,7 @@ class ProfileTransferRequestSerializer(
     club_voivodeship = serializers.CharField(source="voivodeship", read_only=True)
     profile_uuid = serializers.UUIDField(source="profile.uuid", read_only=True)
     requesting_team = serializers.PrimaryKeyRelatedField(
-        queryset=TeamContributor.objects.all()
+        queryset=TeamContributor.objects.all(), required=False, allow_null=True
     )
     status = ProfileEnumChoicesSerializer(
         model=ProfileTransferRequest,
@@ -245,7 +245,9 @@ class ProfileTransferRequestSerializer(
             info_serialized = serializer(info, many=True, context=self.context)
             data["benefits"] = info_serialized.data
         if instance.position:
-            positions = PlayerPositionSerializer(instance=instance.position, many=True, context=self.context)
+            positions = PlayerPositionSerializer(
+                instance=instance.position, many=True, context=self.context
+            )
             data["player_position"] = positions.data
         if instance.number_of_trainings:
             num_of_training_serialized = serializer(
@@ -273,9 +275,12 @@ class ProfileTransferRequestSerializer(
         return data
 
     def validate_requesting_team(
-        self, requesting_team: TeamContributor
+        self, requesting_team: Optional[TeamContributor]
     ) -> TeamContributor:
         """Validate requesting team field"""
+        if requesting_team is None:
+            return requesting_team
+
         owner = self.context.get("profile")
         if requesting_team.profile_uuid != owner.uuid:
             logger.error(
@@ -398,16 +403,20 @@ class ProfileTransferStatusSerializer(
         Overrides to_representation method to return additional info
         as a list of strings.
         """
-        
+
         data = super().to_representation(instance)
-        data["league"] = LeagueSerializer(instance=instance.league, many=True, context=self.context).data
+        data["league"] = LeagueSerializer(
+            instance=instance.league, many=True, context=self.context
+        ).data
         if instance.additional_info:
             info = [
                 ChoicesTuple(*transfer)
                 for transfer in TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES
                 if transfer[0] in str(instance.additional_info)
             ]
-            serializer = ProfileEnumChoicesSerializer(info, many=True, context=self.context)
+            serializer = ProfileEnumChoicesSerializer(
+                info, many=True, context=self.context
+            )
             data["additional_info"] = serializer.data
         if instance.benefits:
             benefits = [
@@ -415,7 +424,9 @@ class ProfileTransferStatusSerializer(
                 for transfer in TRANSFER_BENEFITS_CHOICES
                 if transfer[0] in str(instance.benefits)
             ]
-            serializer = ProfileEnumChoicesSerializer(benefits, many=True, context=self.context)
+            serializer = ProfileEnumChoicesSerializer(
+                benefits, many=True, context=self.context
+            )
             data["benefits"] = serializer.data
         if instance.salary:
             salary = [
@@ -423,7 +434,9 @@ class ProfileTransferStatusSerializer(
                 for transfer in TRANSFER_SALARY_CHOICES
                 if transfer[0] in str(instance.salary)
             ]
-            serializer = ProfileEnumChoicesSerializer(instance=salary[0], context=self.context)
+            serializer = ProfileEnumChoicesSerializer(
+                instance=salary[0], context=self.context
+            )
             data["salary"] = serializer.data
         if instance.number_of_trainings:
             number_of_trainings = [
@@ -431,7 +444,9 @@ class ProfileTransferStatusSerializer(
                 for transfer in TRANSFER_TRAININGS_CHOICES
                 if transfer[0] in str(instance.number_of_trainings)
             ]
-            serializer = ProfileEnumChoicesSerializer(number_of_trainings, many=True, context=self.context)
+            serializer = ProfileEnumChoicesSerializer(
+                number_of_trainings, many=True, context=self.context
+            )
             data["number_of_trainings"] = serializer.data
 
         # expose = self.context.get("expose", False)
