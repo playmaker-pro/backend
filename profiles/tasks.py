@@ -57,6 +57,12 @@ def post_create_profile_tasks(class_name: str, profile_id: int) -> None:
     profile.ensure_visitation_exist(commit=False)
     profile.ensure_meta_exist(commit=False)
     profile.save()
+    
+    # Automatically activate trial (3 days, 10 queries)
+    setup_premium_profile.delay(
+        profile_id, class_name, profile_models.PremiumType.TRIAL.value
+    )
+    
     create_post_create_profile__periodic_tasks.delay(class_name, profile_id)
     NotificationService(profile.meta).notify_welcome()
 
@@ -109,9 +115,6 @@ def check_profile_one_day_after(profile_id: int, model_name: str) -> None:
             and not profile.meta.transfer_requests
         ):
             service.notify_set_transfer_requests()
-
-        if profile.products and not profile.products.trial_tested:
-            service.notify_check_trial()
 
 
 @shared_task
