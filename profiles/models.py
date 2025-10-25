@@ -2096,21 +2096,22 @@ class PlayerProfilePosition(models.Model):
 
         This method is called before a `PlayerProfilePosition` object is saved. It ensures that the following
         constraints are met:
-        - A player can have only one main position. (This is checked if the position is marked as main.)
+        - A player can have only one main position. (Auto-unsets other main positions)
         - A player can have a maximum of two non-main positions.
         """  # noqa: E501
         # Call the parent class's clean method
         # to ensure any inherited validation is performed
         super().clean()
         if self.is_main:
+            # Auto-unset other main positions instead of raising error
+            # This handles cases where multiple forms update positions separately
             main_positions = self.player_profile.player_positions.filter(is_main=True)
             if self.pk:
                 main_positions = main_positions.exclude(pk=self.pk)
 
             if main_positions.exists():
-                raise validators.ValidationError(
-                    "A player can have only one main position."
-                )
+                # Automatically unset old main positions
+                main_positions.update(is_main=False)
 
         non_main_positions = self.player_profile.player_positions.filter(is_main=False)
         if self.pk:

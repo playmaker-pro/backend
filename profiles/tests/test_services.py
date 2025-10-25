@@ -127,6 +127,66 @@ class PlayerPositionServiceTest(TestCase):
         positions = self.profile.player_positions.all()
         self.assertEqual(len(positions), 1)
 
+    def test_changing_main_position_auto_unsets_old_main(self):
+        """
+        Test that when changing main position, the old main position is automatically unset.
+        This simulates the user flow:
+        1. Set position 1 as main
+        2. Set position 2 as main (should auto-unset position 1)
+        3. Verify only position 2 is main
+        """
+        PositionFactory.create(id=3)
+        
+        # Step 1: Set position 1 as main, position 2 as other
+        self.position_service.manage_positions(
+            self.profile,
+            [
+                PositionData(player_position=1, is_main=True),
+                PositionData(player_position=2, is_main=False),
+            ],
+        )
+        
+        # Verify initial state
+        main_positions = self.profile.player_positions.filter(is_main=True)
+        self.assertEqual(main_positions.count(), 1)
+        self.assertEqual(main_positions.first().player_position_id, 1)
+        
+        # Step 2: Change other position 2 to position 3
+        self.position_service.manage_positions(
+            self.profile,
+            [
+                PositionData(player_position=1, is_main=True),
+                PositionData(player_position=3, is_main=False),
+            ],
+        )
+        
+        # Step 3: Change main position from 1 to 2
+        self.position_service.manage_positions(
+            self.profile,
+            [
+                PositionData(player_position=2, is_main=True),
+                PositionData(player_position=3, is_main=False),
+            ],
+        )
+        
+        # Step 4: Change other position 3 to 1 (recreating the bug scenario)
+        self.position_service.manage_positions(
+            self.profile,
+            [
+                PositionData(player_position=2, is_main=True),
+                PositionData(player_position=1, is_main=False),
+            ],
+        )
+        
+        # Verify final state: only position 2 should be main
+        main_positions = self.profile.player_positions.filter(is_main=True)
+        self.assertEqual(main_positions.count(), 1)
+        self.assertEqual(main_positions.first().player_position_id, 2)
+        
+        # Verify position 1 is no longer main
+        position_1 = self.profile.player_positions.get(player_position_id=1)
+        self.assertFalse(position_1.is_main)
+
 
 class TeamContributorServiceTests(TestCase):
     def setUp(self):
