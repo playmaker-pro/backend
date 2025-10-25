@@ -7246,7 +7246,7 @@ components:
           type: string
         is_anonymous:
           type: boolean
-      required: [ "requesting_team", "gender", "status", "position", "number_of_trainings", "salary", "benefits", "profile_uuid", "club_voivodeship" ]
+      required: [ "gender", "status", "position", "number_of_trainings", "salary", "benefits", "profile_uuid", "club_voivodeship" ]
 
       example:
         {
