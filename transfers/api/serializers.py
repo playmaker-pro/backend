@@ -233,9 +233,12 @@ class ProfileTransferRequestSerializer(
             logger.error(f"Instance: {instance.__dict__} has wrong data", exc_info=True)
             raise AttributeError from exc
 
-        data["requesting_team"] = TeamContributorSerializer(
-            instance=instance.requesting_team, read_only=True, context=self.context
-        ).data
+        if instance.requesting_team is not None:
+            data["requesting_team"] = TeamContributorSerializer(
+                instance=instance.requesting_team, read_only=True, context=self.context
+            ).data
+        else:
+            data["requesting_team"] = None
         if instance.benefits:
             info = [
                 ChoicesTuple(*transfer)
