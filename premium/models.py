@@ -199,7 +199,15 @@ class PromoteProfileProduct(models.Model):
 
 
 class PremiumInquiriesProduct(models.Model):
-    INQUIRIES_LIMIT = 10
+    # Profile-specific inquiry limits
+    INQUIRIES_LIMIT_DEFAULT = 10  # Trial/default
+    INQUIRIES_LIMIT_CLUB = 30  # Club premium: 30 every 3 months
+    INQUIRIES_LIMIT_PLAYER = 30  # Player premium: 30 per month (anti-spam)
+    
+    # Reset periods (in days)
+    RESET_PERIOD_DEFAULT = 30
+    RESET_PERIOD_CLUB = 90  # 3 months for clubs
+    RESET_PERIOD_PLAYER = 30  # 1 month for players
 
     product = models.OneToOneField(
         "PremiumProduct", on_delete=models.CASCADE, related_name="inquiries"
@@ -210,6 +218,39 @@ class PremiumInquiriesProduct(models.Model):
 
     current_counter = models.PositiveIntegerField(default=0)
     counter_updated_at = models.DateTimeField(null=True, blank=True)
+
+    def get_profile_type(self) -> Optional[str]:
+        """Get the profile type class name (ClubProfile, PlayerProfile, etc.)"""
+        if self.product and self.product.profile:
+            return self.product.profile.__class__.__name__
+        return None
+    
+    def get_inquiry_limit(self) -> int:
+        """Get inquiry limit based on profile type"""
+        profile_type = self.get_profile_type()
+        
+        if profile_type == "ClubProfile":
+            return self.INQUIRIES_LIMIT_CLUB
+        elif profile_type == "PlayerProfile":
+            return self.INQUIRIES_LIMIT_PLAYER
+        else:
+            return self.INQUIRIES_LIMIT_DEFAULT
+    
+    def get_reset_period(self) -> int:
+        """Get reset period based on profile type"""
+        profile_type = self.get_profile_type()
+        
+        if profile_type == "ClubProfile":
+            return self.RESET_PERIOD_CLUB
+        elif profile_type == "PlayerProfile":
+            return self.RESET_PERIOD_PLAYER
+        else:
+            return self.RESET_PERIOD_DEFAULT
+    
+    @property
+    def INQUIRIES_LIMIT(self) -> int:
+        """Dynamic inquiry limit based on profile type (backward compatibility)"""
+        return self.get_inquiry_limit()
 
     def increment_counter(self) -> None:
         self.current_counter += 1
@@ -246,7 +287,9 @@ class PremiumInquiriesProduct(models.Model):
 
     @property
     def inquiries_refreshed_at(self) -> datetime:
-        return self.counter_updated_at + timedelta(days=30)
+        """Calculate when inquiries should be refreshed based on profile type"""
+        reset_days = self.get_reset_period()
+        return self.counter_updated_at + timedelta(days=reset_days)
 
     def _fresh_init(self, period: int) -> None:
         """Initialize the premium inquiries."""

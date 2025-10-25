@@ -1098,7 +1098,7 @@ class ExternalLinksAPI(EndpointView):
 
 class VisitationView(EndpointView):
     def list_my_visitors(self, request: Request) -> Response:
-        """List visitors of the profile."""
+        """List visitors of the profile (premium Players and Guests only)."""
         try:
             profile = request.user.profile
         except:
@@ -1106,9 +1106,18 @@ class VisitationView(EndpointView):
                 {"detail": "Profile not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
+        # Check if profile is premium
         if not profile.is_premium:
             return Response(
                 "Available only for premium users", status=status.HTTP_204_NO_CONTENT
+            )
+        
+        # Check if profile type is Player or Guest
+        profile_type = profile.__class__.__name__
+        if profile_type not in ["PlayerProfile", "GuestProfile"]:
+            return Response(
+                "Profile statistics are only available for players and guests",
+                status=status.HTTP_403_FORBIDDEN
             )
 
         # Get I18n-aware context from the mixin

@@ -133,6 +133,12 @@ class UserInquiry(models.Model):
 
     objects = UserInquiryManager()
     _default_limit = 2
+    
+    # Profile-specific freemium limits
+    CLUB_FREEMIUM_SENT_LIMIT = 5
+    CLUB_FREEMIUM_RECEIVED_LIMIT = 5
+    PLAYER_FREEMIUM_LIMIT = 10
+    GUEST_FREEMIUM_LIMIT = 0  # Guests can't send inquiries
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True
@@ -152,6 +158,25 @@ class UserInquiry(models.Model):
         default=None,
     )
 
+    def get_profile_type(self) -> Optional[str]:
+        """Get the profile type class name (ClubProfile, PlayerProfile, etc.)"""
+        if self.user and hasattr(self.user, 'profile') and self.user.profile:
+            return self.user.profile.__class__.__name__
+        return None
+    
+    def get_freemium_limit(self) -> int:
+        """Get freemium inquiry limit based on profile type"""
+        profile_type = self.get_profile_type()
+        
+        if profile_type == "ClubProfile":
+            return self.CLUB_FREEMIUM_SENT_LIMIT
+        elif profile_type == "PlayerProfile":
+            return self.PLAYER_FREEMIUM_LIMIT
+        elif profile_type == "GuestProfile":
+            return self.GUEST_FREEMIUM_LIMIT
+        else:
+            return self._default_limit
+    
     @property
     def limit(self):
         if self.premium_inquiries:
@@ -160,11 +185,13 @@ class UserInquiry(models.Model):
 
     @property
     def limit_to_show(self) -> int:
-        return (
-            self._default_limit + self.premium_inquiries.INQUIRIES_LIMIT
-            if self.premium_inquiries
-            else self._default_limit
-        )
+        """Get the limit to show to user (profile-aware)"""
+        if self.premium_inquiries:
+            # Premium: freemium limit + premium limit
+            return self.get_freemium_limit() + self.premium_inquiries.INQUIRIES_LIMIT
+        else:
+            # Freemium: profile-specific limit
+            return self.get_freemium_limit()
 
     @property
     def counter(self):
@@ -200,16 +227,19 @@ class UserInquiry(models.Model):
 
     def reset_inquiries(self) -> None:
         """
-        Set basic plan and reset counter to 0.
+        Set basic plan and reset counter to 0 with profile-aware limits.
         """
         self.plan = InquiryPlan.basic()
         self.counter_raw = 0
-        self.limit_raw = self.plan.limit
+        # Set limit based on profile type for freemium users
+        self.limit_raw = self.get_freemium_limit()
         self.save()
 
     def reset_plan(self):
+        """Reset to basic plan with profile-aware limits"""
         self.plan = InquiryPlan.basic()
-        self.limit_raw = self.plan.limit
+        # Set limit based on profile type for freemium users
+        self.limit_raw = self.get_freemium_limit()
 
         if self.counter_raw >= self.limit_raw:
             self.counter_raw = self.limit_raw
@@ -335,6 +365,13 @@ class UserInquiry(models.Model):
                 else False
             )
 
+    def save(self, *args, **kwargs):
+        """Set profile-aware limits on creation"""
+        if self.pk is None:  # Only on creation
+            # Set limit based on profile type
+            self.limit_raw = self.get_freemium_limit()
+        super().save(*args, **kwargs)
+    
     def __str__(self):
         return f"{self.user}: {self.counter}/{self.limit}"
 

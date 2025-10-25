@@ -36,15 +36,41 @@ class InquiresAPIView(EndpointView):
         return Response(serializer.data)
 
     def get_my_received_inquiries(self, request: Request) -> Response:
-        """Get all received inquiries by user"""
+        """Get all received inquiries by user (limited to 5 for freemium clubs)"""
         InquireService.update_inquiry_read_status_based_on_role(request.user)
         received_inquiries: QuerySet = InquireService.get_user_received_inquiries(
             request.user
         )
+        
+        # Limit to 5 for freemium clubs
+        total_count = received_inquiries.count()
+        is_club_freemium = (
+            hasattr(request.user, 'profile') and 
+            request.user.profile.__class__.__name__ == "ClubProfile" and
+            not request.user.profile.is_premium
+        )
+        
+        if is_club_freemium:
+            # Limit queryset to first 5
+            received_inquiries = received_inquiries[:5]
+            hidden_count = max(0, total_count - 5)
+        else:
+            hidden_count = 0
+        
         serializer = InquiryRequestSerializer(
             received_inquiries, many=True, context=self.get_serializer_context()
         )
-        return Response(serializer.data)
+        
+        # Add metadata about hidden inquiries
+        response_data = {
+            "inquiries": serializer.data,
+            "total_count": total_count,
+            "shown_count": len(serializer.data),
+            "hidden_count": hidden_count,
+            "is_limited": is_club_freemium
+        }
+        
+        return Response(response_data)
 
     def get_my_inquiry_data(self, request: Request) -> Response:
         """Get all received inquiries by user"""
