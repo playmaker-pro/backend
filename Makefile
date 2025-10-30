@@ -34,13 +34,13 @@ startapp:
 	python manage.py runserver
 
 
-.PHONY: restart
-restart:
-	touch tmp/restart.txt
-	make stop-celery
-	make stop-celery-beat
-	make start-celery
-	make start-celery-beat
+.PHONY: restart stop start start-celery stop-celery start-celery-beat stop-celery-beat
+restart: tmp/restart.txt stop start
+stop: stop-celery stop-celery-beat
+start: start-celery start-celery-beat
+tmp/restart.txt:
+	@mkdir -p tmp
+	@touch tmp/restart.txt
 
 
 .PHONY: migrate
@@ -50,39 +50,37 @@ migrate:
 
 .PHONY: ensure-logs
 ensure-logs:
-	mkdir -p $(LOG_DIR)
+	@mkdir -p $(LOG_DIR)
 
 .PHONY: start-celery
 start-celery: ensure-logs
-	@echo "Starting Celery worker with auto-restart..."
-	nohup bash -c '\
+	@nohup bash -c '\
 	while true; do \
-		echo "[$$(date)] Starting Celery worker..."; \
+		echo "Starting Celery worker..."; \
 		poetry run celery -A backend worker --autoscale=0,6 --without-mingle --without-gossip --loglevel=INFO >> $(CELERY_LOG) 2>&1; \
-		echo "[$$(date)] Celery worker crashed. Restarting in 5s..." >> $(CELERY_LOG); \
+		echo "Celery worker crashed. Restarting in 5s..." >> $(CELERY_LOG); \
 		sleep 5; \
 	done' > /dev/null 2>&1 &
 
 .PHONY: stop-celery
 stop-celery:
 	@echo "Stopping Celery worker..."
-	pkill -f 'celery -A backend worker' || true
+	@pkill -f 'celery -A backend worker' || true
 
 .PHONY: start-celery-beat
 start-celery-beat: ensure-logs
-	@echo "Starting Celery Beat with auto-restart..."
-	nohup bash -c '\
+	@nohup bash -c '\
 	while true; do \
-		echo "[$$(date)] Starting Celery beat..."; \
+		echo "Starting Celery beat..."; \
 		poetry run celery -A backend beat -l info --scheduler django --pidfile .celerybeat.pid >> $(BEAT_LOG) 2>&1; \
-		echo "[$$(date)] Celery beat crashed. Restarting in 5s..." >> $(BEAT_LOG); \
+		echo "Celery beat crashed. Restarting in 5s..." >> $(BEAT_LOG); \
 		sleep 5; \
 	done' > /dev/null 2>&1 &
 
 .PHONY: stop-celery-beat
 stop-celery-beat:
 	@echo "Stopping Celery Beat..."
-	pkill -f 'celery -A backend beat' || true
+	@pkill -f 'celery -A backend beat' || true
 
 
 .PHONY: shell
