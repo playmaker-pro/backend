@@ -58,7 +58,7 @@ start-celery: ensure-logs
 	@nohup bash -c '\
 	while true; do \
 		echo "Starting Celery worker..."; \
-		poetry run celery -A backend worker --autoscale=0,6 --without-mingle --without-gossip --loglevel=INFO >> $(CELERY_LOG) 2>&1; \
+		poetry run celery -A backend worker --autoscale=1,6 --without-mingle --without-gossip --loglevel=INFO >> $(CELERY_LOG) 2>&1; \
 		echo "Celery worker crashed. Restarting in 5s..." >> $(CELERY_LOG); \
 		sleep 5; \
 	done' > /dev/null 2>&1 &

@@ -99,7 +99,9 @@ def send(
                     status = MailLog.MailStatus.FAILED
                 else:
                     status = MailLog.MailStatus.SENT
-                    logger.info(f"[{operation_id}] Email sent to {recipient}")
+                    logger.info(
+                        f"[{operation_id}] Email sent to {recipient}: {subject[:50]}"
+                    )
                 finally:
                     metadata.update({
                         "duration_seconds": timer.duration,
@@ -114,8 +116,9 @@ def send(
             "status": "failed",
             "error": str(err),
             "recipients_count": len(recipients),
+            "operation_id": str(operation_id),
             **data,
         }
-
         logger.error(f"✗ Email failed: {error_result}")
+
         raise Exception(error_result) from err
