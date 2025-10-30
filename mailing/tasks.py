@@ -1,31 +1,18 @@
-import time
 import uuid
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from django.core.mail import mail_admins, send_mail
-from django.core.mail.backends.smtp import EmailBackend
+from django.core.mail import get_connection, mail_admins, send_mail
+from django.utils import timezone
 
-from backend.settings import cfg
 from utils.functions import Timer
 
 User = get_user_model()
 logger = get_task_logger("mailing")
-
-connection = (
-    EmailBackend(
-        host=cfg.ses.host,
-        port=cfg.ses.port,
-        username=cfg.ses.username,
-        password=cfg.ses.password.get_secret_value(),
-        use_tls=cfg.ses.use_tls,
-        fail_silently=False,
-    )
-    if cfg.ses.enabled
-    else None
-)
+connection = get_connection()
 
 
 @shared_task
@@ -48,8 +35,6 @@ def notify_admins(subject: str, message: str, **kwargs):
 def send(
     self,
     operation_id: uuid.UUID,
-    separate: bool,
-    track_metrics: bool = True,
     **data,
 ) -> None:
     """
@@ -58,121 +43,79 @@ def send(
     from mailing.models import MailLog
 
     recipients = data.get("recipient_list", [])
-    subject = data.get("subject", "No subject")
-    start_time = time.time()
+    subject = data.get("subject")
     template_file = data.pop("template_file", None)
 
-    # Input validation
     if not recipients:
         logger.warning(f"[{operation_id}] No recipients provided")
         return {"status": "skipped", "reason": "no_recipients"}
 
-    if not subject or subject == "No subject":
+    if not subject:
         logger.warning(f"[{operation_id}] No subject provided")
 
-    users = User.objects.filter(email__in=recipients)
-    for user in users:
-        MailLog.objects.create(
-            mailing=user.mailing,
-            mail_template=template_file,
-            operation_id=operation_id,
-            subject=subject,
-        )
-
-    mail_logs = MailLog.objects.filter(operation_id=operation_id)
-
     try:
-        if separate:
-            for recipient in recipients:
-                metadata, status = {}, MailLog.MailStatus.SENT
+        for recipient in recipients:
+            if user := User.objects.filter(email=recipient).first():
+                mail_log, created = MailLog.objects.get_or_create(
+                    mailing=user.mailing,
+                    subject=subject,
+                    created_at__gte=timezone.now()
+                    - timezone.timedelta(minutes=15),  # antispam
+                    defaults={
+                        "mailing": user.mailing,
+                        "mail_template": template_file,
+                        "operation_id": operation_id,
+                        "subject": subject,
+                    },
+                )
+                if not created:
+                    logger.info(
+                        f"[{operation_id}] Antispam skip: {recipient} -- {subject}"
+                    )
+                    continue
+            else:
+                logger.warning(
+                    f"[{operation_id}] No mailing found for recipient: {recipient}"
+                )
+                mail_log = None
 
-                with Timer() as timer:
-                    try:
-                        individual_data = data.copy()
-                        individual_data["recipient_list"] = [recipient]
-                        send_mail(
-                            **individual_data,
-                            fail_silently=False,
-                            connection=connection,
-                        )
-                    except Exception as err:
-                        logger.error(
-                            f"[{operation_id}] Failed to send email to {recipient}: {err}"
-                        )
-                        metadata["error"] = str(err)
-                        status = MailLog.MailStatus.FAILED
-                    else:
-                        logger.info(f"[{operation_id}] Email sent to {recipient}")
+            metadata = {}
 
-                metadata.update({
-                    "duration_seconds": timer.duration,
-                    "start_time": timer.start_time,
-                    "end_time": timer.end_time,
-                })
-
-                if log := mail_logs.filter(mailing__user__email=recipient).first():
-                    log.update_metadata(metadata, status)
-        else:
-            logger.info(
-                f"[{operation_id}] Sending email to {len(recipients)} recipients"
-            )
-            metadata, status = {}, MailLog.MailStatus.SENT
             with Timer() as timer:
                 try:
-                    send_mail(**data, fail_silently=False, connection=connection)
-                except Exception as err:
-                    status = MailLog.MailStatus.FAILED
-                    metadata["error"] = str(err)
-                    logger.error(f"[{operation_id}] Failed to send BULK email: {err}")
-                else:
-                    logger.info(
-                        f"[{operation_id}] Email sent to {len(recipients)} recipients"
+                    individual_data = data.copy()
+                    individual_data["recipient_list"] = [recipient]
+                    send_mail(
+                        **individual_data,
+                        fail_silently=False,
+                        connection=connection,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
                     )
-
-            result = {
-                "recipients_count": len(recipients),
-                "duration_seconds": round(time.time() - start_time, 3),
-                "subject": subject,
-            }
-
-            for log in mail_logs:
-                log.update_metadata(result, status)
-
-            if track_metrics:
-                _update_email_metrics("bulk_success", len(recipients))
-
-            return result
+                except Exception as err:
+                    logger.error(
+                        f"[{operation_id}] Failed to send email to {recipient}: {str(err)}"
+                    )
+                    metadata["error"] = str(err)
+                    status = MailLog.MailStatus.FAILED
+                else:
+                    status = MailLog.MailStatus.SENT
+                    logger.info(f"[{operation_id}] Email sent to {recipient}")
+                finally:
+                    metadata.update({
+                        "duration_seconds": timer.duration,
+                        "start_time": timer.start_time,
+                        "end_time": timer.end_time,
+                    })
+                    if mail_log:
+                        mail_log.update_metadata(metadata, status)
 
     except Exception as err:
-        duration = time.time() - start_time
         error_result = {
             "status": "failed",
             "error": str(err),
             "recipients_count": len(recipients),
-            "duration_seconds": round(duration, 2),
-            "retry_count": self.request.retries,
+            **data,
         }
 
         logger.error(f"✗ Email failed: {error_result}")
-
-        if track_metrics:
-            _update_email_metrics("failure", len(recipients))
-
-        # Retry with exponential backoff
-        if self.request.retries < self.max_retries:
-            countdown = 60 * (2**self.request.retries)
-            logger.info(
-                f"Retrying in {countdown}s (attempt {self.request.retries + 1})"
-            )
-            raise self.retry(countdown=countdown)
-
-        return error_result
-
-
-def _update_email_metrics(metric_type: str, count: int):
-    """Update email sending metrics in cache."""
-    try:
-        current = cache.get(f"email_metrics_{metric_type}", 0)
-        cache.set(f"email_metrics_{metric_type}", current + count, 86400)  # 24h
-    except:
-        pass  # Don't fail task if metrics update fails
+        raise Exception(error_result) from err

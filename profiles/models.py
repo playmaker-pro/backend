@@ -2379,7 +2379,7 @@ class ProfileMeta(models.Model, VisitationMixin):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="meta_profile",
+        related_name="metas",
         null=False,
         blank=False,
     )

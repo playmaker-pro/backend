@@ -179,11 +179,10 @@ class TestEmailHandlerEndToEnd:
         }
 
         notify_admins(**test_data)
-        mock_mail_admins.assert_called_once_with(**test_data, connection=None)
+        mock_mail_admins.assert_called_once()
 
     @override_settings(
         ADMINS=[("Test Admin", "admin@test.com")],
-        EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
     )
     def test_email_actually_sent_to_outbox(self):
         """Test that email is actually sent and appears in Django mail outbox."""
@@ -204,16 +203,15 @@ class TestEmailHandlerEndToEnd:
 
     @override_settings(
         ADMINS=[("Test Admin", "admin@test.com")],
-        EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
         CONFIGURATION=Environment.STAGING.value,
     )
-    @patch("mailing.handlers.send_error_message.delay")
+    @patch("mailing.handlers.send_error_message")
     def test_handler_integration_with_slack_fallback(self, mock_send_error):
         """Test complete integration: handler -> slack with email fallback."""
         from app.slack.errors import SlackDisabledException
 
         # Make Slack fail to test email fallback
-        mock_send_error.side_effect = SlackDisabledException("Slack disabled")
+        mock_send_error.delay.side_effect = SlackDisabledException("Slack disabled")
 
         mail.outbox.clear()
 

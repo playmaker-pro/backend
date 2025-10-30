@@ -6,8 +6,15 @@ from mailing import models
 class MailLogInline(admin.TabularInline):
     model = models.MailLog
     extra = 0
-    readonly_fields = ("id", "subject", "get_recipient", "sent_at", "status")
-    fields = ("id", "subject", "get_recipient", "sent_at", "status")
+    readonly_fields = (
+        "id",
+        "subject",
+        "get_recipient",
+        "created_at",
+        "updated_at",
+        "status",
+    )
+    fields = ("id", "subject", "get_recipient", "created_at", "updated_at", "status")
     can_delete = False
 
     def get_recipient(self, obj):
@@ -18,7 +25,14 @@ class MailLogInline(admin.TabularInline):
 
 @admin.register(models.MailLog)
 class MailLogAdmin(admin.ModelAdmin):
-    list_display = ("id", "subject", "sent_at")
+    list_display = (
+        "id",
+        "get_recipient",
+        "subject",
+        "created_at",
+        "updated_at",
+        "status",
+    )
     search_fields = (
         "subject",
         "mailing__user__email",
@@ -27,6 +41,11 @@ class MailLogAdmin(admin.ModelAdmin):
     )
 
     autocomplete_fields = ("mailing",)
+
+    def get_recipient(self, obj):
+        return obj.mailing.user.email if obj.mailing and obj.mailing.user else "-"
+
+    get_recipient.short_description = "Recipient"
 
 
 @admin.register(models.Mailing)

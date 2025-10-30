@@ -3,7 +3,6 @@ import uuid
 from enum import Enum
 from typing import List, Optional
 
-from django.conf import settings
 from django.template import TemplateDoesNotExist
 from django.template.loader import get_template, render_to_string
 from django.utils.html import strip_tags
@@ -123,9 +122,7 @@ class Envelope(BaseModel):
     recipients: List[str] = []
     log_pk: Optional[int] = None
 
-    def send(
-        self, operation_id: uuid.UUID = uuid.uuid4(), separate: bool = True
-    ) -> None:
+    def send(self, operation_id: uuid.UUID = uuid.uuid4()) -> None:
         """
         Sends the email using the provided mail content and recipients.
         """
@@ -134,9 +131,7 @@ class Envelope(BaseModel):
 
         send.delay(
             **self.mail.data,
-            from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=list(self.recipients),
-            separate=separate,
             operation_id=operation_id,
         )
 

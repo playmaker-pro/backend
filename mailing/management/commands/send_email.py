@@ -10,6 +10,7 @@ from mailing.schemas import MailContent, MailingPreferenceType
 from mailing.services import MailingService
 from mailing.utils import build_email_context
 from profiles.models import ProfileMeta
+from users.models import User
 
 logger = logging.getLogger("commands")
 
@@ -45,14 +46,14 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self._set_args(options)
-        recipients: QuerySet[ProfileMeta] = self._get_recipients()
+        recipients: QuerySet[User] = self._get_recipients()
         others: Set[str] = self._parse_others_recipients()
         if not (recipients or others):
             self.stdout.write(self.style.WARNING("No recipients found."))
             return
         operation_id = uuid.uuid4()
 
-        for recipient_meta in recipients:
+        for recipient_user in recipients:
             try:
                 schema = MailContent(
                     subject_format=self.args.title,
@@ -60,19 +61,15 @@ class Command(BaseCommand):
                     mailing_type=MailingPreferenceType.MARKETING.value,
                 )
                 context = build_email_context(
-                    user=recipient_meta.user,
+                    user=recipient_user,
                     mailing_type=schema.mailing_type,
                 )
-                MailingService(schema(context), operation_id).send_mail(
-                    recipient_meta.user
-                )
+                MailingService(schema(context), operation_id).send_mail(recipient_user)
             except Exception as e:
-                logger.error(
-                    f"Error preparing email for {recipient_meta.user.email}: {e}"
-                )
+                logger.error(f"Error preparing email for {recipient_user.email}: {e}")
                 self.stdout.write(
                     self.style.ERROR(
-                        f"Error preparing email for {recipient_meta.user.email}: {e}"
+                        f"Error preparing email for {recipient_user.email}: {e}"
                     )
                 )
                 continue
@@ -133,9 +130,9 @@ class Command(BaseCommand):
         If `--all` is provided, return all profiles.
         """
         if self.args.all:
-            return ProfileMeta.objects.filter(
-                user__mailing__preferences__marketing=True,
-                user__is_email_verified=True,
+            return User.objects.filter(
+                mailing__preferences__marketing=True,
+                is_email_verified=True,
             )
 
         args_mapper = {
@@ -149,11 +146,11 @@ class Command(BaseCommand):
         profile_names_to_fetch = [
             key for key, arg_state in args_mapper.items() if arg_state
         ]
-        return ProfileMeta.objects.filter(
-            _profile_class__in=profile_names_to_fetch,
-            user__mailing__preferences__marketing=True,
-            user__is_email_verified=True,
-        )
+        return User.objects.filter(
+            metas___profile_class__in=profile_names_to_fetch,
+            mailing__preferences__marketing=True,
+            is_email_verified=True,
+        ).distinct()
 
     def _set_args(self, arguments: Dict[str, Any]) -> None:
         """

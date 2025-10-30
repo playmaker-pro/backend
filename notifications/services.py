@@ -406,6 +406,14 @@ class NotificationService:
         )
         self.create_notification(body)
 
+    @classmethod
+    def bulk_notify_confirm_email(cls) -> None:
+        """
+        Send notifications for email confirmation.
+        """
+        for meta in cls.get_queryset(user__is_email_verified=False):
+            cls(meta).notify_confirm_email()
+
     def bind_all_reccurrent_notifications(self) -> None:
         """
         Bind all notifications to the user.

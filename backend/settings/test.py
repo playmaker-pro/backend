@@ -2,7 +2,7 @@ from .config import Environment
 from .development import *  # type: ignore
 
 CONFIGURATION = Environment.TEST
-
+EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 

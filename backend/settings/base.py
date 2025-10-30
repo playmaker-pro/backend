@@ -521,13 +521,21 @@ CACHES = {
     }
 }
 
-EMAIL_USE_TLS = cfg.smtp.use_tls
-EMAIL_HOST = cfg.smtp.host
-EMAIL_PORT = cfg.smtp.port
-EMAIL_HOST_USER = cfg.smtp.host_username
-DEFAULT_FROM_EMAIL = SERVER_EMAIL = cfg.smtp.outgoing_address
-EMAIL_HOST_PASSWORD = cfg.smtp.password.get_secret_value()
+if cfg.ses.enabled:
+    EMAIL_USE_TLS = cfg.ses.use_tls
+    EMAIL_HOST = cfg.ses.host
+    EMAIL_PORT = cfg.ses.port
+    EMAIL_HOST_USER = cfg.ses.username
+    EMAIL_HOST_PASSWORD = cfg.ses.password.get_secret_value()
+else:
+    EMAIL_USE_TLS = cfg.smtp.use_tls
+    EMAIL_HOST = cfg.smtp.host
+    EMAIL_PORT = cfg.smtp.port
+    EMAIL_HOST_USER = cfg.smtp.host_username
+    EMAIL_HOST_PASSWORD = cfg.smtp.password.get_secret_value()
 
+DEFAULT_FROM_EMAIL = SERVER_EMAIL = cfg.smtp.outgoing_address
+EMAIL_TIMEOUT = 10  # seconds
 
 try:
     from backend.settings.local import *  # noqa

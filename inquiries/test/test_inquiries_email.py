@@ -111,7 +111,7 @@ class TestSendEmails:
 
         latest_mail = (
             MailLog.objects.filter(mailing__user=inquiry_request.recipient)
-            .order_by("-sent_at")
+            .order_by("-created_at")
             .first()
         )
         assert latest_mail is not None
@@ -137,7 +137,7 @@ class TestSendEmails:
 
         latest_mail = (
             MailLog.objects.filter(mailing__user=inquiry_request.recipient)
-            .order_by("-sent_at")
+            .order_by("-created_at")
             .first()
         )
         assert latest_mail is not None

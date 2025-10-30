@@ -1,5 +1,7 @@
 SHELL = /bin/bash
-
+LOG_DIR=_logs
+CELERY_LOG=$(LOG_DIR)/celery_worker.log
+BEAT_LOG=$(LOG_DIR)/celery_beat.log
 
 .PHONY: test
 test:
@@ -46,24 +48,41 @@ migrate:
 	poetry run python manage.py migrate
 
 
-.PHONY: start-celery
-start-celery:
-	nohup poetry run celery -A backend worker --autoscale=0,6 --without-mingle --without-gossip > /dev/null 2>&1 &
+.PHONY: ensure-logs
+ensure-logs:
+	mkdir -p $(LOG_DIR)
 
+.PHONY: start-celery
+start-celery: ensure-logs
+	@echo "Starting Celery worker with auto-restart..."
+	nohup bash -c '\
+	while true; do \
+		echo "[$$(date)] Starting Celery worker..."; \
+		poetry run celery -A backend worker --autoscale=0,6 --without-mingle --without-gossip --loglevel=INFO >> $(CELERY_LOG) 2>&1; \
+		echo "[$$(date)] Celery worker crashed. Restarting in 5s..." >> $(CELERY_LOG); \
+		sleep 5; \
+	done' > /dev/null 2>&1 &
 
 .PHONY: stop-celery
 stop-celery:
-	nohup poetry run celery -A backend control shutdown > /dev/null 2>&1 &
-
+	@echo "Stopping Celery worker..."
+	pkill -f 'celery -A backend worker' || true
 
 .PHONY: start-celery-beat
-start-celery-beat:
-	nohup poetry run celery -A backend beat -l info --scheduler django --pidfile .celerybeat.pid > /dev/null 2>&1 &
-
+start-celery-beat: ensure-logs
+	@echo "Starting Celery Beat with auto-restart..."
+	nohup bash -c '\
+	while true; do \
+		echo "[$$(date)] Starting Celery beat..."; \
+		poetry run celery -A backend beat -l info --scheduler django --pidfile .celerybeat.pid >> $(BEAT_LOG) 2>&1; \
+		echo "[$$(date)] Celery beat crashed. Restarting in 5s..." >> $(BEAT_LOG); \
+		sleep 5; \
+	done' > /dev/null 2>&1 &
 
 .PHONY: stop-celery-beat
 stop-celery-beat:
-	kill -9 `cat .celerybeat.pid`
+	@echo "Stopping Celery Beat..."
+	pkill -f 'celery -A backend beat' || true
 
 
 .PHONY: shell

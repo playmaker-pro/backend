@@ -17,7 +17,7 @@ class TestCommandSendEmail:
         (
             ("--players", 1),
             ("--coaches --players", 2),
-            ("--all", 4),
+            ("--all", 5),
             (f"--guests --others '{settings.SYSTEM_USER_EMAIL}'", 2),
         ),
     )
@@ -67,4 +67,4 @@ class TestCommandSendEmail:
             test_template.template_file,
         )
 
-        assert len(outbox) == 2 if recipients == "all" else 1
+        assert len(outbox) == 3 if recipients == "all" else 1

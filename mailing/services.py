@@ -83,7 +83,7 @@ class PostmanService:
                 user__is_email_verified=False,
             )
             .exclude(
-                user__mailing__mailbox__sent_at__gt=thirty_days_ago,
+                user__mailing__mailbox__created_at__gt=thirty_days_ago,
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
             .exclude(user__date_joined__gt=timezone.now() - timezone.timedelta(days=3))
@@ -108,7 +108,7 @@ class PostmanService:
                 user__display_status=User.DisplayStatus.NOT_SHOWN,
             )
             .exclude(
-                user__mailing__mailbox__sent_at__gt=thirty_days_ago,
+                user__mailing__mailbox__created_at__gt=thirty_days_ago,
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
             .exclude(
@@ -136,7 +136,7 @@ class PostmanService:
                 user__display_status=User.DisplayStatus.NOT_SHOWN,
             )
             .exclude(
-                user__mailing__mailbox__sent_at__gt=thirty_days_ago,
+                user__mailing__mailbox__created_at__gt=thirty_days_ago,
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
             .exclude(
@@ -168,11 +168,11 @@ class PostmanService:
                 last_activity__lt=thirty_days_ago,
             )
             .exclude(
-                mailing__mailbox__sent_at__gt=thirty_days_ago,
+                mailing__mailbox__created_at__gt=thirty_days_ago,
                 mailing__mailbox__mail_template=mail_schema.template_file,
             )
             .exclude(
-                mailing__mailbox__sent_at__gt=F("last_activity"),
+                mailing__mailbox__created_at__gt=F("last_activity"),
                 mailing__mailbox__mail_template=mail_schema.template_file,
             )
             .exclude(
@@ -201,11 +201,11 @@ class PostmanService:
                 last_activity__lt=ninety_days_ago,
             )
             .exclude(
-                mailing__mailbox__sent_at__gt=ninety_days_ago,
+                mailing__mailbox__created_at__gt=ninety_days_ago,
                 mailing__mailbox__mail_template=mail_schema.template_file,
             )
             .exclude(
-                mailing__mailbox__sent_at__gt=F("last_activity"),
+                mailing__mailbox__created_at__gt=F("last_activity"),
                 mailing__mailbox__mail_template=mail_schema.template_file,
             )
             .exclude(
@@ -231,7 +231,7 @@ class PostmanService:
         qs = (
             PremiumProduct.objects.filter(premium__valid_until__isnull=True)
             .exclude(
-                user__mailing__mailbox__sent_at__gt=timezone.now()
+                user__mailing__mailbox__created_at__gt=timezone.now()
                 - timezone.timedelta(days=30),
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
@@ -271,7 +271,7 @@ class PostmanService:
             )
             .filter(visits_count__gte=5)
             .exclude(
-                user__mailing__mailbox__sent_at__gt=timezone.now()
+                user__mailing__mailbox__created_at__gt=timezone.now()
                 - timezone.timedelta(days=14),
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
@@ -303,7 +303,7 @@ class PostmanService:
                 user__declared_role="P",
             )
             .exclude(
-                user__mailing__mailbox__sent_at__gt=timezone.now()
+                user__mailing__mailbox__created_at__gt=timezone.now()
                 - timezone.timedelta(days=60),
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
@@ -335,7 +335,7 @@ class PostmanService:
                 user__declared_role__in=["C", "T"],
             )
             .exclude(
-                user__mailing__mailbox__sent_at__gt=timezone.now()
+                user__mailing__mailbox__created_at__gt=timezone.now()
                 - timezone.timedelta(days=60),
                 user__mailing__mailbox__mail_template=mail_schema.template_file,
             )
@@ -362,7 +362,7 @@ class PostmanService:
         mail_schema = EmailTemplateRegistry.INVITE_FRIENDS_REMINDER
         qs = (
             User.objects.exclude(
-                mailing__mailbox__sent_at__gt=timezone.now()
+                mailing__mailbox__created_at__gt=timezone.now()
                 - timezone.timedelta(days=60),
                 mailing__mailbox__mail_template=mail_schema.template_file,
             )

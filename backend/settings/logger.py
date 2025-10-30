@@ -3,9 +3,6 @@ import os
 from os.path import join
 from typing import Any, Dict
 
-from backend.settings import cfg
-from backend.settings.config import Environment
-
 
 def get_logging_structure(logfile_root: str) -> Dict[str, Any]:
     """
@@ -198,14 +195,9 @@ def get_logging_structure(logfile_root: str) -> Dict[str, Any]:
                 "propagate": True,
             },
             "celery": {
-                "handlers": ["celery_file", "console", "mail_admins"],
-                "level": "DEBUG" if cfg.environment != Environment.TEST else "DEBUG",
-                "propagate": False,
-            },
-            "celery.utils": {
-                "handlers": ["mail_admins", "console"],
-                "level": "ERROR",
-                "propagate": False,
+                "handlers": ["celery_file"],
+                "level": "INFO",
+                "propagate": True,
             },
         },
         "root": {

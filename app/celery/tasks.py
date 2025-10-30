@@ -207,6 +207,14 @@ NOTIFICATIONS = [
         "enabled": True,
     },
     {
+        "name": "Notify to confirm email",
+        "task": "app.celery.tasks.bulk_notify_confirm_email",
+        "schedule": CrontabSchedule.objects.get_or_create(
+            minute=0, hour=4, day_of_month=22
+        ),
+        "enabled": True,
+    },
+    {
         "name": "Test beat each minute",
         "task": "app.celery.tasks.notify_as_test_each_minute",
         "schedule": CrontabSchedule.objects.get_or_create(
