@@ -54,6 +54,7 @@ ensure-logs:
 
 .PHONY: start-celery
 start-celery: ensure-logs
+	@echo "Starting Celery worker..."
 	@nohup bash -c '\
 	while true; do \
 		echo "Starting Celery worker..."; \
@@ -69,6 +70,7 @@ stop-celery:
 
 .PHONY: start-celery-beat
 start-celery-beat: ensure-logs
+	@echo "Starting Celery Beat..."
 	@nohup bash -c '\
 	while true; do \
 		echo "Starting Celery beat..."; \
