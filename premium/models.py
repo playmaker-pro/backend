@@ -200,14 +200,13 @@ class PromoteProfileProduct(models.Model):
 
 class PremiumInquiriesProduct(models.Model):
     # Profile-specific inquiry limits
-    INQUIRIES_LIMIT_DEFAULT = 10  # Trial/default
-    INQUIRIES_LIMIT_CLUB = 30  # Club premium: 30 every 3 months
+    # Only Player gets 30/month; everything else (Club, Coach, Manager, Scout, Guest, Referee, Other) gets 30/90days
     INQUIRIES_LIMIT_PLAYER = 30  # Player premium: 30 per month (anti-spam)
-    
+    INQUIRIES_LIMIT_DEFAULT = 30  # All others (Club-like): 30 every 3 months
+
     # Reset periods (in days)
-    RESET_PERIOD_DEFAULT = 30
-    RESET_PERIOD_CLUB = 90  # 3 months for clubs
     RESET_PERIOD_PLAYER = 30  # 1 month for players
+    RESET_PERIOD_DEFAULT = 90  # 3 months for all others (Club-like)
 
     product = models.OneToOneField(
         "PremiumProduct", on_delete=models.CASCADE, related_name="inquiries"
@@ -224,29 +223,29 @@ class PremiumInquiriesProduct(models.Model):
         if self.product and self.product.profile:
             return self.product.profile.__class__.__name__
         return None
-    
+
     def get_inquiry_limit(self) -> int:
-        """Get inquiry limit based on profile type"""
+        """Get inquiry limit based on profile type.
+        Only PlayerProfile gets 30/month; all others get 30/90days (Club-like).
+        """
         profile_type = self.get_profile_type()
-        
-        if profile_type == "ClubProfile":
-            return self.INQUIRIES_LIMIT_CLUB
-        elif profile_type == "PlayerProfile":
-            return self.INQUIRIES_LIMIT_PLAYER
+        if profile_type == "PlayerProfile":
+            return self.INQUIRIES_LIMIT_PLAYER  # 30
         else:
-            return self.INQUIRIES_LIMIT_DEFAULT
-    
+            # Club, Coach, Manager, Scout, Guest, Referee, Other all get 30 (Club-like)
+            return self.INQUIRIES_LIMIT_DEFAULT  # 30
+
     def get_reset_period(self) -> int:
-        """Get reset period based on profile type"""
+        """Get reset period based on profile type.
+        Only PlayerProfile gets 30 days; all others get 90 days (Club-like).
+        """
         profile_type = self.get_profile_type()
-        
-        if profile_type == "ClubProfile":
-            return self.RESET_PERIOD_CLUB
-        elif profile_type == "PlayerProfile":
-            return self.RESET_PERIOD_PLAYER
+        if profile_type == "PlayerProfile":
+            return self.RESET_PERIOD_PLAYER  # 30
         else:
-            return self.RESET_PERIOD_DEFAULT
-    
+            # Club, Coach, Manager, Scout, Guest, Referee, Other all get 90 (Club-like)
+            return self.RESET_PERIOD_DEFAULT  # 90
+
     @property
     def INQUIRIES_LIMIT(self) -> int:
         """Dynamic inquiry limit based on profile type (backward compatibility)"""
@@ -422,9 +421,13 @@ class Product(models.Model):
             raise Exception("User has no profile.")
 
         if self.ref == self.ProductReference.INQUIRIES:
+            # Players cannot buy inquiry packages (they get unlimited premium)
+            if user.profile.__class__.__name__ == "PlayerProfile":
+                raise PermissionError("Players cannot buy inquiry packages.")
             if not user.profile.is_premium:
                 raise PermissionError("Product is available only for premium users.")
-            if user.userinquiry.left:
+            # Packages can only be bought when premium inquiries are exhausted (left == 0)
+            if user.userinquiry.left > 0:
                 raise PermissionError(
                     "You need to use all inquiries before buying new ones."
                 )

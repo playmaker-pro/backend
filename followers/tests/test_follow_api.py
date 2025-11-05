@@ -34,6 +34,9 @@ class TestFollowAPI(APITestCase):
 
     def test_list_my_followers(self) -> None:
         """Test listing all followers of a user."""
+        # Make superuser premium to access follower statistics (Players/Guests only)
+        self.superuser.profile.setup_premium_profile()
+        
         for _ in range(5):
             follow_service.follow_profile(
                 self.superuser.profile.uuid, PlayerProfileFactory().user

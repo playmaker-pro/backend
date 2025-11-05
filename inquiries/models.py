@@ -132,13 +132,12 @@ class UserInquiry(models.Model):
             return self.filter(counter_raw__gte=models.F("plan__limit"))
 
     objects = UserInquiryManager()
-    _default_limit = 2
+    _default_limit = 5  # Default for all non-Player profiles (Club-like)
     
     # Profile-specific freemium limits
-    CLUB_FREEMIUM_SENT_LIMIT = 5
-    CLUB_FREEMIUM_RECEIVED_LIMIT = 5
+    # Only PlayerProfile is special: 10
+    # Everything else (Club, Coach, Manager, Scout, Guest, Referee, Other) = 5
     PLAYER_FREEMIUM_LIMIT = 10
-    GUEST_FREEMIUM_LIMIT = 0  # Guests can't send inquiries
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True
@@ -165,30 +164,31 @@ class UserInquiry(models.Model):
         return None
     
     def get_freemium_limit(self) -> int:
-        """Get freemium inquiry limit based on profile type"""
+        """Get freemium inquiry limit based on profile type.
+        Only PlayerProfile gets 10, all others (Club, Coach, Manager, Scout, Guest, Referee, Other) get 5.
+        """
         profile_type = self.get_profile_type()
         
-        if profile_type == "ClubProfile":
-            return self.CLUB_FREEMIUM_SENT_LIMIT
-        elif profile_type == "PlayerProfile":
-            return self.PLAYER_FREEMIUM_LIMIT
-        elif profile_type == "GuestProfile":
-            return self.GUEST_FREEMIUM_LIMIT
+        if profile_type == "PlayerProfile":
+            return self.PLAYER_FREEMIUM_LIMIT  # 10
         else:
-            return self._default_limit
+            # Club, Coach, Manager, Scout, Guest, Referee, Other all get 5
+            return self._default_limit  # 5
     
     @property
     def limit(self):
+        # Premium overrides freemium limit (don't add them)
         if self.premium_inquiries:
-            return self.limit_raw + self.premium_inquiries.INQUIRIES_LIMIT
-        return self.limit_raw
+            return self.premium_inquiries.INQUIRIES_LIMIT
+        # When no premium, return freemium limit (not the package-enhanced limit_raw)
+        return self.get_freemium_limit()
 
     @property
     def limit_to_show(self) -> int:
         """Get the limit to show to user (profile-aware)"""
+        # Premium overrides freemium limit
         if self.premium_inquiries:
-            # Premium: freemium limit + premium limit
-            return self.get_freemium_limit() + self.premium_inquiries.INQUIRIES_LIMIT
+            return self.premium_inquiries.INQUIRIES_LIMIT
         else:
             # Freemium: profile-specific limit
             return self.get_freemium_limit()
@@ -237,9 +237,15 @@ class UserInquiry(models.Model):
 
     def reset_plan(self):
         """Reset to basic plan with profile-aware limits"""
+        # Check if current plan is not default (meaning it's an inquiry package)
+        has_inquiry_package = self.plan and not self.plan.default
+        
         self.plan = InquiryPlan.basic()
-        # Set limit based on profile type for freemium users
-        self.limit_raw = self.get_freemium_limit()
+        
+        # Only reset limit_raw to freemium if there was no inquiry package
+        # If user had purchased packages, keep the extra limit they added
+        if not has_inquiry_package:
+            self.limit_raw = self.get_freemium_limit()
 
         if self.counter_raw >= self.limit_raw:
             self.counter_raw = self.limit_raw

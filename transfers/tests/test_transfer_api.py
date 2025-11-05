@@ -839,6 +839,7 @@ class TestAnonymousTransferRequest:
     def test_create_anonymous_transfer_request_full_flow_for_coach(
         self, coach_profile, api_client, payload
     ):
+        """Test that Coach cannot use anonymous mode (only Clubs and Players can)."""
         assert not ProfileTransferRequest.objects.filter().exists()
         coach_profile.setup_premium_profile()
         api_client.force_authenticate(coach_profile.user)
@@ -851,43 +852,10 @@ class TestAnonymousTransferRequest:
             format="json",
         )
 
-        assert response.status_code == 201
-
-        data = response.json()
-        transfer_request = coach_profile.meta.transfer_object
-
-        assert transfer_request.is_anonymous is True
-        assert data["requesting_team"]["id"] == 0
-        assert data["requesting_team"]["team"]["team_name"] == "Anonimowa drużyna"
-        assert data["requesting_team"]["team"]["id"] == 0
-        assert data["requesting_team"]["team"]["team_contributor_id"] == 0
-        assert data["requesting_team"]["team"]["picture_url"] is None
-        assert data["profile_uuid"] == str(transfer_request.anonymous_uuid)
-        # Contact fields are now write-only and never appear in responses
-        assert "phone_number" not in data
-        assert "contact_email" not in data
-        assert data["is_anonymous"] is True
-
-        api_client.patch(
-            reverse(self.url_path),
-            {
-                "is_anonymous": False,
-            },
-            format="json",
-        )
-        transfer_request.refresh_from_db()
-
-        assert transfer_request.is_anonymous is False
-
-        response = api_client.get(
-            GET_TRANSFER_REQUEST_URL(transfer_request.anonymous_uuid),
-            format="json",
-        )
-        data = response.json()
-
-        assert data["requesting_team"]["team"]["team_name"] != "Anonimowa drużyna"
-        assert data["requesting_team"]["id"] == transfer_request.requesting_team.pk
-        assert data["is_anonymous"] is False
+        # Coaches cannot use anonymous mode - should get 400 validation error
+        assert response.status_code == 400
+        assert "Anonymous profile is only available for clubs and players" in str(response.content)
+        assert not ProfileTransferRequest.objects.filter().exists()
 
     def test_expose_anonymous_transfer_request(self, coach_profile, api_client):
         """

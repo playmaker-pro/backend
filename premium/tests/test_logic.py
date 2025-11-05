@@ -310,13 +310,15 @@ class TestPremiumInquiriesProduct:
         assert premium_inquiries.valid_until == make_aware(
             datetime(2020, 1, 31, 12, 00, 00)
         )
-        assert user_inquiries.limit == 12
+        # With override logic: premium limit (30) overrides freemium limit (10)
+        assert user_inquiries.limit == 30
 
         timezone_now.return_value = make_aware(datetime(2020, 2, 15, 12, 00, 00))
         user_inquiries.refresh_from_db()
 
         assert premium_inquiries.is_active is False
-        assert user_inquiries.limit == 2
+        # Back to freemium: player has 10 freemium limit
+        assert user_inquiries.limit == 10
 
         premium_inquiries.refresh(PremiumType.MONTH)
         user_inquiries.refresh_from_db()
@@ -329,7 +331,8 @@ class TestPremiumInquiriesProduct:
         assert premium_inquiries.valid_until == make_aware(
             datetime(2020, 3, 16, 12, 00)
         )
-        assert user_inquiries.limit == 12
+        # Premium override again: 30
+        assert user_inquiries.limit == 30
 
 
 class TestProduct:

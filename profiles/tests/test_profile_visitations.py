@@ -46,7 +46,7 @@ def _visit_factory(subject: BaseProfile) -> ProfileVisitation:
 def test_who_visited_my_profile_freemium(client, subject):
     client.force_authenticate(user=subject)
     response = client.get(url)
-    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_who_visited_my_profile(client, subject):

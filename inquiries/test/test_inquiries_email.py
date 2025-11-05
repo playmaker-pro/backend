@@ -185,7 +185,8 @@ class TestSendEmails:
 
     def test_send_email_on_limit_reached(self, player_profile, coach_profile) -> None:
         """Send email to user if he reached inquiry requests limit"""
-        player_profile.user.userinquiry.counter = 2
+        # Player freemium limit is 10, so set counter_raw to 10 to reach the limit
+        player_profile.user.userinquiry.counter_raw = 10
         player_profile.user.userinquiry.save()
 
         limit_reached = UserInquiry.objects.limit_reached()
