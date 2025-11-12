@@ -395,6 +395,26 @@ CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_TASK_TIME_LIMIT = 60 * 60
 CELERY_TIMEZONE = TIME_ZONE
+
+# Ustawienia zapobiegające wyłączaniu workera przy błędach
+CELERY_TASK_ACKS_LATE = True  # Potwierdzaj task dopiero po zakończeniu
+CELERY_TASK_REJECT_ON_WORKER_LOST = True  # Wróć task do kolejki gdy worker się wyłączy
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1  # Pobieraj tylko 1 task na raz (lepsze dla autoscale)
+CELERY_WORKER_MAX_TASKS_PER_CHILD = 1000  # Restartuj worker po 1000 tasków (zapobiega memory leaks)
+CELERY_TASK_SOFT_TIME_LIMIT = 3000  # 50 minut soft limit
+CELERY_WORKER_DISABLE_RATE_LIMITS = False
+
+# Broker transport options - retry i visibility
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    'visibility_timeout': 43200,  # 12 godzin - czas na wykonanie tasku
+    'max_retries': 3,
+    'interval_start': 0,
+    'interval_step': 0.2,
+    'interval_max': 0.5,
+}
+
+# Beat schedule max run frequency - zapobiega multiple runs
+CELERY_BEAT_MAX_LOOP_INTERVAL = 5  # Sprawdzaj schedule co 5 sekund (domyślnie)
 CELERY_BEAT_SCHEDULE = {
     "daily-supervisor": {
         "task": "app.celery.tasks.run_daily_supervisor",

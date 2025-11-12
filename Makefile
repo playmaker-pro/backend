@@ -55,13 +55,7 @@ ensure-logs:
 .PHONY: start-celery
 start-celery: ensure-logs
 	@echo "Starting Celery worker..."
-	@nohup bash -c '\
-	while true; do \
-		echo "Starting Celery worker..."; \
-		poetry run celery -A backend worker --autoscale=1,6 --without-mingle --without-gossip --loglevel=INFO >> $(CELERY_LOG) 2>&1; \
-		echo "Celery worker crashed. Restarting in 5s..." >> $(CELERY_LOG); \
-		sleep 5; \
-	done' > /dev/null 2>&1 &
+	nohup poetry run celery -A backend worker --autoscale=1,6 --without-mingle --without-gossip --loglevel=DEBUG --max-tasks-per-child=1000 --task-events --pool=prefork >> $(CELERY_LOG) 2>&1 &
 
 .PHONY: stop-celery
 stop-celery:
@@ -71,13 +65,7 @@ stop-celery:
 .PHONY: start-celery-beat
 start-celery-beat: ensure-logs
 	@echo "Starting Celery Beat..."
-	@nohup bash -c '\
-	while true; do \
-		echo "Starting Celery beat..."; \
-		poetry run celery -A backend beat -l info --scheduler django --pidfile .celerybeat.pid >> $(BEAT_LOG) 2>&1; \
-		echo "Celery beat crashed. Restarting in 5s..." >> $(BEAT_LOG); \
-		sleep 5; \
-	done' > /dev/null 2>&1 &
+	nohup poetry run celery -A backend beat -l info --scheduler django --pidfile .celerybeat.pid >> $(BEAT_LOG) 2>&1 &
 
 .PHONY: stop-celery-beat
 stop-celery-beat:
