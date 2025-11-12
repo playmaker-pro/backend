@@ -51,8 +51,7 @@ services:
       - "27018:27017"
     volumes:
       - mongodb_data:/mongo/db
-    command: mongod --quiet --logpath /dev/null 
-
+    command: mongod --quiet --logpath /dev/null
 
   playmaker:
     container_name: playmaker
@@ -68,7 +67,7 @@ services:
     volumes:
       - .:/app
       - ./media:/app/media
-      - ./_logs:/app/_logs
+      - ./.logs:/app/.logs
 
 volumes:
   postgres_data:

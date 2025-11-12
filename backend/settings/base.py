@@ -384,7 +384,7 @@ BLOG_PAGINATION_PER_PAGE = 4
 # (see http://www.caktusgroup.com/blog/2015/01/27/Django-Logging-Configuration-logging_config-default-settings-logger/)
 # LOGGING_CONFIG = None
 # setup_logging(LOGGING_ROOTDIR)
-LOGGING = setup_logging("_logs")
+LOGGING = setup_logging(".logs")
 
 
 CELERY_TASK_ALWAYS_EAGER = False

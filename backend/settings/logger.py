@@ -207,7 +207,7 @@ def get_logging_structure(logfile_root: str) -> Dict[str, Any]:
     }
 
 
-def setup_logging(logfile_root: str = "_logs") -> Dict[str, Any]:
+def setup_logging(logfile_root: str = ".logs") -> Dict[str, Any]:
     """
     Konfiguruje logging dla aplikacji.
 

@@ -1,5 +1,4 @@
-SHELL = /bin/bash
-LOG_DIR=_logs
+LOG_DIR=.logs
 CELERY_LOG=$(LOG_DIR)/celery_worker.log
 BEAT_LOG=$(LOG_DIR)/celery_beat.log
 
@@ -31,16 +30,16 @@ start-db:
 
 .PHONY: startapp
 startapp:
-	python manage.py runserver
+	poetry run python manage.py runserver
 
 
-.PHONY: restart stop start start-celery stop-celery start-celery-beat stop-celery-beat
+.PHONY: restart 
 restart: tmp/restart.txt stop start
 stop: stop-celery stop-celery-beat
 start: start-celery start-celery-beat
-tmp/restart.txt:
+restart:
 	@mkdir -p tmp
-	@touch tmp/restart.txt
+	touch tmp/restart.txt
 
 
 .PHONY: migrate
@@ -55,7 +54,7 @@ ensure-logs:
 .PHONY: start-celery
 start-celery: ensure-logs
 	@echo "Starting Celery worker..."
-	nohup poetry run celery -A backend worker --autoscale=1,6 --without-mingle --without-gossip --loglevel=DEBUG --max-tasks-per-child=1000 --task-events --pool=prefork >> $(CELERY_LOG) 2>&1 &
+	poetry run celery -A backend worker --autoscale=1,6 --without-mingle --without-gossip --loglevel=DEBUG --max-tasks-per-child=1000 --task-events --pool=prefork >> $(CELERY_LOG) 2>&1 & disown
 
 .PHONY: stop-celery
 stop-celery:
@@ -65,7 +64,7 @@ stop-celery:
 .PHONY: start-celery-beat
 start-celery-beat: ensure-logs
 	@echo "Starting Celery Beat..."
-	nohup poetry run celery -A backend beat -l info --scheduler django --pidfile .celerybeat.pid >> $(BEAT_LOG) 2>&1 &
+	poetry run celery -A backend beat -l info --scheduler django --pidfile .celerybeat.pid >> $(BEAT_LOG) 2>&1 & disown
 
 .PHONY: stop-celery-beat
 stop-celery-beat:

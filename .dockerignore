@@ -48,7 +48,7 @@ Dockerfile*
 .dockerignore
 
 # Logs and temporary files
-_logs/
+.logs/
 celerybeat.pid
 *.log
 

@@ -33,7 +33,7 @@ RUN poetry config virtualenvs.create false && poetry install
 COPY . .
 
 # Create directories for logs and media
-RUN mkdir -p _logs media/uploads static
+RUN mkdir -p .logs media/uploads static
 
 # Copy supervisor config
 COPY tools/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
