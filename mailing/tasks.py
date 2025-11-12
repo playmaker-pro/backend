@@ -15,7 +15,7 @@ logger = get_task_logger("mailing")
 connection = get_connection()
 
 
-@shared_task
+@shared_task(bind=True, max_retries=3)
 def notify_admins(subject: str, message: str, **kwargs):
     """Send notification to admins with error tracking."""
     if cache.get(subject):
@@ -23,7 +23,7 @@ def notify_admins(subject: str, message: str, **kwargs):
         return
 
     try:
-        mail_admins(subject=subject, message=message, connection=connection, **kwargs)
+        mail_admins(subject=subject, message=message, connection=connection)
         logger.info(f"Admin notification sent: {subject}")
         cache.set(subject, message, 3600)
     except Exception as err:
