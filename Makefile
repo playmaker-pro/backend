@@ -1,3 +1,4 @@
+SHELL := /bin/bash
 LOG_DIR=.logs
 CELERY_LOG=$(LOG_DIR)/celery_worker.log
 BEAT_LOG=$(LOG_DIR)/celery_beat.log
