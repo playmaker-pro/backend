@@ -165,10 +165,14 @@ class UserInquiry(models.Model):
     
     def get_freemium_limit(self) -> int:
         """Get freemium inquiry limit based on profile type.
-        Only PlayerProfile gets 10, all others (Club, Coach, Manager, Scout, Guest, Referee, Other) get 5.
+        Uses InquiryPlan.limit if available, falls back to profile-aware hardcoded values.
         """
-        profile_type = self.get_profile_type()
+        # If plan is set, use its limit (from new InquiryPlan-based system)
+        if self.plan and self.plan.limit:
+            return self.plan.limit
         
+        # Fallback to profile-aware calculation (backward compatibility)
+        profile_type = self.get_profile_type()
         if profile_type == "PlayerProfile":
             return self.PLAYER_FREEMIUM_LIMIT  # 10
         else:
@@ -185,12 +189,15 @@ class UserInquiry(models.Model):
 
     @property
     def limit_to_show(self) -> int:
-        """Get the limit to show to user (profile-aware)"""
+        """Get the limit to show to user (profile-aware via InquiryPlan)"""
         # Premium overrides freemium limit
         if self.premium_inquiries:
             return self.premium_inquiries.INQUIRIES_LIMIT
         else:
-            # Freemium: profile-specific limit
+            # Use plan.limit if available (from new InquiryPlan-based system)
+            if self.plan and self.plan.limit:
+                return self.plan.limit
+            # Fallback to profile-aware calculation
             return self.get_freemium_limit()
 
     @property
@@ -259,8 +266,6 @@ class UserInquiry(models.Model):
                 premium_inquiries = self.user.profile.products.inquiries
                 premium_inquiries.check_refresh()
                 return premium_inquiries
-            elif not self.plan or not self.plan.default:
-                self.reset_plan()
 
     @property
     def regular_pool(self) -> (int, int):
@@ -372,10 +377,35 @@ class UserInquiry(models.Model):
             )
 
     def save(self, *args, **kwargs):
-        """Set profile-aware limits on creation"""
+        """Ensure plan and limit_raw are set on creation"""
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"UserInquiry.save() called: pk={self.pk}, plan={self.plan}")
+        
         if self.pk is None:  # Only on creation
-            # Set limit based on profile type
-            self.limit_raw = self.get_freemium_limit()
+            logger.info("UserInquiry: New record (pk is None)")
+            # Ensure plan is set (should be set by create_basic_inquiry_plan or caller)
+            if not self.plan:
+                logger.info("UserInquiry: No plan set, assigning...")
+                # Fallback: try to get correct plan based on profile
+                if hasattr(self.user, 'profile') and self.user.profile:
+                    profile_type = self.user.profile.__class__.__name__
+                    is_premium = self.user.profile.is_premium
+                    from inquiries.services import InquireService
+                    self.plan = InquireService.get_plan_for_profile_type(profile_type, is_premium)
+                    logger.info(f"UserInquiry: Assigned plan {self.plan} (ID={self.plan.id})")
+                else:
+                    # Fallback to basic plan
+                    self.plan = InquiryPlan.basic()
+                    logger.info(f"UserInquiry: No profile, using basic plan")
+            
+            # Set limit_raw based on plan
+            self.limit_raw = self.plan.limit if self.plan else 5
+            logger.info(f"UserInquiry: Set limit_raw to {self.limit_raw}")
+        else:
+            logger.info(f"UserInquiry: Updating existing record (pk={self.pk})")
+        
+        logger.info(f"UserInquiry: Before super().save() - plan={self.plan}, limit_raw={self.limit_raw}")
         super().save(*args, **kwargs)
     
     def __str__(self):
@@ -521,18 +551,36 @@ class InquiryRequest(models.Model):
     @transition(field=status, source=[STATUS_NEW], target=STATUS_SENT)
     def send(self):
         """Should be appeared when message was distributed to recipient"""
-
-        NotificationService(self.recipient.profile.meta).notify_new_inquiry(
-            self.sender.profile
-        )
+        if self.recipient.profile and self.recipient.profile.meta:
+            # Check if recipient is freemium and NOT a player (Club, Coach, Scout, Manager, Guest, Referee)
+            is_freemium_non_player = (
+                self.recipient.profile.__class__.__name__ != "PlayerProfile" and
+                not self.recipient.profile.is_premium
+            )
+            
+            if is_freemium_non_player:
+                received_count = self.recipient.inquiry_request_recipient.count()
+                if received_count > 5:
+                    # This inquiry is hidden - send hidden inquiry notification
+                    NotificationService(self.recipient.profile.meta).notify_hidden_inquiry()
+                else:
+                    # This is one of the first 5 - send normal notification
+                    NotificationService(self.recipient.profile.meta).notify_new_inquiry(
+                        self.sender.profile
+                    )
+            else:
+                # Player or premium - send normal notification
+                NotificationService(self.recipient.profile.meta).notify_new_inquiry(
+                    self.sender.profile
+                )
 
     @transition(field=status, source=[STATUS_SENT], target=STATUS_RECEIVED)
     def read(self):
         """Should be appeared when message readed/seen by recipient"""
-
-        NotificationService(self.sender.profile.meta).notify_inquiry_read(
-            self.recipient.profile, hide_profile=self.anonymous_recipient
-        )
+        if self.sender.profile and self.sender.profile.meta:
+            NotificationService(self.sender.profile.meta).notify_inquiry_read(
+                self.recipient.profile, hide_profile=self.anonymous_recipient
+            )
         logger.info(
             f"{self.recipient} read request from {self.sender}. -- "
             f"InquiryRequestID: {self.pk}"
@@ -553,9 +601,10 @@ class InquiryRequest(models.Model):
         )
         self.is_read_by_sender = False
 
-        NotificationService(self.sender.profile.meta).notify_inquiry_accepted(
-            self.recipient.profile
-        )
+        if self.sender.profile and self.sender.profile.meta:
+            NotificationService(self.sender.profile.meta).notify_inquiry_accepted(
+                self.recipient.profile
+            )
         self.create_log_for_sender(InquiryLogType.ACCEPTED)
 
     @transition(
@@ -571,9 +620,10 @@ class InquiryRequest(models.Model):
             f"InquiryRequestID: {self.pk}"
         )
         self.is_read_by_sender = False
-        NotificationService(self.sender.profile.meta).notify_inquiry_rejected(
-            self.recipient.profile, hide_profile=self.anonymous_recipient
-        )
+        if self.recipient.profile and self.recipient.profile.meta:
+            NotificationService(self.recipient.profile.meta).notify_inquiry_rejected(
+                self.recipient.profile, hide_profile=self.anonymous_recipient
+            )
         self.create_log_for_sender(InquiryLogType.REJECTED)
 
     def save(self, *args, **kwargs):

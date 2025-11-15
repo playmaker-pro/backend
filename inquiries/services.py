@@ -17,11 +17,32 @@ User = get_user_model()
 
 class InquireService:
     @staticmethod
+    def get_plan_for_profile_type(profile_type: str, is_premium: bool) -> InquiryPlan:
+        """Get appropriate inquiry plan based on profile type and premium status."""
+        try:
+            if is_premium:
+                if profile_type == "PlayerProfile":
+                    return InquiryPlan.objects.get(type_ref="PREMIUM_PLAYER")
+                else:
+                    # All other profiles: Club, Guest, Scout, Coach, Manager, Referee, Other
+                    return InquiryPlan.objects.get(type_ref="PREMIUM_STANDARD")
+            else:
+                if profile_type == "PlayerProfile":
+                    return InquiryPlan.objects.get(type_ref="FREEMIUM_PLAYER")
+                else:
+                    # All other profiles: Club, Guest, Scout, Coach, Manager, Referee, Other
+                    return InquiryPlan.objects.get(type_ref="FREEMIUM_STANDARD")
+        except InquiryPlan.DoesNotExist:
+            # Fallback to basic plan if not found
+            logger.warning(f"InquiryPlan not found for {profile_type} (premium={is_premium}). Using basic plan.")
+            return InquiryPlan.basic()
+
+    @staticmethod
     def create_basic_inquiry_plan(user) -> None:
-        """Create basic inquiry plan and contact instance for user"""
+        """Create basic inquiry plan for user. Profile-specific plan assignment happens later."""
         plan = InquiryPlan.basic()
-        UserInquiry.objects.get_or_create(user=user, plan=plan)
-        logger.info(f"Created {plan.description} plan for {user}")
+        UserInquiry.objects.get_or_create(user=user, defaults={"plan": plan})
+        logger.info(f"Created basic plan for {user}")
 
     def create_default_basic_plan_if_not_present(self) -> InquiryPlan:
         """

@@ -45,6 +45,17 @@ def premium_expired(premium_products_id: int):
     ):
         pp_object.profile.meta.transfer_object.is_anonymous = False
         pp_object.profile.meta.transfer_object.save()
+    
+    # Update UserInquiry plan back to freemium when premium expires
+    try:
+        from inquiries.services import InquireService
+        if pp_object.profile and pp_object.profile.user and hasattr(pp_object.profile.user, 'userinquiry'):
+            profile_type = pp_object.profile.__class__.__name__
+            plan = InquireService.get_plan_for_profile_type(profile_type, is_premium=False)
+            pp_object.profile.user.userinquiry.plan = plan
+            pp_object.profile.user.userinquiry.save(update_fields=['plan'])
+    except Exception as e:
+        logger.error(f"Failed to update inquiry plan on premium expiration: {str(e)}")
 
     context = build_email_context(
         pp_object.profile.user, mailing_type=mail_content.mailing_type

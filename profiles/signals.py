@@ -55,7 +55,7 @@ def update_calculate_pm_score_product(sender, instance, **kwargs):
 @receiver(post_save, sender=models.GuestProfile)
 def post_create_profile(sender, instance, created, **kwargs):
     """
-    Create a profile for the user if it doesn't exist.
+    Create a profile for the user if it doesn't exist and ensure UserInquiry plan matches profile type.
     """
     if created:
         profile_class_name = instance.__class__.__name__
@@ -65,6 +65,7 @@ def post_create_profile(sender, instance, created, **kwargs):
             post_create_other_profile.delay(instance.pk, profile_class_name)
         elif profile_class_name == "PlayerProfile":
             post_create_player_profile.delay(instance.pk)
+
 
 
 @receiver(post_save, sender=models.ProfileVisitation)

@@ -72,6 +72,28 @@ class PremiumProfile(models.Model):
         else:
             self._fresh_init()
         self.save()
+    
+    def _update_inquiry_plan(self, is_premium: bool) -> None:
+        """Update UserInquiry plan when premium status changes."""
+        try:
+            if not self.product.profile or not self.product.profile.user:
+                return
+            
+            user = self.product.profile.user
+            if not hasattr(user, 'userinquiry'):
+                return
+            
+            from inquiries.services import InquireService
+            profile_type = self.product.profile.__class__.__name__
+            plan = InquireService.get_plan_for_profile_type(profile_type, is_premium)
+            
+            user.userinquiry.plan = plan
+            user.userinquiry.save(update_fields=['plan'])
+        except Exception as e:
+            # Log but don't crash - inquiry plan update is not critical
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Failed to update inquiry plan: {str(e)}")
 
     @property
     def is_active(self) -> bool:
@@ -91,6 +113,9 @@ class PremiumProfile(models.Model):
         self.period = premium_type.period
         self._refresh()
         self.product.setup_premium_products(premium_type)
+        
+        # Update UserInquiry plan to premium plan
+        self._update_inquiry_plan(is_premium=True)
 
     def setup_by_days(self, days: int) -> None:
         """Setup the premium profile by days."""

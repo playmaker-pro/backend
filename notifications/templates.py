@@ -190,6 +190,12 @@ class NotificationTemplate(Enum):
         "href": "/kontakty?tab=zapytania",
         "icon": "inquiry",
     }
+    HIDDEN_INQUIRY = {
+        "title": _("Otrzymałeś/aś nowe zapytanie (ukryte)"),
+        "description": _("Masz ukryte zapytanie. Przejdź na premium, aby zobaczyć wszystkie zapytania."),
+        "href": "/premium",
+        "icon": "inquiry-hidden",
+    }
     PROFILE_VERIFIED = {
         "title": _("Twój profil został zweryfikowany!"),
         "description": _(
