@@ -165,13 +165,9 @@ class UserInquiry(models.Model):
     
     def get_freemium_limit(self) -> int:
         """Get freemium inquiry limit based on profile type.
-        Uses InquiryPlan.limit if available, falls back to profile-aware hardcoded values.
+        Always returns the freemium limit, regardless of current plan.
+        This is used to calculate package bonuses and base limits.
         """
-        # If plan is set, use its limit (from new InquiryPlan-based system)
-        if self.plan and self.plan.limit:
-            return self.plan.limit
-        
-        # Fallback to profile-aware calculation (backward compatibility)
         profile_type = self.get_profile_type()
         if profile_type == "PlayerProfile":
             return self.PLAYER_FREEMIUM_LIMIT  # 10
@@ -181,24 +177,20 @@ class UserInquiry(models.Model):
     
     @property
     def limit(self):
-        # Premium overrides freemium limit (don't add them)
+        # Premium base limit, plus any package bonuses
         if self.premium_inquiries:
-            return self.premium_inquiries.INQUIRIES_LIMIT
-        # When no premium, return freemium limit (not the package-enhanced limit_raw)
+            # Include package bonuses on top of premium limit
+            base_limit = self.premium_inquiries.INQUIRIES_LIMIT
+            package_bonus = self.limit_raw - self.get_freemium_limit()
+            return base_limit + max(0, package_bonus)
+        # When no premium, return freemium limit
         return self.get_freemium_limit()
 
     @property
     def limit_to_show(self) -> int:
         """Get the limit to show to user (profile-aware via InquiryPlan)"""
-        # Premium overrides freemium limit
-        if self.premium_inquiries:
-            return self.premium_inquiries.INQUIRIES_LIMIT
-        else:
-            # Use plan.limit if available (from new InquiryPlan-based system)
-            if self.plan and self.plan.limit:
-                return self.plan.limit
-            # Fallback to profile-aware calculation
-            return self.get_freemium_limit()
+        # Use same logic as limit property
+        return self.limit
 
     @property
     def counter(self):
@@ -282,15 +274,17 @@ class UserInquiry(models.Model):
 
     def increment(self):
         """Increase by one counter"""
-        if self.counter_raw < self.limit_raw:
-            self.counter_raw += 1
-            self.save()
-        else:
-            if (
-                self.premium_inquiries
-                and self.premium_inquiries.can_use_premium_inquiries
-            ):
-                self.premium_inquiries.increment_counter()
+        # Only increment if we have remaining quota
+        if self.left > 0:
+            if self.counter_raw < self.limit_raw:
+                self.counter_raw += 1
+                self.save()
+            else:
+                if (
+                    self.premium_inquiries
+                    and self.premium_inquiries.can_use_premium_inquiries
+                ):
+                    self.premium_inquiries.increment_counter()
 
     def decrement(self):
         """Decrease by one counter"""
@@ -325,10 +319,11 @@ class UserInquiry(models.Model):
         return max(days_until_next_reference, 0)
 
     def set_new_plan(self, plan: InquiryPlan) -> None:
-        """Set a new plan for user"""
-        self.plan = plan
+        """Apply a package by increasing limit_raw"""
+        # Don't change the plan, just add the package bonus to limit_raw
+        # The plan stays as Premium, only limit_raw increases
         self.limit_raw += plan.limit
-        self.save(update_fields=["plan", "limit_raw"])
+        self.save(update_fields=["limit_raw"])
 
     def can_sent_inquiry_limit_reached_email(self) -> bool:
         """

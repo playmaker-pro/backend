@@ -88,7 +88,12 @@ class PremiumProfile(models.Model):
             plan = InquireService.get_plan_for_profile_type(profile_type, is_premium)
             
             user.userinquiry.plan = plan
-            user.userinquiry.save(update_fields=['plan'])
+            # When activating premium, reset counter to give full 30 inquiries
+            if is_premium:
+                user.userinquiry.counter_raw = 0
+                user.userinquiry.save(update_fields=['plan', 'counter_raw'])
+            else:
+                user.userinquiry.save(update_fields=['plan'])
         except Exception as e:
             # Log but don't crash - inquiry plan update is not critical
             import logging
@@ -277,8 +282,10 @@ class PremiumInquiriesProduct(models.Model):
         return self.get_inquiry_limit()
 
     def increment_counter(self) -> None:
-        self.current_counter += 1
-        self.save()
+        # Only increment if under the limit
+        if self.current_counter < self.INQUIRIES_LIMIT:
+            self.current_counter += 1
+            self.save()
 
     @property
     def subscription_lifespan(self) -> timedelta:
@@ -451,7 +458,7 @@ class Product(models.Model):
                 raise PermissionError("Players cannot buy inquiry packages.")
             if not user.profile.is_premium:
                 raise PermissionError("Product is available only for premium users.")
-            # Packages can only be bought when premium inquiries are exhausted (left == 0)
+            # Packages can only be bought when all available inquiries are exhausted
             if user.userinquiry.left > 0:
                 raise PermissionError(
                     "You need to use all inquiries before buying new ones."
