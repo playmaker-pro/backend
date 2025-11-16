@@ -42,6 +42,10 @@ def setup_premium_profile(
     if premium.is_trial and premium_type != profile_models.PremiumType.TRIAL:
         pp_object.inquiries.reset_counter(reset_plan=False)
 
+    # Send notification when trial is activated
+    if premium_type == profile_models.PremiumType.TRIAL:
+        NotificationService(profile.meta).notify_trial_active()
+
 
 @shared_task
 def post_create_profile_tasks(class_name: str, profile_id: int) -> None:

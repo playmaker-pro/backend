@@ -45,3 +45,11 @@ def post_save_inquiry_request(sender, instance, created, **kwargs):
                 clocked_time=timezone.now() + timezone.timedelta(days=7)
             ),
         )
+
+        # Send notification to freemium clubs when they receive a new inquiry
+        recipient_profile = instance.recipient.profile
+        if recipient_profile and not recipient_profile.is_premium:
+            from profiles.services import NotificationService
+
+            if hasattr(recipient_profile, "meta") and recipient_profile.meta:
+                NotificationService(recipient_profile.meta).notify_new_inquiry_for_freemium()
