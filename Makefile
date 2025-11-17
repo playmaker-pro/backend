@@ -73,7 +73,7 @@ start-celery-worker: ensure-logs
 .PHONY: stop-celery-worker
 stop-celery-worker:
 	@echo "Stopping Celery worker..."
-	celery -A backend control shutdown
+	poetry run celery -A backend control shutdown
 
 .PHONY: start-celery-beat
 start-celery-beat: ensure-logs
