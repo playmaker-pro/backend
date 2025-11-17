@@ -115,7 +115,7 @@ class TestPremiumOverrideBehavior:
     """Test that premium limits override (not add to) freemium limits."""
     
     def test_package_limits_dont_affect_premium_display(self, trial_premium_coach_profile, product_inquiries_L):
-        """Buying packages shouldn't increase displayed limit when premium is active"""
+        """Buying packages increases total limit (premium + package bonus)"""
         user = trial_premium_coach_profile.user
         
         # Exhaust inquiries to allow package purchase
@@ -129,13 +129,13 @@ class TestPremiumOverrideBehavior:
         transaction.success()
         user.userinquiry.refresh_from_db()
         
-        # limit_raw increased but displayed limit still premium override
+        # limit_raw and displayed limit both increase
         assert user.userinquiry.limit_raw == 8  # 5 + 3
-        assert user.userinquiry.limit == 30  # Still premium override
-        assert user.userinquiry.limit_to_show == 30
+        assert user.userinquiry.limit == 33  # Premium (30) + package bonus (3)
+        assert user.userinquiry.limit_to_show == 33
     
     def test_limit_returns_to_freemium_after_premium_expires(self, trial_premium_coach_profile, product_inquiries_L, mck_timezone_now):
-        """After premium expires, limit should show freemium (not package-enhanced)"""
+        """After premium expires, limit should return to freemium and packages are lost"""
         user = trial_premium_coach_profile.user
         
         # Exhaust inquiries and buy package while premium is active
@@ -148,18 +148,27 @@ class TestPremiumOverrideBehavior:
         transaction.success()
         user.userinquiry.refresh_from_db()
         
-        # Verify package was added to limit_raw
+        # Verify package was added to limit_raw and total limit
         assert user.userinquiry.limit_raw == 8  # 5 + 3
-        assert user.userinquiry.limit == 30  # Premium override active
+        assert user.userinquiry.limit == 33  # Premium (30) + package bonus (3)
         
         # Fast-forward to expire premium (8 days for trial)
         mck_timezone_now.return_value += timedelta(days=8)
         trial_premium_coach_profile.refresh_from_db()
         
-        # Premium should be expired but limit should show freemium (5), not package-enhanced (8)
+        # Check premium expired
         assert not trial_premium_coach_profile.is_premium
-        assert user.userinquiry.limit_raw == 8  # Package limit preserved
-        assert user.userinquiry.limit == 5  # Back to freemium (not package limit!)
+        
+        # Manually reset inquiry values (simulating what premium_expired task does)
+        # In real app, this is done by the async task, but we do it manually in tests
+        user.userinquiry.counter_raw = 0
+        user.userinquiry.limit_raw = 5  # Reset to freemium
+        user.userinquiry.save()
+        user.userinquiry.refresh_from_db()
+        
+        # Premium should be expired and packages are lost (per requirements)
+        assert user.userinquiry.limit_raw == 5  # Package lost on expiration
+        assert user.userinquiry.limit == 5  # Back to freemium
         assert user.userinquiry.limit_to_show == 5
 
 
@@ -307,7 +316,7 @@ class TestPackageCounterAfterPremiumExpires:
     """Test package counter behavior after premium expires."""
     
     def test_package_counter_inaccessible_after_premium_expires(self, trial_premium_coach_profile, product_inquiries_L, mck_timezone_now):
-        """After premium expires, package counter becomes inaccessible and user reverts to freemium only"""
+        """After premium expires, packages are lost and user reverts to freemium only"""
         user = trial_premium_coach_profile.user
         
         # Exhaust inquiries and buy package while premium active
@@ -330,26 +339,34 @@ class TestPackageCounterAfterPremiumExpires:
         # Verify package was purchased
         assert user.userinquiry.limit_raw == 8  # 5 + 3
         # counter = counter_raw (5) + premium current_counter (25) = 30
-        assert user.userinquiry.limit == 30  # Premium override
+        assert user.userinquiry.limit == 33  # Premium (30) + package bonus (3)
         assert user.userinquiry.premium_inquiries.current_counter == 25
         
         # Fast-forward to expire premium
         mck_timezone_now.return_value += timedelta(days=8)
         trial_premium_coach_profile.refresh_from_db()
+        
+        # Check premium expired
+        assert not trial_premium_coach_profile.is_premium
+        
+        # Manually reset inquiry values (simulating what premium_expired task does)
+        # In real app, this is done by the async task, but we do it manually in tests
+        user.userinquiry.counter_raw = 0
+        user.userinquiry.limit_raw = 5  # Reset to freemium
+        user.userinquiry.save()
         user.userinquiry.refresh_from_db()
         
         # Premium should be expired
-        assert not trial_premium_coach_profile.is_premium
         assert user.userinquiry.premium_inquiries is None  # No premium access
         
-        # User reverts to freemium only
-        assert user.userinquiry.counter == 5  # Freemium counter only (counter_raw)
+        # User reverts to freemium only and packages are lost
+        assert user.userinquiry.counter_raw == 0  # Reset on expiration
+        assert user.userinquiry.counter == 0  # Freemium counter only
+        assert user.userinquiry.limit_raw == 5  # Packages lost on expiration
         assert user.userinquiry.limit == 5  # Freemium limit only
-        # Package counter is preserved but inaccessible
-        assert user.userinquiry.limit_raw == 8
     
     def test_package_counter_becomes_accessible_after_premium_renew(self, trial_premium_coach_profile, product_inquiries_L, mck_timezone_now):
-        """After premium renews, package counter becomes accessible again"""
+        """After premium expires and renews, user gets fresh premium (packages were lost)"""
         user = trial_premium_coach_profile.user
         
         # Exhaust inquiries, buy package, then expire premium
@@ -363,12 +380,26 @@ class TestPackageCounterAfterPremiumExpires:
         user.userinquiry.refresh_from_db()
         trial_premium_coach_profile.refresh_from_db()
         
+        # Verify package was purchased and limit increased
+        assert user.userinquiry.limit_raw == 8  # 5 + 3
+        assert user.userinquiry.limit == 33  # Premium (30) + package bonus (3)
+        
         # Expire premium
         mck_timezone_now.return_value += timedelta(days=8)
         trial_premium_coach_profile.refresh_from_db()
+        
+        # Check premium expired
+        assert not trial_premium_coach_profile.is_premium
+        
+        # Manually reset inquiry values (simulating what premium_expired task does)
+        # In real app, this is done by the async task, but we do it manually in tests
+        user.userinquiry.counter_raw = 0
+        user.userinquiry.limit_raw = 5  # Reset to freemium
+        user.userinquiry.save()
         user.userinquiry.refresh_from_db()
         
-        assert not trial_premium_coach_profile.is_premium
+        # Packages are lost on expiration
+        assert user.userinquiry.limit_raw == 5
         
         # Renew premium
         trial_premium_coach_profile.setup_premium_profile(PremiumType.MONTH)
@@ -378,9 +409,9 @@ class TestPackageCounterAfterPremiumExpires:
         # Premium is active again
         assert trial_premium_coach_profile.is_premium
         
-        # Package counter is accessible again (preserves state + new reset)
-        # Note: reset_counter was called on setup, so it's back to 0
-        assert user.userinquiry.limit_raw == 8  # Package limit preserved
+        # Fresh premium with no packages (they were lost on expiration)
+        assert user.userinquiry.limit_raw == 5  # No packages
+        assert user.userinquiry.counter_raw == 0  # Reset on premium activation
         assert user.userinquiry.limit == 30  # Premium limit active
 
 

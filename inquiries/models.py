@@ -319,11 +319,12 @@ class UserInquiry(models.Model):
         return max(days_until_next_reference, 0)
 
     def set_new_plan(self, plan: InquiryPlan) -> None:
-        """Apply a package by increasing limit_raw"""
-        # Don't change the plan, just add the package bonus to limit_raw
-        # The plan stays as Premium, only limit_raw increases
+        """Apply a package by increasing limit_raw and updating plan"""
+        # Update plan to reflect the package purchased
+        self.plan = plan
+        # Add package bonus to limit_raw
         self.limit_raw += plan.limit
-        self.save(update_fields=["limit_raw"])
+        self.save(update_fields=["plan", "limit_raw"])
 
     def can_sent_inquiry_limit_reached_email(self) -> bool:
         """

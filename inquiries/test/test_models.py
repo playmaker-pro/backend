@@ -41,8 +41,10 @@ class TestModels(TestCase):
     def test_default_plan_should_exist(self):
         assert InquiryPlan.objects.get(default=True)
 
-    def test_player_user_should_have_basic_plan(self):
-        assert self.player.user.userinquiry.plan.default is True
+    def test_player_user_should_have_freemium_player_plan(self):
+        """Player without premium should have FREEMIUM_PLAYER plan (10 inquiries)"""
+        assert self.player.user.userinquiry.plan.type_ref == "FREEMIUM_PLAYER"
+        assert self.player.user.userinquiry.limit == 10  # Player freemium limit
 
     # def test_plans_with_premium_profile(self):
     #     assert self.player.user.userinquiry.counter == 0

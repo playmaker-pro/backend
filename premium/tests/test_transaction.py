@@ -129,11 +129,12 @@ def test_check_if_premium_inquiries_refresh(
 
     # Buying L product adds 3 to limit_raw (from plan.limit=3 in InquiryPlan)
     # Bought 2x L products, so: 5 (original) + 3 (first L) + 3 (second L) = 11
-    # With freemium=5, we're still at 10 counter, so: 30 (limit) - 10 (used) = 20 left
-    assert user.userinquiry.left == 20
-    assert user.userinquiry.left_to_show == 20
-    assert user.userinquiry.limit == 30  # Still premium override (doesn't add to it)
-    assert user.userinquiry.limit_to_show == 30
+    # Packages ADD to premium limit: 30 (base) + 6 (packages) = 36
+    # With counter at 10 (5 freemium + 5 premium): 36 - 10 = 26 left
+    assert user.userinquiry.left == 26
+    assert user.userinquiry.left_to_show == 26
+    assert user.userinquiry.limit == 36  # Premium (30) + packages (6)
+    assert user.userinquiry.limit_to_show == 36
     assert user.userinquiry.counter == 10  # 5 freemium + 5 premium
     assert user.userinquiry.counter_raw == 5
     assert user.userinquiry.limit_raw == 11  # 5 original + 3 from first L + 3 from second L
@@ -146,11 +147,16 @@ def test_check_if_premium_inquiries_refresh(
     new_current_date = mck_timezone_now.return_value.date()
     coach_profile.products.inquiries.check_refresh()
     user.userinquiry.refresh_from_db()
+    coach_profile.refresh_from_db()
 
-    # After 91 days, premium resets but freemium doesn't
+    # After 91 days, premium counter resets but freemium doesn't
     # Freemium was at 5 (full), stays at 5. Premium was at 5, resets to 0
-    assert user.userinquiry.left == 25  # 30 - 5 freemium (premium reset)
-    assert user.userinquiry.limit == 30
+    # Packages were bought so limit_raw=11 stays preserved after reset_plan
+    # Limit includes package bonus: 30 (premium) + 6 (packages from limit_raw=11) = 36
+    assert user.userinquiry.counter_raw == 5  # Freemium counter
+    assert user.userinquiry.limit_raw == 11  # Packages preserved
+    assert user.userinquiry.limit == 36  # Premium (30) + packages (6)
+    assert user.userinquiry.left == 31  # 36 - 5 freemium (premium counter reset)
     assert user.userinquiry.counter == 5  # Only freemium (5)
     assert user.userinquiry.counter_raw == 5
     assert user.userinquiry.limit_raw == 11  # Still 11 from earlier (5 + 6 from 2x L products)
@@ -193,10 +199,12 @@ def test_premium_inquiries_on_trial(
     assert len(outbox) == 1
     assert outbox[0].to[0] == trial_premium_coach_profile.user.email
     assert outbox[0].subject == "🕒 Koniec próbnej rundy – co dalej?"
-    assert user.userinquiry.left == 2  # 5 - 3 (used 3 out of 5 freemium)
-    assert user.userinquiry.limit == 5  # Back to freemium limit for coach (Club-like)
-    assert user.userinquiry.counter == 3  # Freemium only (3 used)
-    assert user.userinquiry.counter_raw == 3
+    # After premium expires, counter_raw is reset to 0 by premium_expired task
+    user.userinquiry.refresh_from_db()
+    assert user.userinquiry.left == 5  # 5 - 0 (reset on expiration)
+    assert user.userinquiry.limit == 5  # Back to freemium limit for coach
+    assert user.userinquiry.counter == 0  # Reset on expiration
+    assert user.userinquiry.counter_raw == 0  # Reset on expiration
     assert not trial_premium_coach_profile.has_premium_inquiries
     assert not trial_premium_coach_profile.products.inquiries.is_active
     assert (
@@ -206,12 +214,14 @@ def test_premium_inquiries_on_trial(
 
     trial_premium_coach_profile.setup_premium_profile(PremiumType.YEAR)
     trial_premium_coach_profile.refresh_from_db()
+    user.userinquiry.refresh_from_db()
 
     assert trial_premium_coach_profile.has_premium_inquiries
     assert user.userinquiry.limit == 30  # Coach premium limit (Club-like)
-    assert user.userinquiry.left == 27  # 30 - 3 (counter stays from before)
-    assert user.userinquiry.counter == 3  # Freemium counter stays (3 used)
-    assert user.userinquiry.counter_raw == 3  # 3 out of 5 freemium
+    # Counter was reset when premium activated
+    assert user.userinquiry.left == 30  # 30 - 0 (fresh start)
+    assert user.userinquiry.counter == 0  # Reset on activation
+    assert user.userinquiry.counter_raw == 0  # Reset on activation
     assert trial_premium_coach_profile.products.inquiries.is_active
     assert (
         trial_premium_coach_profile.products.inquiries.counter_updated_at.date()
@@ -225,45 +235,47 @@ def test_premium_inquiries_on_trial(
     # Premium counter NOT reset yet (coach uses 90-day cycle like clubs)
     # After 30 days, nothing changes (need 90 days for reset)
     assert user.userinquiry.limit == 30  # Coach premium limit (Club-like)
-    assert user.userinquiry.left == 27  # 30 - 3 (counter unchanged, no reset yet)
-    assert user.userinquiry.counter == 3  # Freemium only (no premium used yet)
-    assert user.userinquiry.counter_raw == 3
+    assert user.userinquiry.left == 30  # 30 - 0 (no inquiries used yet)
+    assert user.userinquiry.counter == 0  # No inquiries used yet
+    assert user.userinquiry.counter_raw == 0
 
-    # increment 10x (2 freemium left + 8 premium = exactly at limit)
+    # increment 10x (all go to freemium first, then premium)
     for _ in range(10):
         user.userinquiry.increment()
 
-    # With override logic: limit=30 (coach Club-like premium), counter=13 (5 freemium + 8 premium)
-    assert user.userinquiry.left == 17  # 30 - 13 (5 freemium + 8 premium used)
+    # With new logic: limit=30, counter=10 (5 freemium + 5 premium)
+    assert user.userinquiry.left == 20  # 30 - 10
     assert user.userinquiry.limit == 30  # Coach premium limit (override, Club-like)
-    assert user.userinquiry.counter == 13  # 5 freemium + 8 premium (capped at limit)
+    assert user.userinquiry.counter == 10  # 5 freemium + 5 premium
     assert user.userinquiry.counter_raw == 5  # All 5 freemium used
     assert user.userinquiry.limit_raw == 5  # Coach freemium limit
-    assert trial_premium_coach_profile.products.inquiries.current_counter == 8  # Premium counter
+    assert trial_premium_coach_profile.products.inquiries.current_counter == 5  # Premium counter
     assert user.userinquiry.can_make_request  # Still 17 left
 
     transaction = Transaction.objects.create(product=product_inquiries_XL, user=user)
     transaction.success()
 
-    # Premium override still applies - limit stays 30 (not increased by limit_raw)
-    # Buying package doesn't change counter, only limit_raw (which is not used in override logic)
-    assert user.userinquiry.left == 17  # 30 - 13 (unchanged)
-    assert user.userinquiry.limit == 30  # Coach premium limit (Club-like, override), not affected by limit_raw
-    assert user.userinquiry.limit_to_show == 30  # Premium override
-    assert user.userinquiry.left_to_show == 17  # 30 - 13
-    assert user.userinquiry.counter == 13  # Unchanged (5 freemium + 8 premium)
+    # Packages ADD to premium limit: 30 (base) + 5 (XL package) = 35
+    # Counter unchanged: 10 (5 freemium + 5 premium)
+    assert user.userinquiry.left == 25  # 35 - 10
+    assert user.userinquiry.limit == 35  # Premium (30) + package (5)
+    assert user.userinquiry.limit_to_show == 35
+    assert user.userinquiry.left_to_show == 25  # 35 - 10
+    assert user.userinquiry.counter == 10  # Unchanged (5 freemium + 5 premium)
     assert user.userinquiry.counter_raw == 5  # Freemium
-    assert user.userinquiry.limit_raw == 10  # 5 original + 5 from XL (not used in calc)
+    assert user.userinquiry.limit_raw == 10  # 5 original + 5 from XL
     assert user.userinquiry.can_make_request
 
     mck_timezone_now.return_value += timedelta(days=370, hours=1)
 
     assert not trial_premium_coach_profile.is_premium
     assert outbox[-1].to[0] == trial_premium_coach_profile.user.email
-    # After premium expires, counter_raw (5) is capped to freemium limit (5), so all 5 are used
-    assert user.userinquiry.left == 0  # 5 - 5 (all freemium used, premium was capped)
-    assert user.userinquiry.limit == 5  # Back to freemium limit (Club-like)
-    assert user.userinquiry.counter == 5  # All 5 freemium (premium capped to limit)
+    # After premium expires, counter and limit are reset by premium_expired task
+    user.userinquiry.refresh_from_db()
+    assert user.userinquiry.left == 5  # 5 - 0 (reset on expiration)
+    assert user.userinquiry.limit == 5  # Back to freemium limit
+    assert user.userinquiry.counter_raw == 0  # Reset on expiration
+    assert user.userinquiry.counter == 0  # Reset on expiration
 
 
 def test_try_trial_after_subscription(player_profile, mck_timezone_now, outbox):

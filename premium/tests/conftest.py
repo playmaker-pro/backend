@@ -77,6 +77,7 @@ def product_premium_player_year():
     return Product.objects.get(name="PLAYER_PREMIUM_PROFILE_YEAR")
 
 
+# Old products (kept for backward compatibility tests)
 @pytest.fixture
 def product_premium_other_month():
     return Product.objects.get(name="PREMIUM_PROFILE_MONTH")
@@ -85,3 +86,25 @@ def product_premium_other_month():
 @pytest.fixture
 def product_premium_other_year():
     return Product.objects.get(name="PREMIUM_PROFILE_YEAR")
+
+
+# New products for Guest
+@pytest.fixture
+def product_premium_guest_month():
+    return Product.objects.get(name="GUEST_PREMIUM_PROFILE_MONTH")
+
+
+@pytest.fixture
+def product_premium_guest_year():
+    return Product.objects.get(name="GUEST_PREMIUM_PROFILE_YEAR")
+
+
+# New products for Other (Club/Coach/etc.)
+@pytest.fixture
+def product_premium_other_quarter():
+    return Product.objects.get(name="OTHER_PREMIUM_PROFILE_QUARTER")
+
+
+@pytest.fixture
+def product_premium_other_year_new():
+    return Product.objects.get(name="OTHER_PREMIUM_PROFILE_YEAR")

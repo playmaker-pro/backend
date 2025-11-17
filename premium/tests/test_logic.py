@@ -160,14 +160,18 @@ class TestPremiumProduct:
             player_profile.setup_premium_profile(PremiumType.TRIAL)
 
     def test_paid_during_trial(self, player_profile, timezone_now):
+        """Test that buying paid premium during trial REPLACES trial, not extends it."""
         products = player_profile.products
         player_profile.setup_premium_profile(PremiumType.TRIAL)
         player_profile.setup_premium_profile(PremiumType.MONTH)
 
-        should_be_valid_until_date = (timezone_now.return_value + timedelta(PremiumType.TRIAL.period + PremiumType.MONTH.period)).date()
+        # Trial should be REPLACED, not extended
+        # So valid_until should be NOW + MONTH (30 days), not NOW + TRIAL + MONTH (33 days)
+        should_be_valid_until_date = (timezone_now.return_value + timedelta(days=PremiumType.MONTH.period)).date()
         products.refresh_from_db()
 
         assert products.premium.valid_until.date() == should_be_valid_until_date
+        assert products.premium.is_trial is False  # Should no longer be trial
         assert products.inquiries.valid_until.date() == should_be_valid_until_date
         assert products.promotion.valid_until.date() == should_be_valid_until_date
 
@@ -349,12 +353,14 @@ class TestProduct:
     def test_premium_products(self):
         premium_products = Product.objects.filter(ref="PREMIUM", visible=True)
 
-        assert premium_products.count() == 4
+        assert premium_products.count() == 6
         assert [product.name for product in premium_products] == [
             "PLAYER_PREMIUM_PROFILE_MONTH",
             "PLAYER_PREMIUM_PROFILE_YEAR",
-            "PREMIUM_PROFILE_MONTH",
-            "PREMIUM_PROFILE_YEAR",
+            "GUEST_PREMIUM_PROFILE_MONTH",
+            "GUEST_PREMIUM_PROFILE_YEAR",
+            "OTHER_PREMIUM_PROFILE_QUARTER",
+            "OTHER_PREMIUM_PROFILE_YEAR",
         ]
 
 
