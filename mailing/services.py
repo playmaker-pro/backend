@@ -1,8 +1,14 @@
 import logging
+import os
 import uuid
+from dataclasses import dataclass
 
+from django.conf import settings
+from django.core.mail import EmailMultiAlternatives
 from django.db.models import Count, F, Q
 from django.utils import timezone
+from typing import List
+from email.mime.image import MIMEImage
 
 from mailing.schemas import EmailTemplateRegistry, Envelope, MailContent
 from mailing.utils import build_email_context
@@ -379,3 +385,98 @@ class PostmanService:
         self.logger.info(
             "Invite friends reminder email has been sent to %d users", qs.count()
         )
+
+
+@dataclass
+class CIDImageConfig:
+    """Configuration for a CID image attachment."""
+    filename: str
+    cid: str
+    path: str
+    mime_type: str = 'image/png'
+
+    def exists(self) -> bool:
+        """Check if the image file exists."""
+        return os.path.exists(self.path)
+
+    @classmethod
+    def from_dict(cls, config: dict) -> 'CIDImageConfig':
+        """Create CIDImageConfig from dictionary configuration."""
+        return cls(
+            filename=config['filename'],
+            cid=config['cid'],
+            path=config['path'],
+            mime_type=config.get('mime_type', 'image/png')
+        )
+
+
+class EmailCIDService:
+    """Service for attaching CID images to emails."""
+
+    @staticmethod
+    def get_standard_images() -> List[CIDImageConfig]:
+        """
+        Get the standard CID images configuration from Django settings.
+        """
+        cid_config = getattr(settings, 'EMAIL_CID_IMAGES', {})
+        return [CIDImageConfig.from_dict(config) for config in cid_config.values()]
+
+    @staticmethod
+    def attach_image(email: EmailMultiAlternatives, image_config: CIDImageConfig) -> None:
+        """
+        Attach a single CID image to an email.
+        """
+        if not image_config.exists():
+            logger.warning(f"CID image not found: {image_config.path}")
+            return
+
+        try:
+            with open(image_config.path, 'rb') as f:
+                image_data = f.read()
+
+            subtype = image_config.mime_type.split('/')[-1]
+
+            # Create MIME image attachment
+            attachment = MIMEImage(image_data, _subtype=subtype)
+
+            # Set Content-ID header (this is the key for CID references)
+            attachment.add_header('Content-ID', f'<{image_config.cid}>')
+            attachment.add_header('Content-Disposition', 'inline', filename=image_config.filename)
+
+            # Attach to email
+            email.attach(attachment)
+
+        except Exception as e:
+            logger.warning(f"Failed to attach CID image {image_config.filename}: {str(e)}")
+
+    @staticmethod
+    def attach_standard_images(email: EmailMultiAlternatives) -> None:
+        """
+        Attach standard header and footer images to an email.
+        """
+        images = EmailCIDService.get_standard_images()
+
+        for image_config in images:
+            EmailCIDService.attach_image(email, image_config)
+
+    @staticmethod
+    def create_email_with_cid_images(**data) -> EmailMultiAlternatives:
+        """Create EmailMultiAlternatives instance with CID images attached."""
+        # Create email instance
+        email = EmailMultiAlternatives(
+            subject=data.get('subject', ''),
+            body=data.get('message', ''),
+            from_email=data.get('from_email'),
+            to=data.get('recipient_list', []),
+            connection=data.get('connection')
+        )
+
+        # Add HTML alternative if provided
+        html_message = data.get('html_message')
+        if html_message:
+            email.attach_alternative(html_message, "text/html")
+
+        # Attach CID images
+        EmailCIDService.attach_standard_images(email)
+
+        return email

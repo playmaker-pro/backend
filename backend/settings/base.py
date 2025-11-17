@@ -341,6 +341,16 @@ ANNOUNCEMENT_INITAL_PLAN = ANNOUNCEMENT_DEFAULT_PLANS[0]
 
 SEASON_DEFINITION = {"middle": 7}
 
+# Email CID Images Configuration
+EMAIL_CID_IMAGES = {
+    'header': {
+        'filename': 'playmaker_header.png',
+        'cid': 'playmaker_header.png',
+        'path': os.path.join(BASE_DIR, 'mailing/images/playmaker_header.png'),
+        'mime_type': 'image/png',
+    },
+}
+
 
 # messages
 MESSAGE_TAGS = {
