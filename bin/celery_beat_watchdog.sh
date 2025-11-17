@@ -1,16 +1,15 @@
 #!/bin/bash
 # Watchdog script for Celery Beat - auto-restarts on failure
 
-PROJECT_NAME="$1"
-LOG_FILE="$2"
-PID_FILE="$3"
+LOG_FILE="$1"
+PID_FILE="$2"
 
-if [ -z "$PROJECT_NAME" ] || [ -z "$LOG_FILE" ] || [ -z "$PID_FILE" ]; then
-    echo "Usage: $0 <project_name> <log_file> <pid_file>"
+if [ -z "$LOG_FILE" ] || [ -z "$PID_FILE" ]; then
+    echo "Usage: $0 <log_file> <pid_file>"
     exit 1
 fi
 
-echo "Starting Celery Beat Watchdog for $PROJECT_NAME" | tee -a "$LOG_FILE"
+echo "Starting Celery Beat Watchdog" | tee -a "$LOG_FILE"
 
 while true; do
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting Celery beat..." | tee -a "$LOG_FILE"

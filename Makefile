@@ -2,8 +2,7 @@ SHELL := /bin/bash
 LOG_DIR=.logs
 CELERY_LOG=$(LOG_DIR)/celery_worker.log
 BEAT_LOG=$(LOG_DIR)/celery_beat.log
-PROJECT_NAME := $(shell basename $(PWD))
-BEAT_PID_FILE := .celerybeat-$(PROJECT_NAME).pid
+BEAT_PID_FILE := .celerybeat.pid
 
 .PHONY: test
 test:
@@ -71,28 +70,28 @@ stop-celery:
 
 .PHONY: start-celery-worker
 start-celery-worker: ensure-logs
-	@echo "Starting Celery worker with watchdog in screen session celery-worker-$(PROJECT_NAME)..."
-	screen -dmS celery-worker-$(PROJECT_NAME) bash bin/celery_worker_watchdog.sh "$(PROJECT_NAME)" "$(CELERY_LOG)"
-	@echo "Celery worker started. Attach with: screen -r celery-worker-$(PROJECT_NAME)"
+	@echo "Starting Celery worker with watchdog in screen session celery-worker..."
+	screen -dmS celery-worker bash bin/celery_worker_watchdog.sh "$(CELERY_LOG)"
+	@echo "Celery worker started. Attach with: screen -r celery-worker"
 
 .PHONY: stop-celery-worker
 stop-celery-worker:
 	@echo "Stopping Celery worker..."
-	@screen -X -S celery-worker-$(PROJECT_NAME) quit 2>/dev/null || true
-	@pkill -f "worker_$(PROJECT_NAME)@" 2>/dev/null || true
+	@screen -X -S celery-worker quit 2>/dev/null || true
+	@pkill -f 'celery -A backend worker' 2>/dev/null || true
 	@sleep 1
 	@echo "Celery worker stopped."
 
 .PHONY: start-celery-beat
 start-celery-beat: ensure-logs
-	@echo "Starting Celery Beat with watchdog in screen session celery-beat-$(PROJECT_NAME)..."
-	screen -dmS celery-beat-$(PROJECT_NAME) bash bin/celery_beat_watchdog.sh "$(PROJECT_NAME)" "$(BEAT_LOG)" "$(BEAT_PID_FILE)"
-	@echo "Celery beat started. Attach with: screen -r celery-beat-$(PROJECT_NAME)"
+	@echo "Starting Celery Beat with watchdog in screen session celery-beat..."
+	screen -dmS celery-beat bash bin/celery_beat_watchdog.sh "$(BEAT_LOG)" "$(BEAT_PID_FILE)"
+	@echo "Celery beat started. Attach with: screen -r celery-beat"
 
 .PHONY: stop-celery-beat
 stop-celery-beat:
 	@echo "Stopping Celery Beat..."
-	@screen -X -S celery-beat-$(PROJECT_NAME) quit 2>/dev/null || true
+	@screen -X -S celery-beat quit 2>/dev/null || true
 	@if [ -f $(BEAT_PID_FILE) ]; then kill $$(cat $(BEAT_PID_FILE)) 2>/dev/null || true; fi
 	@pkill -f 'celery -A backend beat' 2>/dev/null || true
 	@rm -f $(BEAT_PID_FILE) 2>/dev/null || true
@@ -101,13 +100,13 @@ stop-celery-beat:
 
 .PHONY: status-celery
 status-celery:
-	@echo "=== Celery Status for $(PROJECT_NAME) ==="
+	@echo "=== Celery Status ==="
 	@echo ""
 	@echo "Screen sessions:"
-	@screen -ls | grep -E "celery-(worker|beat)-$(PROJECT_NAME)" || echo "  No screen sessions found"
+	@screen -ls | grep -E "celery-(worker|beat)" || echo "  No screen sessions found"
 	@echo ""
 	@echo "Celery processes:"
-	@ps aux | grep -E "celery.*$(PROJECT_NAME)|celery -A backend" | grep -v grep || echo "  No celery processes found"
+	@ps aux | grep -E "celery -A backend" | grep -v grep || echo "  No celery processes found"
 	@echo ""
 	@echo "PID files:"
 	@ls -la $(BEAT_PID_FILE) 2>/dev/null || echo "  No beat PID file found"
@@ -122,11 +121,11 @@ logs-celery-beat:
 
 .PHONY: attach-celery-worker
 attach-celery-worker:
-	@screen -r celery-worker-$(PROJECT_NAME)
+	@screen -r celery-worker
 
 .PHONY: attach-celery-beat
 attach-celery-beat:
-	@screen -r celery-beat-$(PROJECT_NAME)
+	@screen -r celery-beat
 
 
 .PHONY: shell

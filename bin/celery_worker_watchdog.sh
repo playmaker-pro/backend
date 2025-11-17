@@ -1,15 +1,14 @@
 #!/bin/bash
 # Watchdog script for Celery Worker - auto-restarts on failure
 
-PROJECT_NAME="$1"
-LOG_FILE="$2"
+LOG_FILE="$1"
 
-if [ -z "$PROJECT_NAME" ] || [ -z "$LOG_FILE" ]; then
-    echo "Usage: $0 <project_name> <log_file>"
+if [ -z "$LOG_FILE" ]; then
+    echo "Usage: $0 <log_file>"
     exit 1
 fi
 
-echo "Starting Celery Worker Watchdog for $PROJECT_NAME" | tee -a "$LOG_FILE"
+echo "Starting Celery Worker Watchdog" | tee -a "$LOG_FILE"
 
 while true; do
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting Celery worker..." | tee -a "$LOG_FILE"
@@ -19,7 +18,6 @@ while true; do
         --without-mingle \
         --without-gossip \
         --loglevel=DEBUG \
-        -n "worker_${PROJECT_NAME}@%h" \
         --max-tasks-per-child=1000 \
         --task-events \
         --pool=prefork 2>&1 | tee -a "$LOG_FILE"
