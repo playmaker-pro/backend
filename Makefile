@@ -2,7 +2,7 @@ SHELL := /bin/bash
 LOG_DIR=.logs
 CELERY_LOG=$(LOG_DIR)/celery_worker.log
 BEAT_LOG=$(LOG_DIR)/celery_beat.log
-BEAT_PID_FILE := .celerybeat.pid
+BEAT_PID_FILE := .celerybeat-$(PROJECT_NAME).pid
 
 .PHONY: test
 test:
@@ -36,15 +36,10 @@ startapp:
 
 
 .PHONY: restart 
-restart: stop start
-
-.PHONY: stop
-stop: stop-celery
-
-.PHONY: start
-start: start-celery
-
-restart-touch: tmp/restart.txt
+restart: tmp/restart.txt stop start
+stop: stop-celery stop-celery-beat
+start: start-celery start-celery-beat
+restart:
 	@mkdir -p tmp
 	touch tmp/restart.txt
 
@@ -70,62 +65,25 @@ stop-celery:
 
 .PHONY: start-celery-worker
 start-celery-worker: ensure-logs
-	@echo "Starting Celery worker with watchdog in screen session celery-worker..."
-	screen -dmS celery-worker bash bin/celery_worker_watchdog.sh "$(CELERY_LOG)"
-	@echo "Celery worker started. Attach with: screen -r celery-worker"
+	@echo "Starting Celery worker in background session..."
+	nohup poetry run celery -A backend \
+	worker --autoscale=0,6 --without-mingle --without-gossip --loglevel=DEBUG \
+	--max-tasks-per-child=1000 --task-events --pool=prefork > $(CELERY_LOG) 2>&1 &
 
 .PHONY: stop-celery-worker
 stop-celery-worker:
 	@echo "Stopping Celery worker..."
-	@screen -X -S celery-worker quit 2>/dev/null || true
-	@pkill -f 'celery -A backend worker' 2>/dev/null || true
-	@sleep 1
-	@echo "Celery worker stopped."
+	celery -A backend control shutdown
 
 .PHONY: start-celery-beat
 start-celery-beat: ensure-logs
-	@echo "Starting Celery Beat with watchdog in screen session celery-beat..."
-	screen -dmS celery-beat bash bin/celery_beat_watchdog.sh "$(BEAT_LOG)" "$(BEAT_PID_FILE)"
-	@echo "Celery beat started. Attach with: screen -r celery-beat"
+	@echo "Starting Celery Beat in background session..."
+	nohup poetry run celery -A backend beat -l info --scheduler django --pidfile .celerybeat.pid > $(BEAT_LOG) 2>&1 &
 
 .PHONY: stop-celery-beat
 stop-celery-beat:
 	@echo "Stopping Celery Beat..."
-	@screen -X -S celery-beat quit 2>/dev/null || true
-	@if [ -f $(BEAT_PID_FILE) ]; then kill $$(cat $(BEAT_PID_FILE)) 2>/dev/null || true; fi
-	@pkill -f 'celery -A backend beat' 2>/dev/null || true
-	@rm -f $(BEAT_PID_FILE) 2>/dev/null || true
-	@sleep 1
-	@echo "Celery beat stopped."
-
-.PHONY: status-celery
-status-celery:
-	@echo "=== Celery Status ==="
-	@echo ""
-	@echo "Screen sessions:"
-	@screen -ls | grep -E "celery-(worker|beat)" || echo "  No screen sessions found"
-	@echo ""
-	@echo "Celery processes:"
-	@ps aux | grep -E "celery -A backend" | grep -v grep || echo "  No celery processes found"
-	@echo ""
-	@echo "PID files:"
-	@ls -la $(BEAT_PID_FILE) 2>/dev/null || echo "  No beat PID file found"
-
-.PHONY: logs-celery-worker
-logs-celery-worker:
-	@tail -f $(CELERY_LOG)
-
-.PHONY: logs-celery-beat
-logs-celery-beat:
-	@tail -f $(BEAT_LOG)
-
-.PHONY: attach-celery-worker
-attach-celery-worker:
-	@screen -r celery-worker
-
-.PHONY: attach-celery-beat
-attach-celery-beat:
-	@screen -r celery-beat
+	kill $$(cat .celerybeat.pid)
 
 
 .PHONY: shell
