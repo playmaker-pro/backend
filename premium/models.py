@@ -85,13 +85,20 @@ class PremiumProfile(models.Model):
             if not hasattr(user, 'userinquiry'):
                 return
             
-            # When activating premium, reset counter and set limit_raw to freemium limit
-            # Note: Plan stays as BASIC - premium limit is controlled by premium_inquiries product
+            # Set appropriate plan based on premium status
+            from inquiries.services import InquireService
+            profile_type = self.product.profile.__class__.__name__
+            plan = InquireService.get_plan_for_profile_type(profile_type, is_premium)
+            user.userinquiry.plan = plan
+            
+            # When activating premium, reset counter and initialize limit_raw to freemium baseline
             if is_premium:
                 user.userinquiry.counter_raw = 0
                 # Set limit_raw to profile's freemium limit (10 for Player, 5 for others)
                 user.userinquiry.limit_raw = user.userinquiry.get_freemium_limit()
-                user.userinquiry.save(update_fields=['counter_raw', 'limit_raw'])
+                user.userinquiry.save(update_fields=['plan', 'counter_raw', 'limit_raw'])
+            else:
+                user.userinquiry.save(update_fields=['plan'])
         except Exception as e:
             # Log but don't crash - inquiry update is not critical
             import logging
@@ -348,7 +355,8 @@ class PremiumInquiriesProduct(models.Model):
         # self.counter_updated_at = timezone.now()
         self.valid_since = timezone.now()
         self.valid_until = get_date_days_after(self.valid_since, days=period)
-        self.reset_counter(commit=False)
+        # Don't reset plan when initializing - plan is set by PremiumProfile._update_inquiry_plan
+        self.reset_counter(reset_plan=False, commit=False)
 
     @property
     def is_active(self) -> bool:

@@ -3,8 +3,6 @@
 import django.db.models.deletion
 from django.db import migrations, models
 
-from inquiries.schemas import InquiryPlanTypeRef
-
 
 def delete_old_objects(apps, schema_editor):
     InquiryPlan = apps.get_model("inquiries", "InquiryPlan")
@@ -15,23 +13,17 @@ def delete_old_objects(apps, schema_editor):
 def create_new_objects(apps, schema_editor):
     InquiryPlan = apps.get_model("inquiries", "InquiryPlan")
 
-    for inquiry_plan_ref in InquiryPlanTypeRef:
-        data = {
-            "type_ref": inquiry_plan_ref,
-            "limit": inquiry_plan_ref.inquiry_count,
-            "name": (
-                f"Premium {inquiry_plan_ref.inquiry_count} zapytania"
-                if inquiry_plan_ref != "BASIC"
-                else "Podstawowy plan"
-            ),
-            "description": f"Dodatkowe {inquiry_plan_ref.inquiry_count} zapytań dostępne dla profilów premium"
-            if inquiry_plan_ref != "BASIC"
-            else "Podstawowy plan",
-        }
-        if inquiry_plan_ref == "BASIC":
-            InquiryPlan.objects.create(default=True, **data)
-        else:
-            InquiryPlan.objects.create(**data)
+    # Hardcoded list of plan types that existed at the time of this migration
+    # DO NOT use InquiryPlanTypeRef enum here as it may have new values added later
+    plans_to_create = [
+        {"type_ref": "BASIC", "limit": 2, "name": "Podstawowy plan", "description": "Podstawowy plan", "default": True},
+        {"type_ref": "PREMIUM_INQUIRIES_L", "limit": 3, "name": "Premium 3 zapytania", "description": "Dodatkowe 3 zapytań dostępne dla profilów premium", "default": False},
+        {"type_ref": "PREMIUM_INQUIRIES_XL", "limit": 5, "name": "Premium 5 zapytania", "description": "Dodatkowe 5 zapytań dostępne dla profilów premium", "default": False},
+        {"type_ref": "PREMIUM_INQUIRIES_XXL", "limit": 10, "name": "Premium 10 zapytania", "description": "Dodatkowe 10 zapytań dostępne dla profilów premium", "default": False},
+    ]
+
+    for plan_data in plans_to_create:
+        InquiryPlan.objects.create(**plan_data)
 
 
 class Migration(migrations.Migration):

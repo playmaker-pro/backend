@@ -290,7 +290,8 @@ def test_extend_premium_during_trial(
     assert trial_premium_player_profile.user.userinquiry.limit_raw == 10
     assert trial_premium_player_profile.user.userinquiry.limit == 30
     assert trial_premium_player_profile.user.userinquiry.left == 30  # Fresh premium (0 used)
-    assert trial_premium_player_profile.user.userinquiry.plan.type_ref == "BASIC"
+    # Plan should be PREMIUM_PLAYER when premium is active
+    assert trial_premium_player_profile.user.userinquiry.plan.type_ref == "PREMIUM_PLAYER"
 
 
 def test_extend_premium_with_trial(

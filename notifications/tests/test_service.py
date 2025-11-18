@@ -484,6 +484,118 @@ class TestNotifications:
             icon="inquiry",
         ).exists()
 
+    def test_notify_hidden_inquiry_for_freemium_non_player(self, player_profile, club_profile):
+        """
+        Test that freemium non-Player profiles (Club/Coach/etc.) receive:
+        - Normal notifications for first 5 inquiries
+        - Hidden inquiry notifications for inquiries 6+
+        """
+        # Ensure club_profile is freemium (not premium)
+        assert not club_profile.is_premium
+        
+        # Send 5 inquiries - should get normal notifications
+        for i in range(5):
+            sender = factories.PlayerProfileFactory()
+            InquiryRequest.objects.create(
+                sender=sender.user, recipient=club_profile.user
+            )
+        
+        # Should have 5 normal inquiry notifications
+        normal_notifications = Notification.objects.filter(
+            target=club_profile.meta,
+            title__icontains="Otrzymałeś/aś nowe zapytanie",
+            icon="inquiry",
+        )
+        assert normal_notifications.count() == 5
+        
+        # Should have 0 hidden inquiry notifications yet
+        hidden_notifications = Notification.objects.filter(
+            target=club_profile.meta,
+            title__icontains="Otrzymałeś/aś nowe zapytanie (ukryte)",
+            icon="inquiry-hidden",
+        )
+        assert hidden_notifications.count() == 0
+        
+        # Send inquiry #6 - should get hidden notification
+        sender_6 = factories.PlayerProfileFactory()
+        InquiryRequest.objects.create(
+            sender=sender_6.user, recipient=club_profile.user
+        )
+        
+        # Should still have 5 normal notifications
+        assert normal_notifications.count() == 5
+        
+        # Should now have 1 hidden notification
+        hidden_notifications_after = Notification.objects.filter(
+            target=club_profile.meta,
+            title__icontains="Otrzymałeś/aś nowe zapytanie (ukryte)",
+            description__icontains="Masz ukryte zapytanie",
+            href="/premium",
+            icon="inquiry-hidden",
+        )
+        assert hidden_notifications_after.count() == 1
+
+    def test_notify_player_always_gets_normal_inquiry_notification(self, player_profile, coach_profile):
+        """
+        Test that freemium PlayerProfile always receives normal notifications,
+        even for many inquiries (no 5-inquiry limit).
+        """
+        # Ensure player_profile is freemium (not premium)
+        assert not player_profile.is_premium
+        
+        # Send 10 inquiries to player
+        for i in range(10):
+            sender = factories.CoachProfileFactory()
+            InquiryRequest.objects.create(
+                sender=sender.user, recipient=player_profile.user
+            )
+        
+        # Should have 10 normal inquiry notifications
+        normal_notifications = Notification.objects.filter(
+            target=player_profile.meta,
+            title__icontains="Otrzymałeś/aś nowe zapytanie",
+            icon="inquiry",
+        )
+        assert normal_notifications.count() == 10
+        
+        # Should have 0 hidden inquiry notifications
+        hidden_notifications = Notification.objects.filter(
+            target=player_profile.meta,
+            icon="inquiry-hidden",
+        )
+        assert hidden_notifications.count() == 0
+
+    def test_notify_premium_non_player_always_gets_normal_inquiry_notification(self, club_profile, player_profile):
+        """
+        Test that premium non-Player profiles always receive normal notifications,
+        even beyond 5 inquiries.
+        """
+        # Set club_profile as premium
+        club_profile.setup_premium_profile(PremiumType.MONTH)
+        assert club_profile.is_premium
+        
+        # Send 10 inquiries to premium club
+        for i in range(10):
+            sender = factories.PlayerProfileFactory()
+            InquiryRequest.objects.create(
+                sender=sender.user, recipient=club_profile.user
+            )
+        
+        # Should have 10 normal inquiry notifications
+        normal_notifications = Notification.objects.filter(
+            target=club_profile.meta,
+            title__icontains="Otrzymałeś/aś nowe zapytanie",
+            icon="inquiry",
+        )
+        assert normal_notifications.count() == 10
+        
+        # Should have 0 hidden inquiry notifications
+        hidden_notifications = Notification.objects.filter(
+            target=club_profile.meta,
+            icon="inquiry-hidden",
+        )
+        assert hidden_notifications.count() == 0
+
     def test_notify_profile_verified(self, player_profile):
         """
         Test the notify_profile_verified function.

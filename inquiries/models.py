@@ -235,17 +235,29 @@ class UserInquiry(models.Model):
         self.save()
 
     def reset_plan(self):
-        """Reset to basic plan with profile-aware limits"""
-        # Check if current plan is not default (meaning it's an inquiry package)
-        has_inquiry_package = self.plan and not self.plan.default
+        """Reset to appropriate plan based on premium status and packages"""
+        # Check if user has packages (limit_raw > freemium limit)
+        freemium_limit = self.get_freemium_limit()
+        has_packages = self.limit_raw > freemium_limit
         
-        self.plan = InquiryPlan.basic()
+        # Determine correct plan based on premium status
+        if self.premium_inquiries:  # User has active premium
+            # During premium counter resets, keep packages but reset plan
+            # If user has packages, plan stays as package plan
+            # If no packages, reset to basic premium plan
+            if not has_packages:
+                from inquiries.services import InquireService
+                profile_type = self.get_profile_type()
+                plan = InquireService.get_plan_for_profile_type(profile_type, is_premium=True)
+                self.plan = plan
+            # else: keep current plan (package plan)
+        else:  # No premium - back to freemium
+            self.plan = InquiryPlan.basic()
+            # Reset limit_raw to freemium only if no premium
+            if not has_packages:
+                self.limit_raw = freemium_limit
         
-        # Only reset limit_raw to freemium if there was no inquiry package
-        # If user had purchased packages, keep the extra limit they added
-        if not has_inquiry_package:
-            self.limit_raw = self.get_freemium_limit()
-
+        # Cap counter to limit
         if self.counter_raw >= self.limit_raw:
             self.counter_raw = self.limit_raw
 
@@ -555,7 +567,8 @@ class InquiryRequest(models.Model):
             )
             
             if is_freemium_non_player:
-                received_count = self.recipient.inquiry_request_recipient.count()
+                # Count existing inquiries + 1 (current inquiry not yet saved)
+                received_count = self.recipient.inquiry_request_recipient.count() + 1
                 if received_count > 5:
                     # This inquiry is hidden - send hidden inquiry notification
                     NotificationService(self.recipient.profile.meta).notify_hidden_inquiry()

@@ -28,7 +28,8 @@ def test_buy_premium(product_premium_player_month, player_profile):
     assert player_profile.user.userinquiry.limit == 30
     assert player_profile.is_promoted
     assert player_profile.products.calculate_pm_score
-    assert player_profile.user.userinquiry.plan.type_ref == "BASIC"
+    # Plan should be set to PREMIUM_PLAYER when premium is activated
+    assert player_profile.user.userinquiry.plan.type_ref == "PREMIUM_PLAYER"
 
 
 def test_buy_inquiries_for_profile_with_premium(
@@ -41,7 +42,8 @@ def test_buy_inquiries_for_profile_with_premium(
     transaction_premium.success()
 
     assert player_profile.is_premium
-    assert player_profile.user.userinquiry.plan.type_ref == "BASIC"
+    # Plan should be PREMIUM_PLAYER after activating premium
+    assert player_profile.user.userinquiry.plan.type_ref == "PREMIUM_PLAYER"
 
     transaction_inquiries = Transaction.objects.create(
         product=product_inquiries_L, user=user
@@ -49,6 +51,7 @@ def test_buy_inquiries_for_profile_with_premium(
     transaction_inquiries.success()
     player_profile.refresh_from_db()
 
+    # After buying package, plan changes to package plan
     assert player_profile.user.userinquiry.plan.type_ref == "PREMIUM_INQUIRIES_L"
 
 
