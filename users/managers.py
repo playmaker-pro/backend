@@ -192,7 +192,7 @@ class GoogleManager(SocialAuthMixin):
         try:
             return UserGoogleDetailPydantic(**data)
         except ValidationError as e:
-            logger.error(str(traceback.format_exc()) + f"\n{e}")
+            logger.exception(str(e))
             raise ValueError(e)
 
 
@@ -235,7 +235,7 @@ class FacebookManager(SocialAuthMixin):
         try:
             return UserFacebookDetailPydantic(**data)
         except ValidationError as e:
-            logger.error(str(traceback.format_exc()) + f"\n{e}")
+            logger.exception(str(e))
             raise ValueError(e)
 
 

@@ -90,16 +90,26 @@ class PostmanService:
             .select_related("user")
         )
 
+        counter = 0
         for profile in qs:
-            context = build_email_context(
-                profile.user, mailing_type=mail_schema.mailing_type
-            )
-            MailingService(mail_schema(context)).send_mail(profile.user)
-            self.logger.info(
-                "Sent incomplete profile reminder to %s", profile.user.email
-            )
+            try:
+                context = build_email_context(
+                    profile.user, mailing_type=mail_schema.mailing_type
+                )
+                MailingService(mail_schema(context)).send_mail(profile.user)
+                self.logger.info(
+                    "Sent incomplete profile reminder to %s", profile.user.email
+                )
+            except Exception as e:
+                self.logger.error(
+                    "Failed to send incomplete profile reminder to %s: %s",
+                    profile.user.email,
+                    str(e),
+                )
+            else:
+                counter += 1
         self.logger.info(
-            "Incomplete profile reminder email has been sent to %d players", qs.count()
+            "Incomplete profile reminder email has been sent to %d players", counter
         )
 
         qs = (
@@ -118,16 +128,26 @@ class PostmanService:
             .select_related("user")
         )
 
+        counter = 0
         for profile in qs:
-            context = build_email_context(
-                profile.user, mailing_type=mail_schema.mailing_type
-            )
-            MailingService(mail_schema(context)).send_mail(profile.user)
-            self.logger.info(
-                "Sent incomplete profile reminder to %s", profile.user.email
-            )
+            try:
+                context = build_email_context(
+                    profile.user, mailing_type=mail_schema.mailing_type
+                )
+                MailingService(mail_schema(context)).send_mail(profile.user)
+                self.logger.info(
+                    "Sent incomplete profile reminder to %s", profile.user.email
+                )
+            except Exception as e:
+                self.logger.error(
+                    "Failed to send incomplete profile reminder to %s: %s",
+                    profile.user.email,
+                    str(e),
+                )
+            else:
+                counter += 1
         self.logger.info(
-            "Incomplete profile reminder email has been sent to %d coaches", qs.count()
+            "Incomplete profile reminder email has been sent to %d coaches", counter
         )
 
         qs = (
@@ -145,16 +165,26 @@ class PostmanService:
             .exclude(user__date_joined__gt=timezone.now() - timezone.timedelta(days=3))
             .select_related("user")
         )
+        counter = 0
         for profile in qs:
-            context = build_email_context(
-                profile.user, mailing_type=mail_schema.mailing_type
-            )
-            MailingService(mail_schema(context)).send_mail(profile.user)
-            self.logger.info(
-                "Sent incomplete profile reminder to %s", profile.user.email
-            )
+            try:
+                context = build_email_context(
+                    profile.user, mailing_type=mail_schema.mailing_type
+                )
+                MailingService(mail_schema(context)).send_mail(profile.user)
+                self.logger.info(
+                    "Sent incomplete profile reminder to %s", profile.user.email
+                )
+            except Exception as e:
+                self.logger.error(
+                    "Failed to send incomplete profile reminder to %s: %s",
+                    profile.user.email,
+                    str(e),
+                )
+            else:
+                counter += 1
         self.logger.info(
-            "Incomplete profile reminder email has been sent to %d clubs", qs.count()
+            "Incomplete profile reminder email has been sent to %d clubs", counter
         )
 
     def inactive_for_30_days(self):
@@ -179,15 +209,25 @@ class PostmanService:
                 is_email_verified=False,
             )
         )
+        counter = 0
         for user in qs:
-            context = build_email_context(
-                user, days_inactive=30, mailing_type=mail_schema.mailing_type
-            )
-            MailingService(mail_schema(context)).send_mail(user)
-            self.logger.info("Sent inactive (30 days) user reminder to %s", user.email)
+            try:
+                context = build_email_context(
+                    user, days_inactive=30, mailing_type=mail_schema.mailing_type
+                )
+                MailingService(mail_schema(context)).send_mail(user)
+                self.logger.info("Sent inactive (30 days) user reminder to %s", user.email)
+            except Exception as e:
+                self.logger.error(
+                    "Failed to send inactive (30 days) user reminder to %s: %s",
+                    user.email,
+                    str(e),
+                )
+            else:
+                counter += 1
         self.logger.info(
             "Inactive (30 days) user reminder email has been sent to %d users",
-            qs.count(),
+            counter,
         )
 
     def inactive_for_90_days(self):
@@ -212,15 +252,25 @@ class PostmanService:
                 is_email_verified=False,
             )
         )
+        counter = 0
         for user in qs:
-            context = build_email_context(
-                user, days_inactive=90, mailing_type=mail_schema.mailing_type
-            )
-            MailingService(mail_schema(context)).send_mail(user)
-            self.logger.info("Sent inactive (90 days) user reminder to %s", user.email)
+            try:
+                context = build_email_context(
+                    user, days_inactive=90, mailing_type=mail_schema.mailing_type
+                )
+                MailingService(mail_schema(context)).send_mail(user)
+                self.logger.info("Sent inactive (90 days) user reminder to %s", user.email)
+            except Exception as e:
+                self.logger.error(
+                    "Failed to send inactive (90 days) user reminder to %s: %s",
+                    user.email,
+                    str(e),
+                )
+            else:
+                counter += 1
         self.logger.info(
             "Inactive (90 days) user reminder email has been sent to %d users",
-            qs.count(),
+            counter,
         )
 
     def go_premium(self):
@@ -241,15 +291,25 @@ class PostmanService:
             .exclude(user__date_joined__gt=timezone.now() - timezone.timedelta(days=5))
             .select_related("user")
         )
+        counter = 0
         for pp in qs:
-            context = build_email_context(
-                pp.user, mailing_type=mail_schema.mailing_type
-            )
-            MailingService(mail_schema(context)).send_mail(pp.user)
-            self.logger.info("Sent premium encouragement email to %s", pp.user.email)
+            try:
+                context = build_email_context(
+                    pp.user, mailing_type=mail_schema.mailing_type
+                )
+                MailingService(mail_schema(context)).send_mail(pp.user)
+                self.logger.info("Sent premium encouragement email to %s", pp.user.email)
+            except Exception as e:
+                self.logger.error(
+                    "Failed to send premium encouragement email to %s: %s",
+                    pp.user.email,
+                    str(e),
+                )
+            else:
+                counter += 1
         self.logger.info(
             "Premium encouragement email has been sent to %d users",
-            qs.count(),
+            counter,
         )
 
     def views_monthly(
@@ -280,16 +340,26 @@ class PostmanService:
             )
             .select_related("user")
         )
+        counter = 0
         for meta in qs:
-            context = build_email_context(
-                meta.user, mailing_type=mail_schema.mailing_type
-            )
-            MailingService(mail_schema(context)).send_mail(meta.user)
-            self.logger.info(
-                "Sent profile views milestone email to %s", meta.user.email
-            )
+            try:
+                context = build_email_context(
+                    meta.user, mailing_type=mail_schema.mailing_type
+                )
+                MailingService(mail_schema(context)).send_mail(meta.user)
+                self.logger.info(
+                    "Sent profile views milestone email to %s", meta.user.email
+                )
+            except Exception as e:
+                self.logger.error(
+                    "Failed to send profile views milestone email to %s: %s",
+                    meta.user.email,
+                    str(e),
+                )
+            else:
+                counter += 1
         self.logger.info(
-            "Profile views milestone email has been sent to %d users", qs.count()
+            "Profile views milestone email has been sent to %d users", counter
         )
 
     def player_without_transfer_status(self):
@@ -313,15 +383,24 @@ class PostmanService:
             .exclude(user__date_joined__gt=timezone.now() - timezone.timedelta(days=7))
             .select_related("user")
         )
-
+        counter = 0
         for player in qs:
-            context = build_email_context(
-                player.user, mailing_type=mail_schema.mailing_type
-            )
-            MailingService(mail_schema(context)).send_mail(player.user)
-            self.logger.info("Sent transfer status reminder to %s", player.user.email)
+            try:
+                context = build_email_context(
+                    player.user, mailing_type=mail_schema.mailing_type
+                )
+                MailingService(mail_schema(context)).send_mail(player.user)
+                self.logger.info("Sent transfer status reminder to %s", player.user.email)
+            except Exception as e:
+                self.logger.error(
+                    "Failed to send transfer status reminder to %s: %s",
+                    player.user.email,
+                    str(e),
+                )
+            else:
+                counter += 1
         self.logger.info(
-            "Transfer status reminder email has been sent to %d players", qs.count()
+            "Transfer status reminder email has been sent to %d players", counter
         )
 
     def profile_without_transfer_request(self):
@@ -345,14 +424,24 @@ class PostmanService:
             .exclude(user__date_joined__gt=timezone.now() - timezone.timedelta(days=7))
             .select_related("user")
         )
+        counter = 0
         for meta in qs:
-            context = build_email_context(
-                meta.user, mailing_type=mail_schema.mailing_type
-            )
-            MailingService(mail_schema(context)).send_mail(meta.user)
-            self.logger.info("Sent transfer request reminder to %s", meta.user.email)
+            try:
+                context = build_email_context(
+                    meta.user, mailing_type=mail_schema.mailing_type
+                )
+                MailingService(mail_schema(context)).send_mail(meta.user)
+                self.logger.info("Sent transfer request reminder to %s", meta.user.email)
+            except Exception as e:
+                self.logger.error(
+                    "Failed to send transfer request reminder to %s: %s",
+                    meta.user.email,
+                    str(e),
+                )
+            else:
+                counter += 1
         self.logger.info(
-            "Transfer request reminder email has been sent to %d profiles", qs.count()
+            "Transfer request reminder email has been sent to %d profiles", counter
         )
 
     def invite_friends(self):
@@ -372,10 +461,20 @@ class PostmanService:
             .exclude(date_joined__gt=timezone.now() - timezone.timedelta(days=10))
         )
 
+        counter = 0
         for user in qs:
-            context = build_email_context(user, mailing_type=mail_schema.mailing_type)
-            MailingService(mail_schema(context)).send_mail(user)
-            self.logger.info("Sent invite friends reminder to %s", user.email)
+            try:
+                context = build_email_context(user, mailing_type=mail_schema.mailing_type)
+                MailingService(mail_schema(context)).send_mail(user)
+                self.logger.info("Sent invite friends reminder to %s", user.email)
+            except Exception as e:
+                self.logger.error(
+                    "Failed to send invite friends reminder to %s: %s",
+                    user.email,
+                    str(e),
+                )
+            else:
+                counter += 1
         self.logger.info(
-            "Invite friends reminder email has been sent to %d users", qs.count()
+            "Invite friends reminder email has been sent to %d users", counter
         )

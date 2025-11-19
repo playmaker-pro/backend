@@ -74,3 +74,4 @@ def post_profile_visitation(sender, instance, created, **kwargs):
     """
     if created:
         NotificationService(instance.visited.profile.meta).notify_profile_visited()
+

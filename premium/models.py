@@ -51,7 +51,7 @@ class PremiumProfile(models.Model):
     )
     is_trial = models.BooleanField(default=False)
     product = models.OneToOneField(
-        "PremiumProduct", on_delete=models.PROTECT, related_name="premium"
+        "PremiumProduct", on_delete=models.CASCADE, related_name="premium"
     )
     valid_since = models.DateTimeField(blank=True, null=True)
     valid_until = models.DateTimeField(blank=True, null=True)
@@ -115,7 +115,7 @@ class CalculatePMScoreProduct(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     approved_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, blank=True, null=True
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True
     )
 
     old_value = models.PositiveBigIntegerField(null=True, blank=True)
@@ -158,7 +158,7 @@ class CalculatePMScoreProduct(models.Model):
 
 class PromoteProfileProduct(models.Model):
     product = models.OneToOneField(
-        "PremiumProduct", on_delete=models.PROTECT, related_name="promotion"
+        "PremiumProduct", on_delete=models.CASCADE, related_name="promotion"
     )
     days_count = models.PositiveIntegerField(default=3)
     valid_since = models.DateTimeField(null=True, blank=True)

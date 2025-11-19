@@ -16,7 +16,7 @@ connection = get_connection()
 
 
 @shared_task(bind=True, max_retries=3)
-def notify_admins(subject: str, message: str, **kwargs):
+def notify_admins(self, subject: str, message: str) -> None:
     """Send notification to admins with error tracking."""
     if cache.get(subject):
         logger.info(f"Skipping duplicate admin notification: {subject}")

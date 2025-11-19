@@ -283,7 +283,7 @@ class TestRefferalSystem:
         assert not profile.is_premium
 
         for _ in range(10):
-            UserRefFactory(ref_by=ref)
+            UserRefFactory.create(ref_by=ref)
 
         last_mail = mail.outbox[-1]
 
@@ -295,7 +295,7 @@ class TestRefferalSystem:
         assert last_mail.body == f"Link afiliacyjny {str(ref)} osiągnął 10 poleconych."
 
         for _ in range(10):
-            UserRefFactory(ref_by=ref)
+            UserRefFactory.create(ref_by=ref)
 
         last_mail = mail.outbox[-1]
 
@@ -305,7 +305,7 @@ class TestRefferalSystem:
         )
 
         for _ in range(10):
-            UserRefFactory(ref_by=ref)
+            UserRefFactory.create(ref_by=ref)
 
         last_mail = mail.outbox[-1]
 

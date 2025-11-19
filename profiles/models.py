@@ -421,7 +421,7 @@ class BaseProfile(models.Model, EventLogMixin):
 
     def ensure_meta_exist(self, commit: bool = True) -> None:
         if self.meta is None:
-            self.meta = ProfileMeta.objects.create(
+            self.meta, _ = ProfileMeta.objects.get_or_create(
                 _profile_class=self.__class__.__name__.lower(),
                 _uuid=self.uuid,
                 _slug=self.slug,

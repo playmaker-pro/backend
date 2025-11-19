@@ -18,3 +18,4 @@ def post_save_premium_inquiries_product(sender, instance, created, **kwargs):
             and instance.current_counter == models.PremiumInquiriesProduct.INQUIRY_LIMIT
         ):
             notify_limit_reached.delay(instance.user_inquiry.pk)
+

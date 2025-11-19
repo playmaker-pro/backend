@@ -52,11 +52,11 @@ class VerificationStageFactory(CustomObjectFactory):
 
 
 class ProfileMetaFactory(CustomObjectFactory):
-    _profile_class = factory.LazyAttribute(lambda _: "some_class")
+    _profile_class = factory.LazyAttribute(lambda _: "playerprofile")
     _uuid = factory.LazyAttribute(lambda _: uuid.uuid4())
     _slug = factory.Faker("slug")
     user = factory.SubFactory(user_factories.UserFactory)
-
+    
     class Meta:
         model = models.ProfileMeta
 

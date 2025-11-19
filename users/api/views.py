@@ -195,8 +195,8 @@ class UsersAPI(EndpointView):
                 UserGoogleDetailPydantic, UserFacebookDetailPydantic
             ]
             user_info = manager.get_user_info()
-        except ValueError as e:
-            logger.exception(str(traceback.format_exc()) + f"\n{str(e)}")
+        except Exception as e:
+            logger.exception(str(e))
             raise ApplicationError(details=str(e))
 
         user_email: str = user_info.email

@@ -269,11 +269,15 @@ class ProfileTransferRequestSerializer(
             )
             data["salary"] = salary_serialized.data
         if data["is_anonymous"] and not self.context.get("expose", False):
-            data["requesting_team"]["id"] = 0
-            data["requesting_team"]["team"]["team_name"] = _("Anonimowa drużyna")
-            data["requesting_team"]["team"]["id"] = 0
-            data["requesting_team"]["team"]["team_contributor_id"] = 0
-            data["requesting_team"]["team"]["picture_url"] = None
+            data["requesting_team"] = {
+                "id": 0,
+                "team": {
+                    "id": 0,
+                    "team_name": _("Anonimowa drużyna"),
+                    "team_contributor_id": 0,
+                    "picture_url": None,
+                },
+            }
             data["profile_uuid"] = instance.anonymous_uuid
         return data
 
