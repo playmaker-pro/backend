@@ -85,12 +85,16 @@ def send(
                 try:
                     individual_data = data.copy()
                     individual_data["recipient_list"] = [recipient]
-                    send_mail(
+                    # Create email with CID images for recipient
+                    from mailing.services import EmailCIDService
+
+                    email = EmailCIDService.create_email_with_cid_images(
                         **individual_data,
                         fail_silently=False,
                         connection=connection,
-                        from_email=settings.DEFAULT_FROM_EMAIL,
-                    )
+                        from_email=settings.DEFAULT_FROM_EMAIL,)
+                    email.send()
+
                 except Exception as err:
                     logger.error(
                         f"[{operation_id}] Failed to send email to {recipient}: {str(err)}"
