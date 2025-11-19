@@ -46,7 +46,7 @@ def setup_premium_profile(
 @shared_task
 def post_create_profile_tasks(class_name: str, profile_id: int) -> None:
     """
-    Create a profile for the user if it doesn't exist.
+    Create a profile for the user if it doesn't exist and assign appropriate UserInquiry plan.
     """
 
     model = getattr(profile_models, class_name)
@@ -57,6 +57,15 @@ def post_create_profile_tasks(class_name: str, profile_id: int) -> None:
     profile.ensure_meta_exist(commit=False)
     profile.ensure_premium_products_exist(commit=False)
     profile.save()
+    
+    # Update UserInquiry plan based on profile type
+    if hasattr(profile.user, 'userinquiry'):
+        from inquiries.services import InquireService
+        plan = InquireService.get_plan_for_profile_type(class_name, is_premium=False)
+        profile.user.userinquiry.plan = plan
+        profile.user.userinquiry.limit_raw = plan.limit
+        profile.user.userinquiry.save(update_fields=['plan', 'limit_raw'])
+    
     create_post_create_profile__periodic_tasks.delay(class_name, profile_id)
     NotificationService(profile.meta).notify_welcome()
 

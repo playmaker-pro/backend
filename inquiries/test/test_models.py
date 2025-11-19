@@ -41,8 +41,10 @@ class TestModels(TestCase):
     def test_default_plan_should_exist(self):
         assert InquiryPlan.objects.get(default=True)
 
-    def test_player_user_should_have_basic_plan(self):
-        assert self.player.user.userinquiry.plan.default is True
+    def test_player_user_should_have_freemium_player_plan(self):
+        """Player without premium should have FREEMIUM_PLAYER plan (10 inquiries)"""
+        assert self.player.user.userinquiry.plan.type_ref == "FREEMIUM_PLAYER"
+        assert self.player.user.userinquiry.limit == 10  # Player freemium limit
 
     # def test_plans_with_premium_profile(self):
     #     assert self.player.user.userinquiry.counter == 0
@@ -82,7 +84,7 @@ class TestModels(TestCase):
 
     def test_premium_inquiries_will_refresh(self):
         assert self.player.user.userinquiry.counter == 0
-        assert self.player.user.userinquiry.limit == 2
+        assert self.player.user.userinquiry.limit == 10  # Player freemium limit
         assert not self.player.has_premium_inquiries
 
         self.player.setup_premium_profile(PremiumType.YEAR)
@@ -90,13 +92,13 @@ class TestModels(TestCase):
 
         assert self.player.has_premium_inquiries
         assert self.player.user.userinquiry.counter == 0
-        assert self.player.user.userinquiry.limit == 12
+        assert self.player.user.userinquiry.limit == 30  # Player premium limit (override)
 
         self.player.user.userinquiry.increment()
         self.player.user.userinquiry.increment()
 
         assert self.player.user.userinquiry.counter == 2
-        assert self.player.user.userinquiry.limit == 12
+        assert self.player.user.userinquiry.limit == 30  # Premium override
         assert self.player.user.userinquiry.premium_inquiries.current_counter == 0
         assert (
             self.player.user.userinquiry.premium_inquiries.counter_updated_at.date()
@@ -109,7 +111,7 @@ class TestModels(TestCase):
         ):
             assert self.player.has_premium_inquiries
             assert self.player.user.userinquiry.counter == 2
-            assert self.player.user.userinquiry.limit == 12
+            assert self.player.user.userinquiry.limit == 30  # Premium limit stays same (reset doesn't affect display)
             assert self.player.user.userinquiry.premium_inquiries.current_counter == 0
             assert (
                 self.player.user.userinquiry.premium_inquiries.counter_updated_at.date()

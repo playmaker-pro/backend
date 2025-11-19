@@ -36,15 +36,54 @@ class InquiresAPIView(EndpointView):
         return Response(serializer.data)
 
     def get_my_received_inquiries(self, request: Request) -> Response:
-        """Get all received inquiries by user"""
+        """Get all received inquiries by user with visibility flags"""
         InquireService.update_inquiry_read_status_based_on_role(request.user)
         received_inquiries: QuerySet = InquireService.get_user_received_inquiries(
             request.user
         )
+        
+        total_count = received_inquiries.count()
+        # Check if user is freemium and NOT a player (applies to Club, Coach, Scout, Manager, Guest, Referee)
+        is_freemium_non_player = (
+            hasattr(request.user, 'profile') and 
+            request.user.profile.__class__.__name__ != "PlayerProfile" and
+            not request.user.profile.is_premium
+        )
+        
+        # Serialize all inquiries
         serializer = InquiryRequestSerializer(
             received_inquiries, many=True, context=self.get_serializer_context()
         )
-        return Response(serializer.data)
+        
+        # Mark which inquiries are visible for freemium non-player profiles
+        inquiries_data = serializer.data
+        visible_count = 0
+        hidden_count = 0
+        
+        if is_freemium_non_player:
+            for idx, inquiry in enumerate(inquiries_data):
+                if idx < 5:
+                    inquiry['is_visible'] = True
+                    visible_count += 1
+                else:
+                    inquiry['is_visible'] = False
+                    hidden_count += 1
+        else:
+            # All visible for premium users or players
+            for inquiry in inquiries_data:
+                inquiry['is_visible'] = True
+            visible_count = total_count
+        
+        # Add metadata about hidden inquiries
+        response_data = {
+            "inquiries": inquiries_data,
+            "total_count": total_count,
+            "visible_count": visible_count,
+            "hidden_count": hidden_count,
+            "is_limited": is_freemium_non_player
+        }
+        
+        return Response(response_data)
 
     def get_my_inquiry_data(self, request: Request) -> Response:
         """Get all received inquiries by user"""

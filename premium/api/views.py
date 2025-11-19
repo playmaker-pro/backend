@@ -42,7 +42,7 @@ class ProductView(EndpointView):
         try:
             product.can_user_buy(request.user)
         except PermissionError as e:
-            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": str(e)}, status=status.HTTP_403_FORBIDDEN)
 
         transaction_service = TransactionService.create_new_transaction_object(
             user=request.user, product=product

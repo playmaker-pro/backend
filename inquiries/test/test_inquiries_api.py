@@ -273,8 +273,9 @@ class TestInquiriesAPI(APITestCase):
         )
 
         assert receive_recipment_repsponse.status_code == 200
+        # Response now includes metadata (inquiries, total_count, shown_count, hidden_count, is_limited)
         assert (
-            receive_recipment_repsponse.data[0]["status"]
+            receive_recipment_repsponse.data["inquiries"][0]["status"]
             == InquiryRequest.STATUS_RECEIVED
         )
 
@@ -306,6 +307,9 @@ class TestInquiriesAPI(APITestCase):
             URL_MY_RECEIVED, **self.recipient_headers
         )
         assert received_inquiries_response.status_code == 200
+        # Response is now a dict with metadata
+        assert isinstance(received_inquiries_response.data, dict)
+        assert "inquiries" in received_inquiries_response.data
 
         inquiry.refresh_from_db()
         assert inquiry.is_read_by_recipient

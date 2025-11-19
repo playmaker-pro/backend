@@ -27,9 +27,9 @@ def approve_transaction(transaction_uuid):
 
 
 def test_impossible_to_buy_inquiries_without_premium(
-    api_client, player_profile, product_inquiries_L
+    api_client, coach_profile, product_inquiries_L
 ):
-    api_client.force_authenticate(user=player_profile.user)
+    api_client.force_authenticate(user=coach_profile.user)
     url = create_transaction_url(product_inquiries_L.id)
     response = api_client.post(url)
 
@@ -58,9 +58,9 @@ def test_buy_premium_month_player(
     assert player_profile.premium_products.calculate_pm_score.awaiting_approval
     assert player_profile.is_promoted
     assert player_profile.has_premium_inquiries
-    assert player_profile.user.userinquiry.limit_raw == 2
-    assert player_profile.user.userinquiry.limit == 12
-    assert player_profile.user.userinquiry.left == 12
+    assert player_profile.user.userinquiry.limit_raw == 10
+    assert player_profile.user.userinquiry.limit == 30
+    assert player_profile.user.userinquiry.left == 30
     assert player_profile.premium_products.trial_tested
 
 
@@ -85,66 +85,67 @@ def test_buy_premium_year_player(
     assert player_profile.premium_products.calculate_pm_score.awaiting_approval
     assert player_profile.is_promoted
     assert player_profile.has_premium_inquiries
-    assert player_profile.user.userinquiry.limit_raw == 2
-    assert player_profile.user.userinquiry.limit == 12
-    assert player_profile.user.userinquiry.left == 12
+    assert player_profile.user.userinquiry.limit_raw == 10
+    assert player_profile.user.userinquiry.limit == 30
+    assert player_profile.user.userinquiry.left == 30
     assert player_profile.premium_products.trial_tested
 
 
-def test_buy_premium_month_other(
+def test_buy_premium_quarter_other(
     api_client,
     coach_profile,
-    product_premium_other_month,
+    product_premium_other_quarter,
 ):
     api_client.force_authenticate(user=coach_profile.user)
-    url = create_transaction_url(product_premium_other_month.id)
+    url = create_transaction_url(product_premium_other_quarter.id)
     response = api_client.post(url)
 
     assert response.status_code == 200
 
     transaction = approve_transaction(response.json()["uuid"])
     coach_profile.refresh_from_db()
-    assert transaction.product == product_premium_other_month
+    assert transaction.product == product_premium_other_quarter
     assert transaction.user == coach_profile.user
-    assert coach_profile.premium.subscription_lifespan == timedelta(days=30)
+    assert coach_profile.premium.subscription_lifespan == timedelta(days=90)
     assert coach_profile.is_premium
     assert not hasattr(coach_profile.premium_products, "calculate_pm_score")
     assert coach_profile.is_promoted
     assert coach_profile.has_premium_inquiries
-    assert coach_profile.user.userinquiry.limit_raw == 2
-    assert coach_profile.user.userinquiry.limit == 12
-    assert coach_profile.user.userinquiry.left == 12
+    assert coach_profile.user.userinquiry.limit_raw == 5  # Coach freemium limit (Club-like)
+    assert coach_profile.user.userinquiry.limit == 30  # Coach premium limit (Club-like)
+    assert coach_profile.user.userinquiry.left == 30
     assert coach_profile.premium_products.trial_tested
 
 
-def test_buy_premium_year_other(api_client, coach_profile, product_premium_other_year):
+def test_buy_premium_year_other(api_client, coach_profile, product_premium_other_year_new):
     api_client.force_authenticate(user=coach_profile.user)
-    url = create_transaction_url(product_premium_other_year.id)
+    url = create_transaction_url(product_premium_other_year_new.id)
     response = api_client.post(url)
 
     assert response.status_code == 200
 
     transaction = approve_transaction(response.json()["uuid"])
     coach_profile.refresh_from_db()
-    assert transaction.product == product_premium_other_year
+    assert transaction.product == product_premium_other_year_new
     assert transaction.user == coach_profile.user
     assert coach_profile.premium.subscription_lifespan == timedelta(days=365)
     assert coach_profile.is_premium
     assert not hasattr(coach_profile.premium_products, "calculate_pm_score")
     assert coach_profile.is_promoted
     assert coach_profile.has_premium_inquiries
-    assert coach_profile.user.userinquiry.limit_raw == 2
-    assert coach_profile.user.userinquiry.limit == 12
-    assert coach_profile.user.userinquiry.left == 12
+    assert coach_profile.user.userinquiry.limit_raw == 5  # Coach freemium limit (Club-like)
+    assert coach_profile.user.userinquiry.limit == 30  # Coach premium limit (Club-like)
+    assert coach_profile.user.userinquiry.left == 30
     assert coach_profile.premium_products.trial_tested
 
 
-def test_buy_L_inquiries(api_client, trial_premium_player_profile, product_inquiries_L):
-    api_client.force_authenticate(user=trial_premium_player_profile.user)
-    ui = trial_premium_player_profile.user.userinquiry
-    pi = trial_premium_player_profile.user.userinquiry.premium_inquiries
-    ui.counter = 2
-    pi.current_counter = 10
+def test_buy_L_inquiries(api_client, trial_premium_coach_profile, product_inquiries_L):
+    api_client.force_authenticate(user=trial_premium_coach_profile.user)
+    ui = trial_premium_coach_profile.user.userinquiry
+    pi = trial_premium_coach_profile.user.userinquiry.premium_inquiries
+    # Set counter to exhaust premium limit (30) so user can buy packages
+    ui.counter_raw = 5  # Use all freemium for coach
+    pi.current_counter = 25  # Use 25 of 30 premium
     ui.save()
     pi.save()
     url = create_transaction_url(product_inquiries_L.id)
@@ -153,31 +154,35 @@ def test_buy_L_inquiries(api_client, trial_premium_player_profile, product_inqui
     assert response.status_code == 200
 
     transaction = approve_transaction(response.json()["uuid"])
-    trial_premium_player_profile.refresh_from_db()
+    trial_premium_coach_profile.refresh_from_db()
 
     assert transaction.product == product_inquiries_L
-    assert transaction.user == trial_premium_player_profile.user
+    assert transaction.user == trial_premium_coach_profile.user
     assert (
-        trial_premium_player_profile.user.userinquiry.plan.type_ref
+        trial_premium_coach_profile.user.userinquiry.plan.type_ref
         == product_inquiries_L.name
     )
-    assert trial_premium_player_profile.user.userinquiry.limit_raw == 5
-    assert trial_premium_player_profile.user.userinquiry.limit == 15
-    assert trial_premium_player_profile.user.userinquiry.left == 3
-    assert trial_premium_player_profile.user.userinquiry.counter_raw == 2
-    assert trial_premium_player_profile.user.userinquiry.limit_to_show == 12
-    assert trial_premium_player_profile.user.userinquiry.left_to_show == 3
-    assert trial_premium_player_profile.premium_products.trial_tested
+    # Counter setup: 5 freemium + 25 premium = 30 total (all used)
+    # Buying L adds 3 to limit_raw (5 + 3 = 8) AND to total limit
+    # New limit: 30 (base) + 3 (package bonus from 8-5) = 33
+    assert trial_premium_coach_profile.user.userinquiry.limit_raw == 8  # 5 + 3 from L
+    assert trial_premium_coach_profile.user.userinquiry.limit == 33  # Premium (30) + package (3)
+    assert trial_premium_coach_profile.user.userinquiry.left == 3  # 33 - 30 used = 3 new inquiries
+    assert trial_premium_coach_profile.user.userinquiry.counter_raw == 5  # All freemium used
+    assert trial_premium_coach_profile.user.userinquiry.limit_to_show == 33
+    assert trial_premium_coach_profile.user.userinquiry.left_to_show == 3
+    assert trial_premium_coach_profile.premium_products.trial_tested
 
 
 def test_buy_XL_inquiries(
-    api_client, trial_premium_player_profile, product_inquiries_XL
+    api_client, trial_premium_coach_profile, product_inquiries_XL
 ):
-    api_client.force_authenticate(user=trial_premium_player_profile.user)
-    ui = trial_premium_player_profile.user.userinquiry
-    pi = trial_premium_player_profile.user.userinquiry.premium_inquiries
-    ui.counter = 2
-    pi.current_counter = 10
+    api_client.force_authenticate(user=trial_premium_coach_profile.user)
+    ui = trial_premium_coach_profile.user.userinquiry
+    pi = trial_premium_coach_profile.user.userinquiry.premium_inquiries
+    # Set counter to exhaust premium limit (30) so user can buy packages
+    ui.counter_raw = 5  # Use all freemium for coach
+    pi.current_counter = 25  # Use 25 of 30 premium
     ui.save()
     pi.save()
     url = create_transaction_url(product_inquiries_XL.id)
@@ -186,26 +191,29 @@ def test_buy_XL_inquiries(
     assert response.status_code == 200
 
     transaction = approve_transaction(response.json()["uuid"])
-    trial_premium_player_profile.refresh_from_db()
+    trial_premium_coach_profile.refresh_from_db()
 
     assert transaction.product == product_inquiries_XL
-    assert transaction.user == trial_premium_player_profile.user
+    assert transaction.user == trial_premium_coach_profile.user
     assert (
-        trial_premium_player_profile.user.userinquiry.plan.type_ref
+        trial_premium_coach_profile.user.userinquiry.plan.type_ref
         == product_inquiries_XL.name
     )
-    assert trial_premium_player_profile.user.userinquiry.limit_raw == 7
-    assert trial_premium_player_profile.user.userinquiry.limit == 17
-    assert trial_premium_player_profile.user.userinquiry.left == 5
-    assert trial_premium_player_profile.user.userinquiry.left_to_show == 5
-    assert trial_premium_player_profile.user.userinquiry.limit_to_show == 12
-    assert trial_premium_player_profile.premium_products.trial_tested
+    # Counter setup: 5 freemium + 25 premium = 30 total (all used)
+    # Buying XL adds 5 to limit_raw (5 + 5 = 10) AND to total limit
+    # New limit: 30 (base) + 5 (package bonus from 10-5) = 35
+    assert trial_premium_coach_profile.user.userinquiry.limit_raw == 10  # 5 + 5 from XL
+    assert trial_premium_coach_profile.user.userinquiry.limit == 35  # Premium (30) + package (5)
+    assert trial_premium_coach_profile.user.userinquiry.left == 5  # 35 - 30 used = 5 new inquiries
+    assert trial_premium_coach_profile.user.userinquiry.left_to_show == 5
+    assert trial_premium_coach_profile.user.userinquiry.limit_to_show == 35
+    assert trial_premium_coach_profile.premium_products.trial_tested
 
 
 def test_buy_inquiries_with_some_left(
-    api_client, trial_premium_player_profile, product_inquiries_L
+    api_client, trial_premium_coach_profile, product_inquiries_L
 ):
-    api_client.force_authenticate(user=trial_premium_player_profile.user)
+    api_client.force_authenticate(user=trial_premium_coach_profile.user)
     url = create_transaction_url(product_inquiries_L.id)
     response = api_client.post(url)
 
@@ -214,13 +222,14 @@ def test_buy_inquiries_with_some_left(
 
 
 def test_buy_XXL_inquiries(
-    api_client, trial_premium_player_profile, product_inquiries_XXL
+    api_client, trial_premium_coach_profile, product_inquiries_XXL
 ):
-    api_client.force_authenticate(user=trial_premium_player_profile.user)
-    ui = trial_premium_player_profile.user.userinquiry
-    pi = trial_premium_player_profile.user.userinquiry.premium_inquiries
-    ui.counter = 2
-    pi.current_counter = 10
+    api_client.force_authenticate(user=trial_premium_coach_profile.user)
+    ui = trial_premium_coach_profile.user.userinquiry
+    pi = trial_premium_coach_profile.user.userinquiry.premium_inquiries
+    # Set counter to exhaust premium limit (30) so user can buy packages
+    ui.counter_raw = 5  # Use all freemium for coach
+    pi.current_counter = 25  # Use 25 of 30 premium
     ui.save()
     pi.save()
 
@@ -230,21 +239,24 @@ def test_buy_XXL_inquiries(
     assert response.status_code == 200
 
     transaction = approve_transaction(response.json()["uuid"])
-    trial_premium_player_profile.refresh_from_db()
+    trial_premium_coach_profile.refresh_from_db()
 
     assert transaction.product == product_inquiries_XXL
-    assert transaction.user == trial_premium_player_profile.user
+    assert transaction.user == trial_premium_coach_profile.user
     assert (
-        trial_premium_player_profile.user.userinquiry.plan.type_ref
+        trial_premium_coach_profile.user.userinquiry.plan.type_ref
         == product_inquiries_XXL.name
     )
-    assert trial_premium_player_profile.user.userinquiry.limit_raw == 12
-    assert trial_premium_player_profile.user.userinquiry.counter_raw == 2
-    assert trial_premium_player_profile.user.userinquiry.limit == 22
-    assert trial_premium_player_profile.user.userinquiry.left == 10
-    assert trial_premium_player_profile.user.userinquiry.left_to_show == 10
-    assert trial_premium_player_profile.user.userinquiry.limit_to_show == 12
-    assert trial_premium_player_profile.premium_products.trial_tested
+    # Counter setup: 5 freemium + 25 premium = 30 total (all used)
+    # Buying XXL adds 10 to limit_raw (5 + 10 = 15) AND to total limit
+    # New limit: 30 (base) + 10 (package bonus from 15-5) = 40
+    assert trial_premium_coach_profile.user.userinquiry.limit_raw == 15  # 5 + 10 from XXL
+    assert trial_premium_coach_profile.user.userinquiry.counter_raw == 5  # All freemium used
+    assert trial_premium_coach_profile.user.userinquiry.limit == 40  # Premium (30) + package (10)
+    assert trial_premium_coach_profile.user.userinquiry.left == 10  # 40 - 30 used = 10 new inquiries
+    assert trial_premium_coach_profile.user.userinquiry.left_to_show == 10
+    assert trial_premium_coach_profile.user.userinquiry.limit_to_show == 40
+    assert trial_premium_coach_profile.premium_products.trial_tested
 
 
 def test_extend_premium_during_trial(
@@ -264,17 +276,22 @@ def test_extend_premium_during_trial(
 
     assert transaction.product == product_premium_player_month
     assert transaction.user == trial_premium_player_profile.user
+    # Trial is replaced, not extended - should be 30 days, not 33
     assert trial_premium_player_profile.premium.subscription_lifespan == timedelta(
-        days=33
+        days=30
     )
     assert trial_premium_player_profile.is_premium
-    assert trial_premium_player_profile.premium_products.calculate_pm_score.awaiting_approval
+    assert not trial_premium_player_profile.premium.is_trial  # No longer trial
+    assert (
+        trial_premium_player_profile.premium_products.calculate_pm_score.awaiting_approval
+    )
     assert trial_premium_player_profile.is_promoted
     assert trial_premium_player_profile.has_premium_inquiries
-    assert trial_premium_player_profile.user.userinquiry.limit_raw == 2
-    assert trial_premium_player_profile.user.userinquiry.limit == 12
-    assert trial_premium_player_profile.user.userinquiry.left == 12
-    assert trial_premium_player_profile.user.userinquiry.plan.type_ref == "BASIC"
+    assert trial_premium_player_profile.user.userinquiry.limit_raw == 10
+    assert trial_premium_player_profile.user.userinquiry.limit == 30
+    assert trial_premium_player_profile.user.userinquiry.left == 30  # Fresh premium (0 used)
+    # Plan should be PREMIUM_PLAYER when premium is active
+    assert trial_premium_player_profile.user.userinquiry.plan.type_ref == "PREMIUM_PLAYER"
 
 
 def test_extend_premium_with_trial(
@@ -296,9 +313,9 @@ def test_extend_premium_with_trial(
     assert player_profile.premium_products.calculate_pm_score.awaiting_approval
     assert player_profile.is_promoted
     assert player_profile.has_premium_inquiries
-    assert player_profile.user.userinquiry.limit_raw == 2
-    assert player_profile.user.userinquiry.limit == 12
-    assert player_profile.user.userinquiry.left == 12
+    assert player_profile.user.userinquiry.limit_raw == 10
+    assert player_profile.user.userinquiry.limit == 30
+    assert player_profile.user.userinquiry.left == 30
     assert player_profile.premium_products.trial_tested
 
     with pytest.raises(ValueError) as exc:
@@ -347,16 +364,16 @@ def test_buy_premium_for_player_after_trial_expiration(
     assert profile.premium_products.calculate_pm_score.awaiting_approval
     assert profile.is_promoted
     assert profile.has_premium_inquiries
-    assert profile.user.userinquiry.limit_raw == 2
-    assert profile.user.userinquiry.limit == 12
-    assert profile.user.userinquiry.left == 12
+    assert profile.user.userinquiry.limit_raw == 10
+    assert profile.user.userinquiry.limit == 30
+    assert profile.user.userinquiry.left == 30  # Fresh premium (0 used after renewal)
     assert profile.premium_products.trial_tested
 
 
 def test_buy_premium_for_other_after_trial_expiration(
     api_client,
     trial_premium_coach_profile,
-    product_premium_other_month,
+    product_premium_other_quarter,
     mck_timezone_now,
 ):
     profile = trial_premium_coach_profile
@@ -378,7 +395,7 @@ def test_buy_premium_for_other_after_trial_expiration(
     assert not profile.has_premium_inquiries
 
     api_client.force_authenticate(user=profile.user)
-    url = create_transaction_url(product_premium_other_month.id)
+    url = create_transaction_url(product_premium_other_quarter.id)
     response = api_client.post(url)
 
     assert response.status_code == 200
@@ -386,29 +403,34 @@ def test_buy_premium_for_other_after_trial_expiration(
     transaction = approve_transaction(response.json()["uuid"])
     trial_premium_coach_profile.refresh_from_db()
 
-    assert transaction.product == product_premium_other_month
+    assert transaction.product == product_premium_other_quarter
     assert transaction.user == profile.user
-    assert profile.premium.subscription_lifespan == timedelta(days=30)
+    assert profile.premium.subscription_lifespan == timedelta(days=90)
     assert profile.is_premium
     assert not hasattr(profile.premium_products, "calculate_pm_score")
     assert profile.is_promoted
     assert profile.has_premium_inquiries
-    assert profile.user.userinquiry.limit_raw == 2
-    assert profile.user.userinquiry.limit == 12
-    assert profile.user.userinquiry.left == 12
+    assert profile.user.userinquiry.limit_raw == 5  # Coach freemium limit (Club-like)
+    assert profile.user.userinquiry.limit == 30  # Coach premium limit (Club-like)
+    assert profile.user.userinquiry.left == 30  # Fresh premium (0 used after renewal)
     assert profile.premium_products.trial_tested
 
 
-def test_buy_premium_for_guest(api_client, guest_profile, product_premium_other_month):
+def test_buy_premium_for_guest(api_client, guest_profile, product_premium_guest_month):
+    """Test Guest buying GUEST_PREMIUM_PROFILE_MONTH (new product)"""
     api_client.force_authenticate(user=guest_profile.user)
-    url = create_transaction_url(product_premium_other_month.id)
+    url = create_transaction_url(product_premium_guest_month.id)
     response = api_client.post(url)
 
     assert response.status_code == 200
 
-    approve_transaction(response.json()["uuid"])
+    transaction = approve_transaction(response.json()["uuid"])
 
     guest_profile.refresh_from_db()
+    assert transaction.product == product_premium_guest_month
     assert guest_profile.is_premium
     assert guest_profile.is_promoted
     assert guest_profile.has_premium_inquiries
+    assert guest_profile.premium.subscription_lifespan == timedelta(days=30)
+    # Guest has same inquiry limits as Club-like (not Player)
+    assert guest_profile.user.userinquiry.limit == 30

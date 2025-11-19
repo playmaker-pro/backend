@@ -122,6 +122,25 @@ paths:
                 $ref: '#/components/schemas/NewTransaction'
         '401':
           description: "Unauthorized"
+        '403':
+          description: "Forbidden - User lacks permission"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+              examples:
+                not_premium:
+                  value:
+                    detail: "Product is available only for premium users."
+                player_restriction:
+                  value:
+                    detail: "Players cannot buy inquiry packages."
+                inquiries_not_exhausted:
+                  value:
+                    detail: "You need to use all inquiries before buying new ones."
         '404':
           description: "Transaction type does not exist."
         '503':
@@ -309,7 +328,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/InquiryRequest'
+                  $ref: '#/components/schemas/ReceivedInquiryRequestsList'
         '401':
           description: "Unauthorized"
   /inquiries/my/meta-data/:
@@ -7739,6 +7758,39 @@ components:
         - recipient
         - is_read_by_sender
         - is_read_by_recipient
+
+    ReceivedInquiryRequestsList:
+      type: object
+      required:
+        - results
+        - total_count
+        - visible_count
+        - hidden_count
+        - is_limited
+      properties:
+        results:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/InquiryRequest'
+              - type: object
+                properties:
+                  is_visible:
+                    type: boolean
+                    description: "Whether this inquiry is visible to the user"
+          description: "List of received inquiry requests"
+        total_count:
+          type: integer
+          description: "Total number of received inquiries"
+        visible_count:
+          type: integer
+          description: "Number of visible inquiries"
+        hidden_count:
+          type: integer
+          description: "Number of hidden inquiries"
+        is_limited:
+          type: boolean
+          description: "Whether the list is limited due to non-premium status"
 
     InquiryPlan:
       type: object

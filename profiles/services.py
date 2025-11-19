@@ -439,6 +439,15 @@ class NotificationService:
         )
         self.create_notification(body)
 
+    def notify_hidden_inquiry(self) -> None:
+        """
+        Send notifications for hidden inquiries (freemium club limit exceeded).
+        """
+        body = self.parse_body(
+            NotificationTemplate.HIDDEN_INQUIRY,
+        )
+        self.create_notification(body)
+
     def notify_profile_verified(self) -> None:
         """
         Send notifications for verified profiles.

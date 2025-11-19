@@ -160,14 +160,18 @@ class TestPremiumProduct:
             player_profile.setup_premium_profile(PremiumType.TRIAL)
 
     def test_paid_during_trial(self, player_profile, timezone_now):
+        """Test that buying paid premium during trial REPLACES trial, not extends it."""
         products = player_profile.products
         player_profile.setup_premium_profile(PremiumType.TRIAL)
         player_profile.setup_premium_profile(PremiumType.MONTH)
 
-        should_be_valid_until_date = (timezone_now.return_value + timedelta(PremiumType.TRIAL.period + PremiumType.MONTH.period)).date()
+        # Trial should be REPLACED, not extended
+        # So valid_until should be NOW + MONTH (30 days), not NOW + TRIAL + MONTH (33 days)
+        should_be_valid_until_date = (timezone_now.return_value + timedelta(days=PremiumType.MONTH.period)).date()
         products.refresh_from_db()
 
         assert products.premium.valid_until.date() == should_be_valid_until_date
+        assert products.premium.is_trial is False  # Should no longer be trial
         assert products.inquiries.valid_until.date() == should_be_valid_until_date
         assert products.promotion.valid_until.date() == should_be_valid_until_date
 
@@ -310,13 +314,15 @@ class TestPremiumInquiriesProduct:
         assert premium_inquiries.valid_until == make_aware(
             datetime(2020, 1, 31, 12, 00, 00)
         )
-        assert user_inquiries.limit == 12
+        # With override logic: premium limit (30) overrides freemium limit (10)
+        assert user_inquiries.limit == 30
 
         timezone_now.return_value = make_aware(datetime(2020, 2, 15, 12, 00, 00))
         user_inquiries.refresh_from_db()
 
         assert premium_inquiries.is_active is False
-        assert user_inquiries.limit == 2
+        # Back to freemium: player has 10 freemium limit
+        assert user_inquiries.limit == 10
 
         premium_inquiries.refresh(PremiumType.MONTH)
         user_inquiries.refresh_from_db()
@@ -329,7 +335,8 @@ class TestPremiumInquiriesProduct:
         assert premium_inquiries.valid_until == make_aware(
             datetime(2020, 3, 16, 12, 00)
         )
-        assert user_inquiries.limit == 12
+        # Premium override again: 30
+        assert user_inquiries.limit == 30
 
 
 class TestProduct:
@@ -346,12 +353,14 @@ class TestProduct:
     def test_premium_products(self):
         premium_products = Product.objects.filter(ref="PREMIUM", visible=True)
 
-        assert premium_products.count() == 4
+        assert premium_products.count() == 6
         assert [product.name for product in premium_products] == [
             "PLAYER_PREMIUM_PROFILE_MONTH",
             "PLAYER_PREMIUM_PROFILE_YEAR",
-            "PREMIUM_PROFILE_MONTH",
-            "PREMIUM_PROFILE_YEAR",
+            "GUEST_PREMIUM_PROFILE_MONTH",
+            "GUEST_PREMIUM_PROFILE_YEAR",
+            "OTHER_PREMIUM_PROFILE_QUARTER",
+            "OTHER_PREMIUM_PROFILE_YEAR",
         ]
 
 

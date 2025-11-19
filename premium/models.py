@@ -15,6 +15,7 @@ from premium.utils import get_date_days_after
 
 class PremiumType(Enum):
     YEAR = "YEAR"
+    QUARTER = "QUARTER"  # 3 months for Club/Coach/etc.
     MONTH = "MONTH"
     TRIAL = "TRIAL"
     CUSTOM = "CUSTOM"
@@ -23,6 +24,7 @@ class PremiumType(Enum):
     def map(self) -> dict:
         return {
             self.YEAR: 365,
+            self.QUARTER: 90,
             self.MONTH: 30,
             self.TRIAL: 3,
         }
@@ -36,7 +38,7 @@ class PremiumType(Enum):
 
     @classmethod
     def get_period_type(cls, period: int) -> "PremiumType":
-        type_map = {3: cls.TRIAL, 30: cls.MONTH, 365: cls.YEAR}
+        type_map = {3: cls.TRIAL, 30: cls.MONTH, 90: cls.QUARTER, 365: cls.YEAR}
         try:
             return type_map[period].value
         except KeyError:
@@ -72,6 +74,36 @@ class PremiumProfile(models.Model):
         else:
             self._fresh_init()
         self.save()
+    
+    def _update_inquiry_plan(self, is_premium: bool) -> None:
+        """Update UserInquiry when premium status changes."""
+        try:
+            if not self.product.profile or not self.product.profile.user:
+                return
+            
+            user = self.product.profile.user
+            if not hasattr(user, 'userinquiry'):
+                return
+            
+            # Set appropriate plan based on premium status
+            from inquiries.services import InquireService
+            profile_type = self.product.profile.__class__.__name__
+            plan = InquireService.get_plan_for_profile_type(profile_type, is_premium)
+            user.userinquiry.plan = plan
+            
+            # When activating premium, reset counter and initialize limit_raw to freemium baseline
+            if is_premium:
+                user.userinquiry.counter_raw = 0
+                # Set limit_raw to profile's freemium limit (10 for Player, 5 for others)
+                user.userinquiry.limit_raw = user.userinquiry.get_freemium_limit()
+                user.userinquiry.save(update_fields=['plan', 'counter_raw', 'limit_raw'])
+            else:
+                user.userinquiry.save(update_fields=['plan'])
+        except Exception as e:
+            # Log but don't crash - inquiry update is not critical
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Failed to update inquiry settings: {str(e)}")
 
     @property
     def is_active(self) -> bool:
@@ -85,12 +117,31 @@ class PremiumProfile(models.Model):
             return False
         return True
 
+    @property
+    def is_on_trial(self) -> bool:
+        """Check if profile is on trial (active trial subscription)."""
+        return self.is_active and self.is_trial
+
     def setup(self, premium_type: PremiumType = PremiumType.TRIAL) -> None:
         """Setup the premium profile."""
+        # Track if we're upgrading from trial to paid premium
+        was_on_trial = self.is_on_trial
+        upgrading_from_trial = was_on_trial and premium_type != PremiumType.TRIAL
+        
         self.is_trial = premium_type == PremiumType.TRIAL
         self.period = premium_type.period
-        self._refresh()
+        
+        # If upgrading from trial, force fresh init instead of extending
+        if upgrading_from_trial:
+            self._fresh_init()
+            self.save()
+        else:
+            self._refresh()
+        
         self.product.setup_premium_products(premium_type)
+        
+        # Update UserInquiry plan to premium plan
+        self._update_inquiry_plan(is_premium=True)
 
     def setup_by_days(self, days: int) -> None:
         """Setup the premium profile by days."""
@@ -186,9 +237,16 @@ class PromoteProfileProduct(models.Model):
     def refresh(self, premium_type: PremiumType, period: int = None) -> None:
         """Refresh the validity of the promotion."""
         self.days_count = period or premium_type.period
-        if self.is_active:
+        
+        # If upgrading from trial (3 days) to paid premium, replace instead of extend
+        was_trial = self.is_active and self.subscription_lifespan.days == 3
+        upgrading_from_trial = was_trial and premium_type != PremiumType.TRIAL
+        
+        if self.is_active and not upgrading_from_trial:
+            # Normal extension (e.g., renewing existing premium)
             self.valid_until = get_date_days_after(self.valid_until, self.days_count)
         else:
+            # Fresh start (new subscription or upgrading from trial)
             self._fresh_init()
         self.save()
 
@@ -199,7 +257,14 @@ class PromoteProfileProduct(models.Model):
 
 
 class PremiumInquiriesProduct(models.Model):
-    INQUIRIES_LIMIT = 10
+    # Profile-specific inquiry limits
+    # Only Player gets 30/month; everything else (Club, Coach, Manager, Scout, Guest, Referee, Other) gets 30/90days
+    INQUIRIES_LIMIT_PLAYER = 30  # Player premium: 30 per month (anti-spam)
+    INQUIRIES_LIMIT_DEFAULT = 30  # All others (Club-like): 30 every 3 months
+
+    # Reset periods (in days)
+    RESET_PERIOD_PLAYER = 30  # 1 month for players
+    RESET_PERIOD_DEFAULT = 90  # 3 months for all others (Club-like)
 
     product = models.OneToOneField(
         "PremiumProduct", on_delete=models.CASCADE, related_name="inquiries"
@@ -211,9 +276,44 @@ class PremiumInquiriesProduct(models.Model):
     current_counter = models.PositiveIntegerField(default=0)
     counter_updated_at = models.DateTimeField(null=True, blank=True)
 
+    def get_profile_type(self) -> Optional[str]:
+        """Get the profile type class name (ClubProfile, PlayerProfile, etc.)"""
+        if self.product and self.product.profile:
+            return self.product.profile.__class__.__name__
+        return None
+
+    def get_inquiry_limit(self) -> int:
+        """Get inquiry limit based on profile type.
+        Only PlayerProfile gets 30/month; all others get 30/90days (Club-like).
+        """
+        profile_type = self.get_profile_type()
+        if profile_type == "PlayerProfile":
+            return self.INQUIRIES_LIMIT_PLAYER  # 30
+        else:
+            # Club, Coach, Manager, Scout, Guest, Referee, Other all get 30 (Club-like)
+            return self.INQUIRIES_LIMIT_DEFAULT  # 30
+
+    def get_reset_period(self) -> int:
+        """Get reset period based on profile type.
+        Only PlayerProfile gets 30 days; all others get 90 days (Club-like).
+        """
+        profile_type = self.get_profile_type()
+        if profile_type == "PlayerProfile":
+            return self.RESET_PERIOD_PLAYER  # 30
+        else:
+            # Club, Coach, Manager, Scout, Guest, Referee, Other all get 90 (Club-like)
+            return self.RESET_PERIOD_DEFAULT  # 90
+
+    @property
+    def INQUIRIES_LIMIT(self) -> int:
+        """Dynamic inquiry limit based on profile type (backward compatibility)"""
+        return self.get_inquiry_limit()
+
     def increment_counter(self) -> None:
-        self.current_counter += 1
-        self.save()
+        # Only increment if under the limit
+        if self.current_counter < self.INQUIRIES_LIMIT:
+            self.current_counter += 1
+            self.save()
 
     @property
     def subscription_lifespan(self) -> timedelta:
@@ -246,14 +346,17 @@ class PremiumInquiriesProduct(models.Model):
 
     @property
     def inquiries_refreshed_at(self) -> datetime:
-        return self.counter_updated_at + timedelta(days=30)
+        """Calculate when inquiries should be refreshed based on profile type"""
+        reset_days = self.get_reset_period()
+        return self.counter_updated_at + timedelta(days=reset_days)
 
     def _fresh_init(self, period: int) -> None:
         """Initialize the premium inquiries."""
         # self.counter_updated_at = timezone.now()
         self.valid_since = timezone.now()
         self.valid_until = get_date_days_after(self.valid_since, days=period)
-        self.reset_counter(commit=False)
+        # Don't reset plan when initializing - plan is set by PremiumProfile._update_inquiry_plan
+        self.reset_counter(reset_plan=False, commit=False)
 
     @property
     def is_active(self) -> bool:
@@ -267,10 +370,16 @@ class PremiumInquiriesProduct(models.Model):
 
         if self.subscription_lifespan.days < 30:
             self.reset_counter(reset_plan=False, commit=False)
+        
+        # If upgrading from trial (3 days) to paid premium, replace instead of extend
+        was_trial = self.is_active and self.subscription_lifespan.days == 3
+        upgrading_from_trial = was_trial and premium_type != PremiumType.TRIAL
 
-        if self.is_active:
+        if self.is_active and not upgrading_from_trial:
+            # Normal extension (e.g., renewing existing premium)
             self.valid_until = get_date_days_after(self.valid_until, days=period)
         else:
+            # Fresh start (new subscription or upgrading from trial)
             self._fresh_init(period)
 
         self.save()
@@ -378,22 +487,55 @@ class Product(models.Model):
         if not user.profile:
             raise Exception("User has no profile.")
 
-        if self.ref == self.ProductReference.INQUIRIES:
+        if self.ref == self.ProductReference.PREMIUM:
+            # Cannot buy premium if already has active PAID premium (trial is allowed)
+            if user.profile.is_premium:
+                # Check if user is on trial - if so, allow purchase (trial will be replaced)
+                premium_profile = getattr(user.profile.products, 'premium', None)
+                if premium_profile and not premium_profile.is_on_trial:
+                    raise PermissionError(
+                        "You already have active premium. Wait for it to expire before purchasing a new one."
+                    )
+            
+            # Validate profile type matches product
+            profile_class_name = user.profile.__class__.__name__
+            
+            # Player products - only for PlayerProfile
+            if self.player_only and profile_class_name != "PlayerProfile":
+                raise PermissionError(
+                    "This product is only available for Player profiles."
+                )
+            
+            # Guest products - only for GuestProfile
+            if self.guest_only and profile_class_name != "GuestProfile":
+                raise PermissionError(
+                    "This product is only available for Guest profiles."
+                )
+            
+            # Other products - for Club/Coach/Manager/Scout/Referee/Other (NOT Player or Guest)
+            if self.other_only and profile_class_name in ["PlayerProfile", "GuestProfile"]:
+                raise PermissionError(
+                    "This product is not available for Player or Guest profiles."
+                )
+            
+            # Old products (PREMIUM_PROFILE_*) - for backward compatibility, exclude Player
+            if not (self.player_only or self.guest_only or self.other_only):
+                if profile_class_name == "PlayerProfile":
+                    raise PermissionError(
+                        "Your profile is not allowed to create transaction for this product."
+                    )
+
+        elif self.ref == self.ProductReference.INQUIRIES:
+            # Players cannot buy inquiry packages (they get unlimited premium)
+            if user.profile.__class__.__name__ == "PlayerProfile":
+                raise PermissionError("Players cannot buy inquiry packages.")
             if not user.profile.is_premium:
                 raise PermissionError("Product is available only for premium users.")
-            if user.userinquiry.left:
+            # Packages can only be bought when all available inquiries are exhausted
+            if user.userinquiry.left > 0:
                 raise PermissionError(
                     "You need to use all inquiries before buying new ones."
                 )
-
-        profile_class_name = user.profile.__class__.__name__
-        if self.ref == self.ProductReference.PREMIUM and (
-            (self.player_only and profile_class_name != "PlayerProfile")
-            or (not self.player_only and profile_class_name == "PlayerProfile")
-        ):
-            raise PermissionError(
-                "Your profile is not allowed to create transaction for this product."
-            )
 
     @property
     def inquiry_plan(self) -> "inquiries.models.InquiryPlan":
@@ -403,9 +545,14 @@ class Product(models.Model):
 
     def apply_product_for_transaction(self, transaction: Transaction) -> None:
         if self.ref == Product.ProductReference.PREMIUM:
-            premium_type = (
-                PremiumType.YEAR if self.name.endswith("_YEAR") else PremiumType.MONTH
-            )
+            # Determine premium type based on product name suffix
+            if self.name.endswith("_YEAR"):
+                premium_type = PremiumType.YEAR
+            elif self.name.endswith("_QUARTER"):
+                premium_type = PremiumType.QUARTER
+            else:  # _MONTH
+                premium_type = PremiumType.MONTH
+            
             profile = transaction.user.profile
             profile.setup_premium_profile(premium_type.value)
         elif self.ref == Product.ProductReference.INQUIRIES:
@@ -424,3 +571,12 @@ class Product(models.Model):
     @property
     def player_only(self) -> bool:
         return self.name.startswith("PLAYER_")
+    
+    @property
+    def guest_only(self) -> bool:
+        return self.name.startswith("GUEST_")
+    
+    @property
+    def other_only(self) -> bool:
+        """For Club, Coach, Manager, Scout, Referee, Other profiles"""
+        return self.name.startswith("OTHER_")

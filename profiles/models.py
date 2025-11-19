@@ -2389,7 +2389,26 @@ class ProfileMeta(models.Model, VisitationMixin):
         """
         Returns the profile object associated with this meta instance.
         """
-        return getattr(self, self._profile_class.lower())
+        from roles import definitions
+        
+        # Map profile class names to model classes
+        profile_model_map = {
+            'playerprofile': PlayerProfile,
+            'coachprofile': CoachProfile,
+            'clubprofile': ClubProfile,
+            'guestprofile': GuestProfile,
+            'managerprofile': ManagerProfile,
+            'scoutprofile': ScoutProfile,
+            'refereeprofile': RefereeProfile,
+        }
+        
+        profile_class_lower = self._profile_class.lower()
+        profile_model = profile_model_map.get(profile_class_lower)
+        
+        if profile_model:
+            return profile_model.objects.get(user=self.user)
+        
+        raise ValueError(f"Unknown profile class: {self._profile_class}")
 
     @property
     def transfer_object(
