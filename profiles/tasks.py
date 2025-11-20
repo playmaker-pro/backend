@@ -44,27 +44,6 @@ def setup_premium_profile(
 
 
 @shared_task
-def post_create_profile_tasks(class_name: str, profile_id: int) -> None:
-    """
-    Create a profile for the user if it doesn't exist.
-    """
-
-    model = getattr(profile_models, class_name)
-    profile: profile_models.BaseProfile = model.objects.get(pk=profile_id)
-
-    profile.ensure_verification_stage_exist(commit=False)
-    profile.ensure_visitation_exist(commit=False)
-    profile.ensure_meta_exist(commit=False)
-    profile.ensure_premium_products_exist(commit=False)
-    profile.save()
-    create_post_create_profile__periodic_tasks.delay(class_name, profile_id)
-    NotificationService(profile.meta).notify_welcome()
-
-    if profile.user.display_status == profile_models.User.DisplayStatus.NOT_SHOWN:
-        NotificationService(profile.meta).notify_profile_hidden()
-
-
-@shared_task
 def check_profile_one_hour_after(profile_id: int, model_name: str) -> None:
     """
     Check if the profile is verified and notify the user.

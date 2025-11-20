@@ -6,9 +6,9 @@ from django.utils import timezone
 
 from profiles.services import NotificationService
 from profiles.tasks import (
+    create_post_create_profile__periodic_tasks,
     post_create_other_profile,
     post_create_player_profile,
-    post_create_profile_tasks,
 )
 from users.models import User
 
@@ -59,7 +59,18 @@ def post_create_profile(sender, instance, created, **kwargs):
     """
     if created:
         profile_class_name = instance.__class__.__name__
-        post_create_profile_tasks.delay(profile_class_name, instance.pk)
+        instance.ensure_verification_stage_exist(commit=False)
+        instance.ensure_visitation_exist(commit=False)
+        instance.ensure_meta_exist(commit=False)
+        instance.ensure_premium_products_exist(commit=False)
+        instance.save()
+        create_post_create_profile__periodic_tasks.delay(
+            profile_class_name, instance.pk
+        )
+        NotificationService(instance.meta).notify_welcome()
+
+        if instance.user.display_status == User.DisplayStatus.NOT_SHOWN:
+            NotificationService(instance.meta).notify_profile_hidden()
 
         if profile_class_name in ["CoachProfile", "ClubProfile", "ScoutProfile"]:
             post_create_other_profile.delay(instance.pk, profile_class_name)
@@ -74,4 +85,3 @@ def post_profile_visitation(sender, instance, created, **kwargs):
     """
     if created:
         NotificationService(instance.visited.profile.meta).notify_profile_visited()
-

@@ -2,11 +2,9 @@ from celery import shared_task
 from celery.utils.log import get_task_logger
 from django.utils import timezone
 
-from inquiries.services import InquireService
-from mailing.models import Mailing
 from profiles.errors import ProfileVisitHistoryDoesNotExistException
 from profiles.services import ProfileVisitHistoryService
-from users.models import Ref, User, UserPreferences
+from users.models import User
 from users.mongo_login_service import mongo_login_service
 from users.services import UserService
 
@@ -15,18 +13,6 @@ logger = get_task_logger(__name__)
 
 def _get_user(user_id: int) -> User:
     return User.objects.get(pk=user_id)
-
-
-@shared_task
-def prepare_new_user(*args, **kwargs) -> None:
-    """
-    Create required/related objects for new user.
-    """
-    user = _get_user(kwargs.get("user_id"))
-    UserPreferences.objects.get_or_create(user=user)
-    Ref.objects.get_or_create(user=user)
-    InquireService.create_basic_inquiry_plan(user)
-    Mailing.objects.get_or_create(user=user)
 
 
 @shared_task

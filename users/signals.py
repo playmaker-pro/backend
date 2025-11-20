@@ -1,17 +1,17 @@
 import logging
 
-from celery import chain
-from django.contrib.auth import get_user_model, user_logged_in
+from django.contrib.auth import user_logged_in
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
+from inquiries.services import InquireService
+from mailing.models import Mailing
 from mailing.tasks import notify_admins
-from users.models import UserRef
+from users.models import Ref, User, UserPreferences, UserRef
 from users.services import ReferralRewardService, UserService
-from users.tasks import prepare_new_user, send_email_to_confirm_new_user
+from users.tasks import send_email_to_confirm_new_user
 
 logger = logging.getLogger("project")
-User = get_user_model()
 
 
 @receiver(user_logged_in)
@@ -29,10 +29,11 @@ def pre_save_user(sender, instance, **kwargs):
 def post_save_user(sender, instance, created, **kwargs) -> None:
     """Create UserPreferences object for each new user"""
     if created:
-        chain(
-            prepare_new_user.s(user_id=instance.pk),
-            send_email_to_confirm_new_user.s(user_id=instance.pk),
-        ).apply_async()
+        UserPreferences.objects.get_or_create(user=instance)
+        Ref.objects.get_or_create(user=instance)
+        InquireService.create_basic_inquiry_plan(instance)
+        Mailing.objects.get_or_create(user=instance)
+        (send_email_to_confirm_new_user.delay(user_id=instance.pk),)
     else:
         old_object = User.objects.get(pk=instance.pk)
 

@@ -1,5 +1,4 @@
 import string
-from unittest.mock import patch
 
 import factory
 from django.contrib.auth import get_user_model
@@ -57,8 +56,7 @@ class UserFactory(CustomObjectFactory):
         kwargs["password"] = make_password(kwargs.get("password", "test"))
         kwargs.setdefault("display_status", User.DisplayStatus.VERIFIED)
 
-        with patch("users.tasks.prepare_new_user"):
-            return super().create(**kwargs)
+        return super().create(**kwargs)
 
     @factory.post_generation
     def post_create(self, create, extracted, **kwargs):
