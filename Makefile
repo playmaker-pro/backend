@@ -2,7 +2,8 @@ SHELL := /bin/bash
 LOG_DIR=.logs
 CELERY_LOG=$(LOG_DIR)/celery_worker.log
 BEAT_LOG=$(LOG_DIR)/celery_beat.log
-BEAT_PID_FILE := .celerybeat-$(PROJECT_NAME).pid
+WORKER_PID_FILE := .celery-worker.pid
+BEAT_PID_FILE := .celerybeat.pid
 
 .PHONY: test
 test:
@@ -35,13 +36,13 @@ startapp:
 	poetry run python manage.py runserver
 
 
-.PHONY: restart 
-restart: tmp/restart.txt stop start
+.PHONY: restart
+restart: stop start tmp/restart.txt
 stop: stop-celery stop-celery-beat
 start: start-celery start-celery-beat
-restart:
+tmp/restart.txt:
 	@mkdir -p tmp
-	touch tmp/restart.txt
+	@touch tmp/restart.txt
 
 
 .PHONY: migrate
@@ -66,24 +67,33 @@ stop-celery:
 .PHONY: start-celery-worker
 start-celery-worker: ensure-logs
 	@echo "Starting Celery worker in background session..."
-	nohup poetry run celery -A backend \
-	worker --autoscale=0,6 --without-mingle --without-gossip --loglevel=DEBUG \
+	nohup poetry run celery -A backend worker --pidfile $(WORKER_PID_FILE) \
+	--autoscale=1,6 --without-mingle --without-gossip --loglevel=DEBUG \
 	--max-tasks-per-child=1000 --task-events --pool=prefork > $(CELERY_LOG) 2>&1 &
 
 .PHONY: stop-celery-worker
 stop-celery-worker:
 	@echo "Stopping Celery worker..."
-	poetry run celery -A backend control shutdown
+	@if [ -f $(WORKER_PID_FILE) ]; then \
+		kill -TERM $$(cat $(WORKER_PID_FILE)) || true; \
+		sleep 2; \
+		if kill -0 $$(cat $(WORKER_PID_FILE)) 2>/dev/null; then kill -KILL $$(cat $(WORKER_PID_FILE)) || true; fi; \
+		rm -f $(WORKER_PID_FILE); \
+		echo "Celery worker stopped."; \
+	else \
+		echo "No worker PID file found. Attempting remote shutdown if any worker responds..."; \
+		poetry run celery -A backend inspect ping >/dev/null 2>&1 && poetry run celery -A backend control shutdown || echo "No active worker responded; skip."; \
+	fi
 
 .PHONY: start-celery-beat
 start-celery-beat: ensure-logs
 	@echo "Starting Celery Beat in background session..."
-	nohup poetry run celery -A backend beat -l info --scheduler django --pidfile .celerybeat.pid > $(BEAT_LOG) 2>&1 &
+	nohup poetry run celery -A backend beat -l info --scheduler django --pidfile $(BEAT_PID_FILE) > $(BEAT_LOG) 2>&1 &
 
 .PHONY: stop-celery-beat
 stop-celery-beat:
 	@echo "Stopping Celery Beat..."
-	kill $$(cat .celerybeat.pid)
+	@if [ -f $(BEAT_PID_FILE) ]; then kill -TERM $$(cat $(BEAT_PID_FILE)) || true; rm -f $(BEAT_PID_FILE); echo "Celery beat stopped."; else echo "No beat PID file found (already stopped)."; fi
 
 
 .PHONY: shell
