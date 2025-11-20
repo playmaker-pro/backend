@@ -25,7 +25,14 @@ from profiles import errors, models, services
 from profiles.api import consts
 from profiles.api import errors as api_errors
 from profiles.services import ProfileVideoService
-from roles.definitions import CLUB_ROLES, GUEST_SHORT, PROFILE_TYPE_SHORT_MAP
+from roles.definitions import (
+    CLUB_ROLES,
+    CLUB_SHORT,
+    COACH_SHORT,
+    GUEST_SHORT,
+    PROFILE_TYPE_SHORT_MAP,
+)
+from transfers.models import ProfileTransferRequest
 from users.models import UserPreferences
 from users.services import UserService
 from utils import translate_to
@@ -943,6 +950,7 @@ class ProfileSerializer(serializers.Serializer):
     # meta fields
     player_stats = serializers.SerializerMethodField(read_only=True)
     role = serializers.SerializerMethodField()
+    transfer_request = serializers.SerializerMethodField()
 
     def get_labels(self, obj):
         """Override labels field to return only visible=True labels"""
@@ -1056,6 +1064,40 @@ class ProfileSerializer(serializers.Serializer):
         if isinstance(obj, QuerySet):
             obj = obj.first()
         return services.ProfileService.get_role_by_model(type(obj))
+
+    def get_transfer_request(
+        self, obj: models.PROFILE_TYPE
+    ) -> Optional[dict]:
+        """
+        Get transfer request status for Coach (T) and Club (C) profiles.
+        Returns only the status (id + name) for listing endpoints.
+        """
+        role = self.get_role(obj)
+        
+        # Only return transfer_request for Coach (T) and Club (C) profiles
+        if role not in (COACH_SHORT, CLUB_SHORT):
+            return None
+        
+        # Check if profile has a transfer_request
+        if not hasattr(obj, "meta") or not hasattr(obj.meta, "transfer_request"):
+            return None
+        
+        transfer_request = obj.meta.transfer_request
+        if not transfer_request or not transfer_request.status:
+            return None
+        
+        # Serialize the status using ProfileEnumChoicesSerializer
+        # The serializer needs the model and source to access field choices
+        status_serializer = ProfileEnumChoicesSerializer(
+            model=ProfileTransferRequest,
+            source="status",
+        )
+        # Parse the status value first, then convert to representation
+        status_data = status_serializer.to_representation(
+            status_serializer.parse(transfer_request.status)
+        )
+        
+        return {"status": status_data}
 
     def save(self) -> None:
         """This serializer should not be able to save anything"""
