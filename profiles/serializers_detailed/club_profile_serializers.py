@@ -25,6 +25,7 @@ class ClubProfileViewSerializer(BaseProfileSerializer):
             "role",
             "verification_stage",
             "team_history_object",
+            "transfer_request",
             "visits",
             "is_promoted",
             "is_premium",

@@ -5878,6 +5878,22 @@ components:
                 $ref: '#/components/schemas/ProfileVideo'
             transfer_status:
               $ref: '#/components/schemas/TransferStatusGet'
+            transfer_request:
+              type: object
+              nullable: true
+              description: "Transfer request status for coaches looking for players. Only present for Coach (T) and Club (C) profiles."
+              properties:
+                status:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      description: "Transfer request status id"
+                    name:
+                      type: string
+                      description: "Transfer request status name"
+                  required: [ "id", "name" ]
+              required: [ "status" ]
             labels:
               type: array
               items:
@@ -5947,6 +5963,12 @@ components:
               "status": {
                 "id": "1",
                 "name": "Szukam klubu"
+              }
+            },
+            "transfer_request": {
+              "status": {
+                "id": "2",
+                "name": "Szukam piłkarzy"
               }
             },
             "role": "T",
@@ -6343,6 +6365,22 @@ components:
                     $ref: '#/components/schemas/ExternalLink'
             team_history_object:
               $ref: '#/components/schemas/TeamHistoryProfileView'
+            transfer_request:
+              type: object
+              nullable: true
+              description: "Transfer request status for clubs looking for players. Only present for Coach (T) and Club (C) profiles."
+              properties:
+                status:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      description: "Transfer request status id"
+                    name:
+                      type: string
+                      description: "Transfer request status name"
+                  required: [ "id", "name" ]
+              required: [ "status" ]
             role:
               type: string
               description: "Player role"
@@ -6437,6 +6475,13 @@ components:
                 "step": 0,
                 "date_updated": "2023-09-09T10:18:34.070304+02:00",
                 "done": false
+              },
+              "team_history_object": null,
+              "transfer_request": {
+                "status": {
+                  "id": "2",
+                  "name": "Szukam piłkarzy"
+                }
               },
               "visits": 10
             }
