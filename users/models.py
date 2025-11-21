@@ -237,6 +237,19 @@ class User(AbstractUser, UserRoleMixin):
     @property
     def is_roleless(self):
         return self.declared_role is None
+    
+    @property
+    def is_freemium_non_player(self) -> bool:
+        """
+        Check if user is a freemium non-Player profile.
+        These profiles (Club, Coach, Scout, Manager, Guest, Referee) have limited inquiry visibility.
+        """
+        return (
+            hasattr(self, 'profile') and 
+            self.profile is not None and
+            self.profile.__class__.__name__ != "PlayerProfile" and
+            not self.profile.is_premium
+        )
 
     @classmethod
     def get_system_user(cls):

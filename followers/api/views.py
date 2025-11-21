@@ -59,7 +59,7 @@ class FollowAPIView(EndpointView, ProfileRetrieveMixin):
 
     def list_my_followers(self, request: Request) -> Response:
         """
-        List all followers of the current user (premium Players and Guests only).
+        List all followers of the current user (premium Players only).
         """
         if profile := request.user.profile:
             # Check if profile is premium
@@ -69,11 +69,11 @@ class FollowAPIView(EndpointView, ProfileRetrieveMixin):
                     status=status.HTTP_403_FORBIDDEN
                 )
             
-            # Check if profile type is Player or Guest
+            # Check if profile type is Player
             profile_type = profile.__class__.__name__
-            if profile_type not in ["PlayerProfile", "GuestProfile"]:
+            if profile_type != "PlayerProfile":
                 return Response(
-                    {"detail": "Follower statistics are only available for players and guests"},
+                    {"detail": "Follower statistics are only available for players"},
                     status=status.HTTP_403_FORBIDDEN
                 )
             

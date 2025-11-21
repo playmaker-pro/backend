@@ -42,20 +42,36 @@ def create_notification(
     template_name = kwargs.pop("template_name", None)
     template_params = kwargs.pop("template_params", None)
 
-    notification, created = Notification.objects.get_or_create(
-        target_id=profile_meta_id,
-        title=title,
-        description=description,
-        href=href,
-        defaults={
-            "template_name": template_name,
-            "template_params": template_params,
+    # If template_params contains 'profile', this notification is event-specific
+    # (e.g., inquiry from a specific sender) and should NOT be deduplicated.
+    # Otherwise, use get_or_create to prevent duplicate generic notifications.
+    if template_params and "profile" in template_params:
+        # Create a new notification without deduplication
+        notification = Notification.objects.create(
+            target_id=profile_meta_id,
+            title=title,
+            description=description,
+            href=href,
+            template_name=template_name,
+            template_params=template_params,
             **kwargs,
-        },
-    )
+        )
+    else:
+        # Use get_or_create for generic notifications that should be deduplicated
+        notification, created = Notification.objects.get_or_create(
+            target_id=profile_meta_id,
+            title=title,
+            description=description,
+            href=href,
+            defaults={
+                "template_name": template_name,
+                "template_params": template_params,
+                **kwargs,
+            },
+        )
 
-    if not created:
-        # Update existing notification with new template data
-        notification.template_name = template_name
-        notification.template_params = template_params
-        notification.refresh()
+        if not created:
+            # Update existing notification with new template data
+            notification.template_name = template_name
+            notification.template_params = template_params
+            notification.refresh()

@@ -839,7 +839,7 @@ class TestAnonymousTransferRequest:
     def test_create_anonymous_transfer_request_full_flow_for_coach(
         self, coach_profile, api_client, payload
     ):
-        """Test that Coach cannot use anonymous mode (only Clubs and Players can)."""
+        """Test that Coach CAN use anonymous mode (same as Club)."""
         assert not ProfileTransferRequest.objects.filter().exists()
         coach_profile.setup_premium_profile()
         api_client.force_authenticate(coach_profile.user)
@@ -852,10 +852,12 @@ class TestAnonymousTransferRequest:
             format="json",
         )
 
-        # Coaches cannot use anonymous mode - should get 400 validation error
-        assert response.status_code == 400
-        assert "Anonymous profile is only available for clubs and players" in str(response.content)
-        assert not ProfileTransferRequest.objects.filter().exists()
+        # Coaches CAN use anonymous mode (same permissions as Club)
+        assert response.status_code == 201
+        assert ProfileTransferRequest.objects.filter().exists()
+        transfer_request = ProfileTransferRequest.objects.first()
+        assert transfer_request.is_anonymous is True
+        assert transfer_request.meta == coach_profile.meta
 
     def test_expose_anonymous_transfer_request(self, coach_profile, api_client):
         """

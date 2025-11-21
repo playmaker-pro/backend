@@ -79,8 +79,8 @@ def test_guest_cannot_buy_player_product(api_client, guest_profile, product_prem
     url = create_transaction_url(product_premium_player_month.id)
     response = api_client.post(url)
 
-    assert response.status_code == 400
-    assert "only available for Player profiles" in response.json()
+    assert response.status_code == 403
+    assert "only available for Player profiles" in response.json()["detail"]
 
 
 def test_guest_cannot_buy_other_product(api_client, guest_profile, product_premium_other_quarter):
@@ -89,8 +89,8 @@ def test_guest_cannot_buy_other_product(api_client, guest_profile, product_premi
     url = create_transaction_url(product_premium_other_quarter.id)
     response = api_client.post(url)
 
-    assert response.status_code == 400
-    assert "not available for Player or Guest profiles" in response.json()
+    assert response.status_code == 403
+    assert "not available for Player or Guest profiles" in response.json()["detail"]
 
 
 # ========== OTHER (CLUB/COACH/ETC.) PREMIUM TESTS ==========
@@ -160,8 +160,8 @@ def test_club_cannot_buy_player_product(api_client, club_profile, product_premiu
     url = create_transaction_url(product_premium_player_month.id)
     response = api_client.post(url)
 
-    assert response.status_code == 400
-    assert "only available for Player profiles" in response.json()
+    assert response.status_code == 403
+    assert "only available for Player profiles" in response.json()["detail"]
 
 
 def test_club_cannot_buy_guest_product(api_client, club_profile, product_premium_guest_month):
@@ -170,8 +170,8 @@ def test_club_cannot_buy_guest_product(api_client, club_profile, product_premium
     url = create_transaction_url(product_premium_guest_month.id)
     response = api_client.post(url)
 
-    assert response.status_code == 400
-    assert "only available for Guest profiles" in response.json()
+    assert response.status_code == 403
+    assert "only available for Guest profiles" in response.json()["detail"]
 
 
 # ========== PLAYER VALIDATION TESTS ==========
@@ -182,8 +182,8 @@ def test_player_cannot_buy_guest_product(api_client, player_profile, product_pre
     url = create_transaction_url(product_premium_guest_month.id)
     response = api_client.post(url)
 
-    assert response.status_code == 400
-    assert "only available for Guest profiles" in response.json()
+    assert response.status_code == 403
+    assert "only available for Guest profiles" in response.json()["detail"]
 
 
 def test_player_cannot_buy_other_product(api_client, player_profile, product_premium_other_quarter):
@@ -192,8 +192,8 @@ def test_player_cannot_buy_other_product(api_client, player_profile, product_pre
     url = create_transaction_url(product_premium_other_quarter.id)
     response = api_client.post(url)
 
-    assert response.status_code == 400
-    assert "not available for Player or Guest profiles" in response.json()
+    assert response.status_code == 403
+    assert "not available for Player or Guest profiles" in response.json()["detail"]
 
 
 # ========== INQUIRY RESET PERIOD TESTS ==========

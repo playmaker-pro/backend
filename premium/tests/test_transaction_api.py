@@ -33,8 +33,8 @@ def test_impossible_to_buy_inquiries_without_premium(
     url = create_transaction_url(product_inquiries_L.id)
     response = api_client.post(url)
 
-    assert response.status_code == 400
-    assert response.json() == "Product is available only for premium users."
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Product is available only for premium users."
 
 
 def test_buy_premium_month_player(
@@ -217,8 +217,8 @@ def test_buy_inquiries_with_some_left(
     url = create_transaction_url(product_inquiries_L.id)
     response = api_client.post(url)
 
-    assert response.status_code == 400
-    assert response.json() == "You need to use all inquiries before buying new ones."
+    assert response.status_code == 403
+    assert response.json()["detail"] == "You need to use all inquiries before buying new ones."
 
 
 def test_buy_XXL_inquiries(

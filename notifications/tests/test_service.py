@@ -484,7 +484,7 @@ class TestNotifications:
             icon="inquiry",
         ).exists()
 
-    def test_notify_hidden_inquiry_for_freemium_non_player(self, player_profile, club_profile):
+    def test_notify_hidden_inquiry_for_freemium_non_player(self, club_profile):
         """
         Test that freemium non-Player profiles (Club/Coach/etc.) receive:
         - Normal notifications for first 5 inquiries

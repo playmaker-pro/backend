@@ -111,10 +111,24 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
         read_only=True, source="recipient", required=False
     )
     recipient_profile_uuid = serializers.UUIDField(write_only=True)
+    is_visible = serializers.SerializerMethodField()
 
     class Meta:
         model = _models.InquiryRequest
         fields = "__all__"
+    
+    def get_is_visible(self, obj: _models.InquiryRequest) -> bool:
+        """Determine if inquiry is visible based on recipient's profile type and premium status."""
+        # Get context flags from view
+        is_freemium_non_player = self.context.get('is_freemium_non_player', False)
+        visible_inquiry_ids = self.context.get('visible_inquiry_ids', set())
+        
+        # Freemium non-player profiles can only see oldest 5 inquiries
+        if is_freemium_non_player:
+            return obj.id in visible_inquiry_ids
+        
+        # All inquiries visible for premium users or players
+        return True
 
     def get_translated_status(self, status: str) -> str:
         """Translate inquiry status to current language."""

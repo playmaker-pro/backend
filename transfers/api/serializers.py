@@ -145,7 +145,7 @@ class SharedValidatorsMixin:
     """Mixing for shared methods."""
 
     def validate_is_anonymous(self, val: bool) -> bool:
-        """Validate is_anonymous field - only for premium clubs and players"""
+        """Validate is_anonymous field - only for premium profiles"""
         profile = self.context.get("profile")
         
         if val:
@@ -153,13 +153,6 @@ class SharedValidatorsMixin:
             if not profile.is_premium:
                 raise serializers.ValidationError(
                     "Anonymous profile is only available for premium users."
-                )
-            
-            # Check if profile is Club or Player
-            profile_type = profile.__class__.__name__
-            if profile_type not in ["ClubProfile", "PlayerProfile"]:
-                raise serializers.ValidationError(
-                    "Anonymous profile is only available for clubs and players."
                 )
         
         return val

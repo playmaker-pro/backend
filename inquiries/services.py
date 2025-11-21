@@ -68,8 +68,18 @@ class InquireService:
 
     @staticmethod
     def update_requests_with_read_status(queryset: QuerySet, user: User) -> None:
-        for request in queryset.filter(status=InquiryRequest.STATUS_SENT):
-            if request.recipient == user:
+        """Transition inquiries from SENT to RECEIVED status. Only visible inquiries for freemium non-players."""
+        sent_requests = queryset.filter(status=InquiryRequest.STATUS_SENT, recipient=user)
+        
+        if user.is_freemium_non_player:
+            # Only transition oldest 5 inquiries to RECEIVED (the visible ones)
+            oldest_5_ids = user.inquiry_request_recipient.order_by('created_at')[:5].values_list('id', flat=True)
+            for request in sent_requests.filter(id__in=oldest_5_ids):
+                request.read()
+                request.save()
+        else:
+            # Transition all to RECEIVED for premium users or players
+            for request in sent_requests:
                 request.read()
                 request.save()
 
@@ -108,17 +118,25 @@ class InquireService:
         Updates the read status of inquiries based on the role of the user.
 
         This method checks both sent and received inquiries for a given user.
-        For received inquiries. it marks them as read by the recipient if they haven't
-        been marked as such already. Similarly, for sent inquiries, it marks them as
-        read by the sender, indicating that the sender has acknowledged any responses
-        or actions taken by the recipient on those inquiries.
+        For received inquiries, it marks them as read by the recipient if they haven't
+        been marked as such already. For freemium non-players, only the oldest 5 
+        inquiries are marked as read (since they can't see the rest).
+        Similarly, for sent inquiries, it marks them as read by the sender.
         """
-        # Update received inquiries as read by the recipient
-        InquiryRequest.objects.filter(
-            recipient=user, is_read_by_recipient=False
-        ).update(is_read_by_recipient=True)
+        if user.is_freemium_non_player:
+            # Only mark oldest 5 inquiries as read (the visible ones)
+            oldest_5_ids = user.inquiry_request_recipient.order_by('created_at')[:5].values_list('id', flat=True)
+            InquiryRequest.objects.filter(
+                id__in=oldest_5_ids,
+                is_read_by_recipient=False
+            ).update(is_read_by_recipient=True)
+        else:
+            # Mark all received inquiries as read for premium users or players
+            InquiryRequest.objects.filter(
+                recipient=user, is_read_by_recipient=False
+            ).update(is_read_by_recipient=True)
 
-        # Update received inquiries as read by the sender
+        # Update sent inquiries as read by the sender (no restriction)
         InquiryRequest.objects.filter(sender=user, is_read_by_sender=False).update(
             is_read_by_sender=True
         )

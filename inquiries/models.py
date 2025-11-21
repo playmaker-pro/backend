@@ -251,11 +251,11 @@ class UserInquiry(models.Model):
                 plan = InquireService.get_plan_for_profile_type(profile_type, is_premium=True)
                 self.plan = plan
             # else: keep current plan (package plan)
-        else:  # No premium - back to freemium
+        else:  # No premium - back to freemium, packages are lost
             self.plan = InquiryPlan.basic()
-            # Reset limit_raw to freemium only if no premium
-            if not has_packages:
-                self.limit_raw = freemium_limit
+            # Always reset limit_raw to freemium when premium expires
+            # Packages are only available during premium
+            self.limit_raw = freemium_limit
         
         # Cap counter to limit
         if self.counter_raw >= self.limit_raw:
@@ -286,17 +286,15 @@ class UserInquiry(models.Model):
 
     def increment(self):
         """Increase by one counter"""
-        # Only increment if we have remaining quota
-        if self.left > 0:
-            if self.counter_raw < self.limit_raw:
-                self.counter_raw += 1
-                self.save()
-            else:
-                if (
-                    self.premium_inquiries
-                    and self.premium_inquiries.can_use_premium_inquiries
-                ):
-                    self.premium_inquiries.increment_counter()
+        if self.counter_raw < self.limit_raw:
+            self.counter_raw += 1
+            self.save()
+        else:
+            if (
+                self.premium_inquiries
+                and self.premium_inquiries.can_use_premium_inquiries
+            ):
+                self.premium_inquiries.increment_counter()
 
     def decrement(self):
         """Decrease by one counter"""
@@ -386,34 +384,22 @@ class UserInquiry(models.Model):
 
     def save(self, *args, **kwargs):
         """Ensure plan and limit_raw are set on creation"""
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.info(f"UserInquiry.save() called: pk={self.pk}, plan={self.plan}")
-        
         if self.pk is None:  # Only on creation
-            logger.info("UserInquiry: New record (pk is None)")
             # Ensure plan is set (should be set by create_basic_inquiry_plan or caller)
             if not self.plan:
-                logger.info("UserInquiry: No plan set, assigning...")
                 # Fallback: try to get correct plan based on profile
                 if hasattr(self.user, 'profile') and self.user.profile:
                     profile_type = self.user.profile.__class__.__name__
                     is_premium = self.user.profile.is_premium
                     from inquiries.services import InquireService
                     self.plan = InquireService.get_plan_for_profile_type(profile_type, is_premium)
-                    logger.info(f"UserInquiry: Assigned plan {self.plan} (ID={self.plan.id})")
                 else:
                     # Fallback to basic plan
                     self.plan = InquiryPlan.basic()
-                    logger.info(f"UserInquiry: No profile, using basic plan")
-            
+
             # Set limit_raw based on plan
             self.limit_raw = self.plan.limit if self.plan else 5
-            logger.info(f"UserInquiry: Set limit_raw to {self.limit_raw}")
-        else:
-            logger.info(f"UserInquiry: Updating existing record (pk={self.pk})")
         
-        logger.info(f"UserInquiry: Before super().save() - plan={self.plan}, limit_raw={self.limit_raw}")
         super().save(*args, **kwargs)
     
     def __str__(self):
@@ -560,13 +546,7 @@ class InquiryRequest(models.Model):
     def send(self):
         """Should be appeared when message was distributed to recipient"""
         if self.recipient.profile and self.recipient.profile.meta:
-            # Check if recipient is freemium and NOT a player (Club, Coach, Scout, Manager, Guest, Referee)
-            is_freemium_non_player = (
-                self.recipient.profile.__class__.__name__ != "PlayerProfile" and
-                not self.recipient.profile.is_premium
-            )
-            
-            if is_freemium_non_player:
+            if self.recipient.is_freemium_non_player:
                 # Count existing inquiries + 1 (current inquiry not yet saved)
                 received_count = self.recipient.inquiry_request_recipient.count() + 1
                 if received_count > 5:
@@ -629,8 +609,8 @@ class InquiryRequest(models.Model):
             f"InquiryRequestID: {self.pk}"
         )
         self.is_read_by_sender = False
-        if self.recipient.profile and self.recipient.profile.meta:
-            NotificationService(self.recipient.profile.meta).notify_inquiry_rejected(
+        if self.sender.profile and self.sender.profile.meta:
+            NotificationService(self.sender.profile.meta).notify_inquiry_rejected(
                 self.recipient.profile, hide_profile=self.anonymous_recipient
             )
         self.create_log_for_sender(InquiryLogType.REJECTED)

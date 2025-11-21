@@ -43,36 +43,27 @@ class InquiresAPIView(EndpointView):
         )
         
         total_count = received_inquiries.count()
-        # Check if user is freemium and NOT a player (applies to Club, Coach, Scout, Manager, Guest, Referee)
-        is_freemium_non_player = (
-            hasattr(request.user, 'profile') and 
-            request.user.profile.__class__.__name__ != "PlayerProfile" and
-            not request.user.profile.is_premium
-        )
         
-        # Serialize all inquiries
-        serializer = InquiryRequestSerializer(
-            received_inquiries, many=True, context=self.get_serializer_context()
-        )
+        # Determine which inquiries are visible (oldest 5 for freemium non-players)
+        visible_inquiry_ids = set()
+        if request.user.is_freemium_non_player:
+            # Get IDs of the 5 oldest inquiries (ascending by created_at)
+            oldest_5 = request.user.inquiry_request_recipient.order_by('created_at')[:5]
+            visible_inquiry_ids = set(oldest_5.values_list('id', flat=True))
         
-        # Mark which inquiries are visible for freemium non-player profiles
-        inquiries_data = serializer.data
-        visible_count = 0
-        hidden_count = 0
+        # Serialize inquiries with context for visibility logic
+        context = self.get_serializer_context()
+        context['is_freemium_non_player'] = request.user.is_freemium_non_player
+        context['visible_inquiry_ids'] = visible_inquiry_ids
         
-        if is_freemium_non_player:
-            for idx, inquiry in enumerate(inquiries_data):
-                if idx < 5:
-                    inquiry['is_visible'] = True
-                    visible_count += 1
-                else:
-                    inquiry['is_visible'] = False
-                    hidden_count += 1
-        else:
-            # All visible for premium users or players
-            for inquiry in inquiries_data:
-                inquiry['is_visible'] = True
-            visible_count = total_count
+        inquiries_data = []
+        for inquiry in received_inquiries:
+            serializer = InquiryRequestSerializer(inquiry, context=context)
+            inquiries_data.append(serializer.data)
+        
+        # Calculate counts based on is_visible field
+        visible_count = sum(1 for inq in inquiries_data if inq.get('is_visible', True))
+        hidden_count = total_count - visible_count
         
         # Add metadata about hidden inquiries
         response_data = {
@@ -80,7 +71,7 @@ class InquiresAPIView(EndpointView):
             "total_count": total_count,
             "visible_count": visible_count,
             "hidden_count": hidden_count,
-            "is_limited": is_freemium_non_player
+            "is_limited": request.user.is_freemium_non_player
         }
         
         return Response(response_data)

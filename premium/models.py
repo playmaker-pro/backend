@@ -12,6 +12,8 @@ from payments.models import Transaction
 from premium.tasks import premium_expired
 from premium.utils import get_date_days_after
 
+import logging
+logger = logging.getLogger(__name__)
 
 class PremiumType(Enum):
     YEAR = "YEAR"
@@ -100,9 +102,6 @@ class PremiumProfile(models.Model):
             else:
                 user.userinquiry.save(update_fields=['plan'])
         except Exception as e:
-            # Log but don't crash - inquiry update is not critical
-            import logging
-            logger = logging.getLogger(__name__)
             logger.error(f"Failed to update inquiry settings: {str(e)}")
 
     @property
@@ -258,7 +257,6 @@ class PromoteProfileProduct(models.Model):
 
 class PremiumInquiriesProduct(models.Model):
     # Profile-specific inquiry limits
-    # Only Player gets 30/month; everything else (Club, Coach, Manager, Scout, Guest, Referee, Other) gets 30/90days
     INQUIRIES_LIMIT_PLAYER = 30  # Player premium: 30 per month (anti-spam)
     INQUIRIES_LIMIT_DEFAULT = 30  # All others (Club-like): 30 every 3 months
 

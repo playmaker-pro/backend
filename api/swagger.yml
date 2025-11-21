@@ -7749,6 +7749,9 @@ components:
         is_read_by_recipient:
           type: boolean
           description: Specifies whether the inquiry has been read by the recipient
+        is_visible:
+          type: boolean
+          description: Whether the inquiry should be fully visible
       required:
         - id
         - created_at
@@ -7758,6 +7761,7 @@ components:
         - recipient
         - is_read_by_sender
         - is_read_by_recipient
+        - is_visible
 
     ReceivedInquiryRequestsList:
       type: object
@@ -7788,9 +7792,6 @@ components:
         hidden_count:
           type: integer
           description: "Number of hidden inquiries"
-        is_limited:
-          type: boolean
-          description: "Whether the list is limited due to non-premium status"
 
     InquiryPlan:
       type: object
