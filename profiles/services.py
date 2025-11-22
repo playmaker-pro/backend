@@ -208,6 +208,24 @@ class NotificationService:
         )
         self.create_notification(body)
 
+    def notify_trial_active(self) -> None:
+        """
+        Send notifications when trial is activated.
+        """
+        body = self.parse_body(
+            NotificationTemplate.TRIAL_ACTIVE,
+        )
+        self.create_notification(body)
+
+    def notify_new_inquiry_for_freemium(self) -> None:
+        """
+        Send notifications for new inquiry to freemium clubs.
+        """
+        body = self.parse_body(
+            NotificationTemplate.NEW_INQUIRY_FREEMIUM,
+        )
+        self.create_notification(body)
+
     @classmethod
     def bulk_notify_pm_rank(cls) -> None:
         """

@@ -198,6 +198,22 @@ class NotificationTemplate(Enum):
         "href": "/profil",
         "icon": "success",
     }
+    TRIAL_ACTIVE = {
+        "title": _("Twój 3-dniowy trial premium jest aktywny!"),
+        "description": _(
+            "Od teraz korzystasz z darmowego konta premium przez 3 dni. Sprawdź pełne możliwości PlayMaker i odkryj wszystkie funkcje!"
+        ),
+        "href": "/rynek-transferowy",
+        "icon": "premium",
+    }
+    NEW_INQUIRY_FREEMIUM = {
+        "title": _("Nowe zapytanie!"),
+        "description": _(
+            "Otrzymałeś nowe zapytanie - sprawdź od kogo i odpowiedz, aby nie przegapić okazji!"
+        ),
+        "href": "/kontakty?tab=zapytania",
+        "icon": "inquiry",
+    }
 
     TEST = {
         "title": _("Test"),

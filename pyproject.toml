@@ -10,9 +10,11 @@ ignore_init_module_imports = true
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "backend.settings.test"
-addopts = "-p no:warnings"
+addopts = "-p no:warnings --import-mode=importlib"
 env = [{ ENVIRONMENT = "test" }]
-pytest_plugins = "utils.fixtures"
+pytest_plugins = ["utils.fixtures"]
+pythonpath = ["."]
+testpaths = ["."]
 
 
 python_files = "tests/* test/*"

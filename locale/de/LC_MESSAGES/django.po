@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-12 21:31+0200\n"
+"POT-Creation-Date: 2025-11-20 00:31+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,29 +18,25 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: api/i18n_config.py:12 backend/settings/base.py:200
+#: api/i18n_config.py:12 backend/settings/base.py:216
 #: profiles/migrations/0083_language.py:76
 msgid "Polski"
 msgstr ""
 
-#: api/i18n_config.py:13 backend/settings/base.py:201
+#: api/i18n_config.py:13 backend/settings/base.py:217
 msgid "English"
 msgstr ""
 
-#: api/i18n_config.py:14 backend/settings/base.py:202
+#: api/i18n_config.py:14 backend/settings/base.py:218
 msgid "Deutsch"
 msgstr ""
 
-#: api/i18n_config.py:15 backend/settings/base.py:203
+#: api/i18n_config.py:15 backend/settings/base.py:219
 msgid "Українська"
 msgstr ""
 
 #: clubs/models.py:153 clubs/models.py:158 clubs/models.py:333
-#: fantasy/templates/fantasy/_table.html:16 marketplace/models.py:235
-#: marketplace/models.py:243 marketplace/models.py:268
-#: marketplace/models.py:276 marketplace/models.py:320
-#: marketplace/models.py:328 marketplace/models.py:363
-#: marketplace/models.py:371 profiles/models.py:1551
+#: fantasy/templates/fantasy/_table.html:16 profiles/models.py:1493
 msgid "Województwo"
 msgstr ""
 
@@ -60,23 +56,22 @@ msgstr ""
 msgid "Kraj"
 msgstr ""
 
-#: clubs/models.py:227 clubs/models.py:463 marketplace/models.py:212
-#: profiles/models.py:931 profiles/models.py:1593 profiles/models.py:1965
+#: clubs/models.py:227 clubs/models.py:463 profiles/models.py:873
+#: profiles/models.py:1535 profiles/models.py:1907
 msgid "Wybierz kraj"
 msgstr ""
 
-#: clubs/models.py:230 profiles/models.py:592 profiles/models.py:882
-#: profiles/models.py:1390 profiles/models.py:1580
+#: clubs/models.py:230 profiles/models.py:539 profiles/models.py:824
+#: profiles/models.py:1332 profiles/models.py:1522
 msgid "Telefon"
 msgstr ""
 
-#: clubs/models.py:235 clubs/models.py:241 marketplace/models.py:253
-#: marketplace/models.py:282 marketplace/models.py:377 profiles/models.py:1969
+#: clubs/models.py:235 clubs/models.py:241 profiles/models.py:1911
 msgid "Adres"
 msgstr ""
 
 #: clubs/models.py:250 plays/templates/plays/_tab_table.html:29
-#: plays/templates/plays/_tab_table.html:74 profiles/models.py:785
+#: plays/templates/plays/_tab_table.html:74 profiles/models.py:727
 msgid "Klub"
 msgstr ""
 
@@ -92,7 +87,7 @@ msgstr ""
 msgid "league_code"
 msgstr ""
 
-#: clubs/models.py:528 users/models.py:282
+#: clubs/models.py:528 users/models.py:281
 msgid "Zdjęcie"
 msgstr ""
 
@@ -132,7 +127,7 @@ msgstr ""
 msgid "Zwroty za buty/rękawice"
 msgstr ""
 
-#: clubs/models.py:982 roles/definitions.py:223
+#: clubs/models.py:982 roles/definitions.py:234
 msgid "Sprzęt treningowy"
 msgstr "Trainingsausrüstung"
 
@@ -140,7 +135,7 @@ msgstr "Trainingsausrüstung"
 msgid "Sprzęt wyjściowy"
 msgstr ""
 
-#: clubs/models.py:992 profiles/models.py:1532
+#: clubs/models.py:992 profiles/models.py:1474
 msgid "Drugi trener"
 msgstr "Co-Trainer"
 
@@ -168,21 +163,21 @@ msgstr ""
 msgid "Mecze"
 msgstr ""
 
-#: fantasy/templates/fantasy/_table.html:12 notifications/services.py:12
-#: profiles/models.py:100 roles/definitions.py:6
+#: fantasy/templates/fantasy/_table.html:12 profiles/models.py:93
+#: roles/definitions.py:6 utils/__init__.py:5
 msgid "Piłkarz"
 msgstr "Spieler"
 
-#: fantasy/templates/fantasy/_table.html:13 profiles/models.py:835
+#: fantasy/templates/fantasy/_table.html:13 profiles/models.py:777
 msgid "Pozycja"
 msgstr ""
 
-#: fantasy/templates/fantasy/_table.html:14 profiles/models.py:794
+#: fantasy/templates/fantasy/_table.html:14 profiles/models.py:736
 msgid "Drużyna"
 msgstr ""
 
-#: fantasy/templates/fantasy/_table.html:15 profiles/models.py:806
-#: profiles/models.py:1997
+#: fantasy/templates/fantasy/_table.html:15 profiles/models.py:748
+#: profiles/models.py:1939
 msgid "Poziom rozgrywkowy"
 msgstr "Wettkampfniveau"
 
@@ -203,7 +198,6 @@ msgid "Zamknij"
 msgstr ""
 
 #: fantasy/templates/fantasy/filters_desktop.html:49
-#: marketplace/templates/marketplace/filters.html:24
 #: products/templates/products/filters.html:22
 #: soccerbase/templates/soccerbase/tables/base_desktop_filters.html:20
 msgid "Filtruj wyniki"
@@ -265,98 +259,118 @@ msgstr ""
 msgid "Najczęściej zadawane pytania"
 msgstr ""
 
-#: inquiries/models.py:29
-msgid ""
-"Type '#male_form|female_form#' - to mark something that should be determined "
-"by gender (e.g. #Otrzymałeś|Otrzymałaś#).\n"
-"<> - to include user related with log.\n"
-"'#r#' to include user related with log with role.\n"
-"'#rb#' to include user related with log with role in objective case "
-"(biernik).\n"
-"#url# - to include additional url."
+#: inquiries/api/serializers.py:122
+msgid "NOWE"
 msgstr ""
 
-#: inquiries/models.py:39
+#: inquiries/api/serializers.py:123
+msgid "WYSŁANO"
+msgstr ""
+
+#: inquiries/api/serializers.py:124
+#, fuzzy
+#| msgid "ODCZYTANO"
+msgid "PRZECZYTANE"
+msgstr "GELESEN"
+
+#: inquiries/api/serializers.py:125
+msgid "ZAAKCEPTOWANE"
+msgstr ""
+
+#: inquiries/api/serializers.py:126
+msgid "ODRZUCONE"
+msgstr ""
+
+# Add missing anonymous translations
+#: inquiries/api/serializers.py:155
+#: profiles/serializers_detailed/player_profile_serializers.py:152
+#: profiles/serializers_detailed/player_profile_serializers.py:174
+msgid "Anonimowy"
+msgstr "Anonym"
+
+#: inquiries/api/serializers.py:156
+#: profiles/serializers_detailed/player_profile_serializers.py:153
+#: profiles/serializers_detailed/player_profile_serializers.py:175
+msgid "profil"
+msgstr "Profil"
+
+#: inquiries/constants.py:10
 msgid "Accepted inquiry"
 msgstr ""
 
-#: inquiries/models.py:40
+#: inquiries/constants.py:11
 msgid "Rejected inquiry"
 msgstr ""
 
-#: inquiries/models.py:41
+#: inquiries/constants.py:12
 msgid "New inquiry"
 msgstr ""
 
-#: inquiries/models.py:42
+#: inquiries/constants.py:13
 msgid "Outdated inquiry"
 msgstr ""
 
-#: inquiries/models.py:43
+#: inquiries/constants.py:14
 msgid "Undefined inquiry"
 msgstr ""
 
-#: inquiries/models.py:44
+#: inquiries/constants.py:15
 msgid "Reminder about outdated inquiry"
 msgstr ""
 
-#: inquiries/models.py:48
-msgid "Message should include '<>' as placeholder for user related with log."
+#: inquiries/constants.py:16
+msgid "No response reminder after 7 days"
 msgstr ""
 
-#: inquiries/models.py:66
-msgid "Should email be sent automatically when log is created?"
-msgstr ""
-
-#: inquiries/models.py:165 marketplace/models.py:47
+#: inquiries/models.py:72
 msgid "Plan Name"
 msgstr ""
 
-#: inquiries/models.py:165 marketplace/models.py:47
+#: inquiries/models.py:72
 msgid "Plan name"
 msgstr ""
 
-#: inquiries/models.py:167 marketplace/models.py:50
+#: inquiries/models.py:74
 msgid "Plan limit"
 msgstr ""
 
-#: inquiries/models.py:167 marketplace/models.py:50
+#: inquiries/models.py:74
 msgid "Limit how many actions are allowed"
 msgstr ""
 
-#: inquiries/models.py:173 marketplace/models.py:66
+#: inquiries/models.py:80
 msgid ""
 "Used to sort plans low numbers threaded as lowest plans. Default=0 which "
 "means this is not set."
 msgstr ""
 
-#: inquiries/models.py:178 marketplace/models.py:71
+#: inquiries/models.py:85
 msgid "Description"
 msgstr ""
 
-#: inquiries/models.py:182 marketplace/models.py:75
+#: inquiries/models.py:89
 msgid ""
 "Short description what is rationale behind plan. Used only for internal "
 "purpose."
 msgstr ""
 
-#: inquiries/models.py:187 marketplace/models.py:80
+#: inquiries/models.py:94
 msgid "Default Plan"
 msgstr ""
 
-#: inquiries/models.py:190 marketplace/models.py:83
+#: inquiries/models.py:97
 msgid "Defines if this is default plan selected during account creation."
 msgstr ""
 
-#: inquiries/models.py:200
+#: inquiries/models.py:107
 msgid "Defines if this is premium plan and what type of premium plan it is."
 msgstr ""
 
-#: inquiries/models.py:239
+#: inquiries/models.py:144
 msgid "Obecna ilość zapytań"
 msgstr ""
 
-#: inquiries/models.py:241 marketplace/models.py:104
+#: inquiries/models.py:146
 msgid "Current number of used inquiries."
 msgstr ""
 
@@ -400,11 +414,12 @@ msgstr "PlayMaker Partner"
 msgid "Junior w seniorach"
 msgstr "Junior bei Senioren"
 
-#: labels/translations.py:22 profiles/models.py:696 roles/definitions.py:97
+#: labels/translations.py:22 labels/translations.py:44 profiles/models.py:643
+#: roles/definitions.py:108
 msgid "Nie szukam klubu"
 msgstr "Suche keinen Verein"
 
-#: labels/translations.py:23 profiles/models.py:694 roles/definitions.py:95
+#: labels/translations.py:23 profiles/models.py:641 roles/definitions.py:106
 msgid "Szukam klubu"
 msgstr "Suche einen Verein"
 
@@ -445,7 +460,9 @@ msgid "Piłkarze otwarci na propozycje"
 msgstr "Spieler offen für Angebote"
 
 #: labels/translations.py:39
-msgid "Piłkarze szukający klub"
+#, fuzzy
+#| msgid "Piłkarze szukający klub"
+msgid "Piłkarze szukający klubu"
 msgstr "Spieler suchen Verein"
 
 #: labels/translations.py:40
@@ -460,98 +477,15 @@ msgstr "Offensivtrainer"
 msgid "Trenerzy defensywni"
 msgstr "Defensive Trainer"
 
-msgid "Podstawowy plan"
-msgstr "Grundplan"
-
-msgid "Premium 3 zapytania"
-msgstr "Premium 3 Anfragen"
-
-msgid "Premium 5 zapytania"
-msgstr "Premium 5 Anfragen"
-
-msgid "Premium 10 zapytania"
-msgstr "Premium 10 Anfragen"
-
-msgid "Dodatkowe 3 zapytań dostępne dla profilów premium"
-msgstr "Zusätzliche 3 Anfragen verfügbar für Premium-Profile"
-
-msgid "Dodatkowe 5 zapytań dostępne dla profilów premium"
-msgstr "Zusätzliche 5 Anfragen verfügbar für Premium-Profile"
-
-msgid "Dodatkowe 10 zapytań dostępne dla profilów premium"
-msgstr "Zusätzliche 10 Anfragen verfügbar für Premium-Profile"
-
-#: mailing/models.py:108
-msgid ""
-"Type '#male_form|female_form#' - to mark something that should be determined "
-"by recipient gender (e.g. #Otrzymałeś|Otrzymałaś#). #url# as placeholder for "
-"some url."
+#: mailing/utils.py:46
+msgid "Użytkownik"
 msgstr ""
 
-#: mailing/models.py:131
-msgid "Is default email template for selected type?"
-msgstr ""
-
-#: marketplace/models.py:58
-msgid ""
-"Number of days to set after which plan expires. Can be null which means is "
-"not activated."
-msgstr ""
-
-#: marketplace/models.py:102
-msgid "Obecna ilość ogłoszeń"
-msgstr ""
-
-#: marketplace/models.py:208 profiles/models.py:928 profiles/models.py:1589
-#: profiles/models.py:1961
-msgid "Country"
-msgstr ""
-
-#: marketplace/models.py:216
-msgid "Rocznik piłkarza od.. np. 1986"
-msgstr ""
-
-#: marketplace/models.py:220
-msgid "Rocznik piłkarza ..do np. 1986"
-msgstr ""
-
-#: marketplace/models.py:335 marketplace/models.py:356 profiles/models.py:1450
-#: profiles/models.py:1544
-msgid "Licencja"
-msgstr ""
-
-#: marketplace/templates/marketplace/announcement_club_for_coach.html:50
-#: marketplace/templates/marketplace/announcement_club_for_player.html:53
-msgid "Link do ogłoszenia / strony www klubu"
-msgstr ""
-
-#: marketplace/templates/marketplace/announcement_club_for_player.html:10
-msgid "Klub szuka zawodnika"
-msgstr ""
-
-#: marketplace/templates/marketplace/announcement_player_for_club.html:12
-#: soccerbase/templates/soccerbase/tables/table_players_card.html:29
-#: soccerbase/templates/soccerbase/tables/table_players_card.html:74
-msgid "r."
-msgstr ""
-
-#: marketplace/templates/marketplace/filter_button.html:3
-#: products/templates/products/_filter_button.html:3
-msgid "Filtruj"
-msgstr ""
-
-#: marketplace/templates/marketplace/filter_button_clear.html:4
-#: marketplace/templates/marketplace/filters_modal.html:16
-msgid "Usuń filtry"
-msgstr ""
-
-#: marketplace/views.py:284
-msgid "Ogłoszenia zaktualizowano"
-msgstr ""
-
-#: marketplace/views.py:337
-msgid "Przyjęto ogłoszenia."
-msgstr ""
+#: mailing/utils.py:47
+#, fuzzy
+#| msgid "Powiadomienia użytkownika"
+msgid "użytkownika"
+msgstr "Benutzer-Benachrichtigungen"
 
 #: notifications/models.py:52
 msgid "ODCZYTANO"
@@ -569,77 +503,51 @@ msgstr "Benutzer-Benachrichtigungen"
 msgid "Powiadomienia użytkowników"
 msgstr "Benutzer-Benachrichtigungen"
 
-#: notifications/services.py:12
-msgid "Piłkarka"
-msgstr "Spielerin"
-
-#: notifications/services.py:13 profiles/models.py:1494 roles/definitions.py:7
-msgid "Trener"
-msgstr "Trainer"
-
-#: notifications/services.py:13
-msgid "Trenerka"
-msgstr "Trainerin"
-
-#: notifications/services.py:14
-msgid "Działacz klubowy"
-msgstr "Vereinsfunktionär"
-
-#: notifications/services.py:14
-msgid "Działaczka klubowa"
-msgstr "Vereinsfunktionärin"
-
-#: notifications/services.py:15 roles/definitions.py:11
-msgid "Kibic"
-msgstr "Fan"
-
-#: notifications/services.py:16
-msgid "Manager"
-msgstr "Manager"
-
-#: notifications/services.py:17 roles/definitions.py:13
-msgid "Sędzia"
-msgstr "Schiedsrichter"
-
-#: notifications/services.py:18 roles/definitions.py:10
-msgid "Skaut"
-msgstr "Scout"
-
-#: notifications/services.py:66
+#: notifications/services.py:62 profiles/services.py:116
 msgid "Anonimowy profil"
 msgstr "Anonymes Profil"
 
+#: notifications/templates.py:57
+msgid "Potwierdź swój adres email"
+msgstr ""
+
 #: notifications/templates.py:59
+msgid ""
+"Twój adres email nie został przez Ciebie potwierdzony.Upewnij się, czy adres "
+"jest poprawny i potwierdź go."
+msgstr ""
+
+#: notifications/templates.py:66
 msgid "Skorzystaj z wersji próbnej Premium"
 msgstr "Nutzen Sie die Premium-Testversion"
 
-#: notifications/templates.py:60
+#: notifications/templates.py:67
 msgid "Wypróbuj 3 dni premium za darmo!"
 msgstr "Testen Sie 3 Tage Premium kostenlos!"
 
-#: notifications/templates.py:65
+#: notifications/templates.py:72
 msgid "Przejdź na Premium"
 msgstr "Wechseln Sie zu Premium"
 
-#: notifications/templates.py:66
+#: notifications/templates.py:73
 msgid "Sprawdź wszystkie możliwości i zyskaj przewagę!"
 msgstr ""
 "Entdecken Sie alle Möglichkeiten und verschaffen Sie sich einen Vorteil!"
 
-#: notifications/templates.py:71
+#: notifications/templates.py:78
 msgid "Zweryfikuj swój profil"
 msgstr "Verifizieren Sie Ihr Profil"
 
-#: notifications/templates.py:72
+#: notifications/templates.py:80
 msgid "Dodaj linki do profili piłkarskich i zweryfikuj swój profil."
 msgstr ""
 "Fügen Sie Links zu Fußballprofilen hinzu und verifizieren Sie Ihr Profil."
 
-#: notifications/templates.py:77
+#: notifications/templates.py:86
 msgid "Profil tymczasowo ukryty"
 msgstr "Profil temporär verborgen"
 
-#: notifications/templates.py:78
+#: notifications/templates.py:88
 msgid ""
 "Popraw informacje w profilu (imię, nazwisko, zdjęcie), aby przywrócić "
 "widoczność."
@@ -647,38 +555,38 @@ msgstr ""
 "Korrigieren Sie die Profilinformationen (Vorname, Nachname, Foto), um die "
 "Sichtbarkeit wiederherzustellen."
 
-#: notifications/templates.py:83
+#: notifications/templates.py:94
 msgid "Twoje konto Premium wygasło!"
 msgstr "Ihr Premium-Konto ist abgelaufen!"
 
-#: notifications/templates.py:84
+#: notifications/templates.py:96
 msgid "Nie czekaj – wróć do PREMIUM i korzystaj ze wszystkich funkcji!"
 msgstr ""
 "Warten Sie nicht – kehren Sie zu PREMIUM zurück und nutzen Sie alle "
 "Funktionen!"
 
-#: notifications/templates.py:89
+#: notifications/templates.py:102
 msgid "Ranking PM"
 msgstr "PM-Ranking"
 
-#: notifications/templates.py:90
+#: notifications/templates.py:103
 msgid "Sprawdź, kto ma najwyższy PM Score w tym miesiacu"
 msgstr "Schauen Sie, wer diesen Monat den höchsten PM-Score hat"
 
-#: notifications/templates.py:95
+#: notifications/templates.py:108
 #, python-brace-format
 msgid "Już {visited_by_count} osób wyświetliło Twój profil!"
 msgstr "Bereits {visited_by_count} Personen haben Ihr Profil angesehen!"
 
-#: notifications/templates.py:96 notifications/templates.py:132
+#: notifications/templates.py:109 notifications/templates.py:147
 msgid "Kliknij tutaj, aby zobaczyc kto to."
 msgstr "Klicken Sie hier, um zu sehen, wer es war."
 
-#: notifications/templates.py:101
+#: notifications/templates.py:114
 msgid "Witaj w PlayMaker!"
 msgstr "Willkommen bei PlayMaker!"
 
-#: notifications/templates.py:102
+#: notifications/templates.py:116
 msgid ""
 "Dziękujemy za dołączenie do społeczności, Twoja podróż zaczyna się tutaj! "
 "Sprawdź, co daje Ci PlayMaker!"
@@ -686,100 +594,124 @@ msgstr ""
 "Danke, dass Sie der Community beigetreten sind, Ihre Reise beginnt hier! "
 "Entdecken Sie, was PlayMaker Ihnen bietet!"
 
-#: notifications/templates.py:107
+#: notifications/templates.py:122
 msgid "Ktoś Cię obserwuje"
 msgstr "Jemand folgt Ihnen"
 
-#: notifications/templates.py:108
+#: notifications/templates.py:123
 msgid "Zobacz kto zaobserwował Twój profil."
 msgstr "Sehen Sie, wer Ihrem Profil gefolgt ist."
 
-#: notifications/templates.py:113
+#: notifications/templates.py:128
 #, python-brace-format
 msgid "{profile} zaakceptował twoje zaproszenie."
 msgstr "{profile} hat Ihre Einladung angenommen."
 
-#: notifications/templates.py:114 notifications/templates.py:120
-#: notifications/templates.py:126
+#: notifications/templates.py:129 notifications/templates.py:135
+#: notifications/templates.py:141
 msgid "Kliknij, aby sprawdzic odpowiedz."
 msgstr "Klicken Sie, um die Antwort zu überprüfen."
 
-#: notifications/templates.py:119
+#: notifications/templates.py:134
 #, python-brace-format
 msgid "{profile} odrzucił twoje zaproszenie."
 msgstr "{profile} hat Ihre Einladung abgelehnt."
 
-#: notifications/templates.py:125
+#: notifications/templates.py:140
 #, python-brace-format
 msgid "{profile} odczytał twoje zaproszenie."
 msgstr "{profile} hat Ihre Einladung gelesen."
 
-#: notifications/templates.py:131
+#: notifications/templates.py:146
 msgid "Wyświetlono twój profil"
 msgstr "Ihr Profil wurde angesehen"
 
-#: notifications/templates.py:137
+#: notifications/templates.py:152
 msgid "Ustaw zapotrzebowanie transferowe!"
 msgstr "Setzen Sie Ihre Transferanforderungen!"
 
-#: notifications/templates.py:138
+#: notifications/templates.py:153
 msgid "Kliknij tutaj, aby ustawic swoje zapotrzebowanie."
 msgstr "Klicken Sie hier, um Ihre Anforderungen festzulegen."
 
-#: notifications/templates.py:143
+#: notifications/templates.py:158
 msgid "Ustaw status transferowy"
 msgstr "Transfer-Status festlegen"
 
-#: notifications/templates.py:144
+#: notifications/templates.py:159
 msgid "Kliknij tutaj, aby ustawic swój status."
 msgstr "Klicken Sie hier, um Ihren Status festzulegen."
 
-#: notifications/templates.py:149
+#: notifications/templates.py:164
 msgid "Zaproś znajomych"
 msgstr "Freunde einladen"
 
-#: notifications/templates.py:150
+#: notifications/templates.py:165
 msgid "Zapraszaj i wygrywaj nagrody!"
 msgstr "Laden Sie ein und gewinnen Sie Preise!"
 
-#: notifications/templates.py:155
+#: notifications/templates.py:170
 msgid "Dodaj linki"
 msgstr "Links hinzufügen"
 
-#: notifications/templates.py:156 notifications/templates.py:162
-#: notifications/templates.py:168
+#: notifications/templates.py:171 notifications/templates.py:177
+#: notifications/templates.py:183
 msgid "Kliknij tutaj, aby przejść do profilu."
 msgstr "Klicken Sie hier, um zu Ihrem Profil zu gehen."
 
-#: notifications/templates.py:161
+#: notifications/templates.py:176
 msgid "Dodaj video"
 msgstr "Video hinzufügen"
 
-#: notifications/templates.py:167
+#: notifications/templates.py:182
 msgid "Dodaj aktualną drużynę"
 msgstr "Aktuelles Team hinzufügen"
 
-#: notifications/templates.py:173
+#: notifications/templates.py:188
 msgid "Otrzymałeś/aś nowe zapytanie"
 msgstr "Sie haben eine neue Anfrage erhalten"
 
-#: notifications/templates.py:174
+#: notifications/templates.py:189
 #, python-brace-format
 msgid "{profile} wysłał Ci zapytanie o kontakt."
 msgstr "{profile} hat Ihnen eine Kontaktanfrage gesendet."
 
-#: notifications/templates.py:179
+#: notifications/templates.py:194
 msgid "Twój profil został zweryfikowany!"
 msgstr "Ihr Profil wurde verifiziert!"
 
-#: notifications/templates.py:180
+#: notifications/templates.py:196
 msgid ""
 "Potwierdziliśmy Twoją tożsamość. Korzystaj z PLAYMAKER.pro bez ograniczeń!"
 msgstr ""
 "Wir haben Ihre Identität bestätigt. Nutzen Sie PLAYMAKER.pro ohne "
 "Einschränkungen!"
 
-#: notifications/templates.py:186 notifications/templates.py:187
+#: notifications/templates.py:202
+msgid "Twój 3-dniowy trial premium jest aktywny!"
+msgstr "Deine 3-tägige Premium-Testversion ist aktiv!"
+
+#: notifications/templates.py:204
+msgid ""
+"Od teraz korzystasz z darmowego konta premium przez 3 dni. Sprawdź pełne "
+"możliwości PlayMaker i odkryj wszystkie funkcje!"
+msgstr ""
+"Ab jetzt nutzt du ein kostenloses 3-Tage-Premiumkonto. Entdecke die vollen "
+"Möglichkeiten von PlayMaker und alle verfügbaren Funktionen!"
+
+#: notifications/templates.py:210
+msgid "Nowe zapytanie!"
+msgstr "Neue Anfrage!"
+
+#: notifications/templates.py:212
+msgid ""
+"Otrzymałeś nowe zapytanie - sprawdź od kogo i odpowiedz, aby nie przegapić "
+"okazji!"
+msgstr ""
+"Du hast eine neue Anfrage erhalten – sieh nach, von wem sie ist, und "
+"antworte, damit dir keine Chance entgeht!"
+
+#: notifications/templates.py:219 notifications/templates.py:220
 msgid "Test"
 msgstr "Test"
 
@@ -823,6 +755,10 @@ msgstr ""
 
 #: plays/templates/plays/_tab_table.html:81
 msgid "FORMA"
+msgstr ""
+
+#: products/templates/products/_filter_button.html:3
+msgid "Filtruj"
 msgstr ""
 
 #: products/templates/products/_filter_button.html:3
@@ -1209,553 +1145,565 @@ msgstr ""
 msgid "Chiński (Tradycyjny)"
 msgstr ""
 
-#: profiles/models.py:54
+#: profiles/models.py:47
 msgid "1-2 treningi"
 msgstr "1-2 Trainingseinheiten"
 
-#: profiles/models.py:55
+#: profiles/models.py:48
 msgid "3-4 treningi"
 msgstr "3-4 Trainingseinheiten"
 
-#: profiles/models.py:56
+#: profiles/models.py:49
 msgid "5-6 treningi"
 msgstr "5-6 Trainingseinheiten"
 
-#: profiles/models.py:79 profiles/models.py:86 profiles/models.py:93
+#: profiles/models.py:72 profiles/models.py:79 profiles/models.py:86
 msgid "Skrót meczu"
 msgstr "Spielhöhepunkte"
 
-#: profiles/models.py:80 profiles/models.py:87 profiles/models.py:94
+#: profiles/models.py:73 profiles/models.py:80 profiles/models.py:87
 msgid "Cały mecz"
 msgstr "Vollständiges Spiel"
 
-#: profiles/models.py:81
+#: profiles/models.py:74
 msgid "Bramka"
 msgstr "Tor"
 
-#: profiles/models.py:88 profiles/models.py:95
+#: profiles/models.py:81 profiles/models.py:88
 msgid "Analiza"
 msgstr "Analyse"
 
-#: profiles/models.py:101
+#: profiles/models.py:94
 msgid "Taktyka"
 msgstr "Taktik"
 
-#: profiles/models.py:102
+#: profiles/models.py:95
 msgid "Stałe fragmenty"
 msgstr "Standardsituationen"
 
-#: profiles/models.py:113
+#: profiles/models.py:106
 msgid "Youtube url"
 msgstr ""
 
-#: profiles/models.py:115
+#: profiles/models.py:108
 msgid "Tytuł nagrania"
 msgstr ""
 
-#: profiles/models.py:116
+#: profiles/models.py:109
 msgid "Opis"
 msgstr ""
 
-#: profiles/models.py:207
+#: profiles/models.py:200
 msgid "Krótki opis o sobie"
 msgstr ""
 
-#: profiles/models.py:588
+#: profiles/models.py:535
 msgid "Imię"
 msgstr ""
 
-#: profiles/models.py:589
+#: profiles/models.py:536
 msgid "Nazwisko"
 msgstr ""
 
-#: profiles/models.py:590
+#: profiles/models.py:537
 msgid "Sezon"
 msgstr ""
 
-#: profiles/models.py:591
+#: profiles/models.py:538
 msgid "adres e-mail"
 msgstr ""
 
-#: profiles/models.py:660 roles/definitions.py:140
+#: profiles/models.py:607 roles/definitions.py:151
 msgid "Bramkarz"
 msgstr "Torwart"
 
-#: profiles/models.py:661
+#: profiles/models.py:608
 msgid "Obrońca Lewy"
 msgstr "Linker Verteidiger"
 
-#: profiles/models.py:662
+#: profiles/models.py:609
 msgid "Obrońca Prawy"
 msgstr "Rechter Verteidiger"
 
-#: profiles/models.py:663
+#: profiles/models.py:610
 msgid "Obrońca Środkowy"
 msgstr "Innenverteidiger"
 
-#: profiles/models.py:664
+#: profiles/models.py:611
 msgid "Pomocnik defensywny (6)"
 msgstr "Defensiver Mittelfeldspieler (6)"
 
-#: profiles/models.py:665
+#: profiles/models.py:612
 msgid "Pomocnik środkowy (8)"
 msgstr "Zentraler Mittelfeldspieler (8)"
 
-#: profiles/models.py:666
+#: profiles/models.py:613
 msgid "Pomocnik ofensywny (10)"
 msgstr "Offensiver Mittelfeldspieler (10)"
 
-#: profiles/models.py:667 roles/definitions.py:150
+#: profiles/models.py:614 roles/definitions.py:161
 msgid "Skrzydłowy"
 msgstr "Flügelspieler"
 
-#: profiles/models.py:668 roles/definitions.py:149
+#: profiles/models.py:615 roles/definitions.py:160
 msgid "Napastnik"
 msgstr "Stürmer"
 
-#: profiles/models.py:689
+#: profiles/models.py:636
 msgid "Lewa"
 msgstr "Links"
 
-#: profiles/models.py:690
+#: profiles/models.py:637
 msgid "Prawa"
 msgstr "Rechts"
 
-#: profiles/models.py:695
+#: profiles/models.py:642
 msgid "Rozważę wszelkie oferty"
 msgstr "Offen für alle Angebote"
 
-#: profiles/models.py:700
+#: profiles/models.py:647
 msgid "Mam kartę na ręku"
 msgstr "Ich habe meinen Spielerpass"
 
-#: profiles/models.py:701
+#: profiles/models.py:648
 msgid "Nie wiem czy mam kartę na ręku"
 msgstr "Ich weiß nicht, ob ich meinen Pass habe"
 
-#: profiles/models.py:702
+#: profiles/models.py:649
 msgid "Nie mam karty na ręku"
 msgstr "Ich habe meinen Spielerpass nicht"
 
-#: profiles/models.py:706
+#: profiles/models.py:653
 msgid "Poziom profesjonalny"
 msgstr "Professionelles Niveau"
 
-#: profiles/models.py:707
+#: profiles/models.py:654
 msgid "Poziom półprofesjonalny"
 msgstr "Halbprofessionelles Niveau"
 
-#: profiles/models.py:708
+#: profiles/models.py:655
 msgid "Poziom regionalny"
 msgstr "Regionales Niveau"
 
-#: profiles/models.py:712
+#: profiles/models.py:659
 msgid "Mam agenta"
 msgstr "Ich habe einen Berater"
 
-#: profiles/models.py:713
+#: profiles/models.py:660
 msgid "Szukam agenta"
 msgstr "Suche einen Berater"
 
-#: profiles/models.py:714
+#: profiles/models.py:661
 msgid "Nie szukam agenta"
 msgstr "Suche keinen Berater"
 
-#: profiles/models.py:757 profiles/models.py:1392
+#: profiles/models.py:699 profiles/models.py:1334
 msgid "team_club_league_voivodeship_ver"
 msgstr ""
 
-#: profiles/models.py:759
+#: profiles/models.py:701
 msgid "Drużyna, klub, rozgrywki, województwo."
 msgstr ""
 
-#: profiles/models.py:788 profiles/models.py:1989
+#: profiles/models.py:730 profiles/models.py:1931
 msgid "Klub w którym obecnie reprezentuejsz"
 msgstr ""
 
-#: profiles/models.py:797
+#: profiles/models.py:739
 msgid "Drużyna w której obecnie grasz"
 msgstr ""
 
-#: profiles/models.py:803
+#: profiles/models.py:745
 msgid "Rozgrywki"
 msgstr ""
 
-#: profiles/models.py:813 profiles/models.py:1573 users/models.py:442
+#: profiles/models.py:755 profiles/models.py:1515 users/models.py:421
 msgid "Data urodzenia"
 msgstr ""
 
-#: profiles/models.py:815
+#: profiles/models.py:757
 msgid "Wzrost"
 msgstr ""
 
-#: profiles/models.py:816
+#: profiles/models.py:758
 msgid "Wysokość (cm) [130-210cm]"
 msgstr ""
 
-#: profiles/models.py:825
+#: profiles/models.py:767
 msgid "Waga"
 msgstr ""
 
-#: profiles/models.py:826
+#: profiles/models.py:768
 msgid "Waga(kg) [40-140kg]"
 msgstr ""
 
-#: profiles/models.py:842
+#: profiles/models.py:784
 msgid "Pozycja alternatywna"
 msgstr ""
 
-#: profiles/models.py:848
+#: profiles/models.py:790
 msgid "Pozycja Fantasy"
 msgstr ""
 
-#: profiles/models.py:851 profiles/models.py:1655
+#: profiles/models.py:793 profiles/models.py:1597
 msgid "Formacja"
 msgstr ""
 
-#: profiles/models.py:858
+#: profiles/models.py:800
 msgid "Alternatywna formacja"
 msgstr ""
 
-#: profiles/models.py:865
+#: profiles/models.py:807
 msgid "Noga"
 msgstr ""
 
-#: profiles/models.py:871
+#: profiles/models.py:813
 msgid "Karta na ręku"
 msgstr ""
 
-#: profiles/models.py:877 profiles/models.py:1575 profiles/models.py:1954
+#: profiles/models.py:819 profiles/models.py:1517 profiles/models.py:1896
 msgid "Piłkarski cel"
 msgstr ""
 
-#: profiles/models.py:883 profiles/models.py:1581 profiles/models.py:1777
-#: profiles/models.py:1828 profiles/models.py:1967
+#: profiles/models.py:825 profiles/models.py:1523 profiles/models.py:1719
+#: profiles/models.py:1770 profiles/models.py:1909
 msgid "Facebook"
 msgstr ""
 
-#: profiles/models.py:891
+#: profiles/models.py:833
 msgid "LNP"
 msgstr ""
 
-#: profiles/models.py:893
+#: profiles/models.py:835
 msgid "90min portal"
 msgstr ""
 
-#: profiles/models.py:895
+#: profiles/models.py:837
 msgid "TrasferMarket"
 msgstr ""
 
-#: profiles/models.py:899 profiles/models.py:1624 profiles/models.py:2003
+#: profiles/models.py:841 profiles/models.py:1566 profiles/models.py:1945
 msgid "Województwo zamieszkania"
 msgstr ""
 
-#: profiles/models.py:907 profiles/models.py:1610
+#: profiles/models.py:849 profiles/models.py:1552
 msgid "Miasto z którego dojeżdżam na trening"
 msgstr ""
 
-#: profiles/models.py:911
+#: profiles/models.py:853
 msgid "Odległość na trening"
 msgstr ""
 
-#: profiles/models.py:914 profiles/models.py:1600 profiles/models.py:1979
+#: profiles/models.py:856 profiles/models.py:1542 profiles/models.py:1921
 msgid "Maksymalna odległośc na trening"
 msgstr ""
 
-#: profiles/models.py:920 profiles/models.py:1607
+#: profiles/models.py:862 profiles/models.py:1549
 msgid "O sobie"
 msgstr ""
 
-#: profiles/models.py:922
+#: profiles/models.py:864
 msgid "Gotowość do treningu"
 msgstr ""
 
-#: profiles/models.py:934
+#: profiles/models.py:870 profiles/models.py:1531 profiles/models.py:1903
+msgid "Country"
+msgstr ""
+
+#: profiles/models.py:876
 msgid "Czy posiadasz agenta"
 msgstr "Haben Sie einen Berater"
 
-#: profiles/models.py:940
+#: profiles/models.py:882
 msgid "Nazwa agenta"
 msgstr "Name des Beraters"
 
-#: profiles/models.py:943
+#: profiles/models.py:885
 msgid "Telefon do agenta"
 msgstr "Telefon des Beraters"
 
-#: profiles/models.py:946
+#: profiles/models.py:888
 msgid "Otwarty na propozycje zagraniczne"
 msgstr ""
 
-#: profiles/models.py:1302
+#: profiles/models.py:1244
 msgid "Metryka gracza"
 msgstr ""
 
-#: profiles/models.py:1303
+#: profiles/models.py:1245
 msgid "Metryki graczy"
 msgstr ""
 
-#: profiles/models.py:1394 profiles/models.py:1553
+#: profiles/models.py:1336 profiles/models.py:1495
 msgid "Drużyna, klub, rozgrywki, wojewódźtwo."
 msgstr ""
 
-#: profiles/models.py:1403
+#: profiles/models.py:1345
 msgid "Defines if admin approved change"
 msgstr ""
 
-#: profiles/models.py:1409 profiles/models.py:1651
+#: profiles/models.py:1351 profiles/models.py:1593
 msgid "Custom club role specified by the user."
 msgstr ""
 
-#: profiles/models.py:1450
+#: profiles/models.py:1392 profiles/models.py:1486
+msgid "Licencja"
+msgstr ""
+
+#: profiles/models.py:1392
 msgid "Type of the licence"
 msgstr ""
 
-#: profiles/models.py:1453
+#: profiles/models.py:1395
 msgid "Key"
 msgstr ""
 
-#: profiles/models.py:1457
+#: profiles/models.py:1399
 msgid "Key of the licence"
 msgstr ""
 
-#: profiles/models.py:1461
+#: profiles/models.py:1403
 msgid "Order in which the licence will be listed."
 msgstr ""
 
-#: profiles/models.py:1495 roles/definitions.py:59
+#: profiles/models.py:1436 roles/definitions.py:7 utils/__init__.py:6
+msgid "Trener"
+msgstr "Trainer"
+
+#: profiles/models.py:1437 roles/definitions.py:70
 msgid "Prezes"
 msgstr "Präsident"
 
-#: profiles/models.py:1496
+#: profiles/models.py:1438
 msgid "Kierownik"
 msgstr "Manager"
 
-#: profiles/models.py:1497 roles/definitions.py:61
+#: profiles/models.py:1439 roles/definitions.py:72
 msgid "Członek zarządu"
 msgstr "Vorstandsmitglied"
 
-#: profiles/models.py:1498
+#: profiles/models.py:1440
 msgid "Sztab szkoleniowy"
 msgstr "Trainerstab"
 
-#: profiles/models.py:1499 profiles/models.py:1537 roles/definitions.py:12
-#: roles/definitions.py:64
+#: profiles/models.py:1441 profiles/models.py:1479 roles/definitions.py:12
+#: roles/definitions.py:75
 msgid "Inne"
 msgstr "Andere"
 
-#: profiles/models.py:1511 profiles/models.py:1948
+#: profiles/models.py:1453 profiles/models.py:1890
 msgid "Profesjonalna kariera"
 msgstr "Professionelle Laufbahn"
 
-#: profiles/models.py:1512 profiles/models.py:1949
+#: profiles/models.py:1454 profiles/models.py:1891
 msgid "Kariera regionalna"
 msgstr "Regionale Laufbahn"
 
-#: profiles/models.py:1513
+#: profiles/models.py:1455
 msgid "Trenerka jako hobby"
 msgstr "Trainertätigkeit als Hobby"
 
-#: profiles/models.py:1517
+#: profiles/models.py:1459
 msgid "UEFA PRO"
 msgstr ""
 
-#: profiles/models.py:1518
+#: profiles/models.py:1460
 msgid "UEFA A"
 msgstr ""
 
-#: profiles/models.py:1519
+#: profiles/models.py:1461
 msgid "UEFA EY A"
 msgstr ""
 
-#: profiles/models.py:1520
+#: profiles/models.py:1462
 msgid "UEFA B"
 msgstr ""
 
-#: profiles/models.py:1521
+#: profiles/models.py:1463
 msgid "UEFA C"
 msgstr ""
 
-#: profiles/models.py:1522
+#: profiles/models.py:1464
 msgid "GRASS C"
 msgstr ""
 
-#: profiles/models.py:1523
+#: profiles/models.py:1465
 msgid "GRASS D"
 msgstr ""
 
-#: profiles/models.py:1524
+#: profiles/models.py:1466
 msgid "UEFA Futsal B"
 msgstr ""
 
-#: profiles/models.py:1525
+#: profiles/models.py:1467
 msgid "PZPN A"
 msgstr ""
 
-#: profiles/models.py:1526
+#: profiles/models.py:1468
 msgid "PZPN B"
 msgstr ""
 
-#: profiles/models.py:1527
+#: profiles/models.py:1469
 msgid "W trakcie kursu"
 msgstr "In Bearbeitung"
 
-#: profiles/models.py:1531
+#: profiles/models.py:1473
 msgid "Pierwszy trener"
 msgstr "Cheftrainer"
 
-#: profiles/models.py:1533
+#: profiles/models.py:1475
 msgid "Trener bramkarzy"
 msgstr "Torwarttrainer"
 
-#: profiles/models.py:1534
+#: profiles/models.py:1476
 msgid "Trener motoryki"
 msgstr "Fitnesstrainer"
 
-#: profiles/models.py:1535
+#: profiles/models.py:1477
 msgid "Trener mentalny"
 msgstr "Mentaltrainer"
 
-#: profiles/models.py:1536
+#: profiles/models.py:1478
 msgid "Analityk"
 msgstr "Analyst"
 
-#: profiles/models.py:1597 profiles/models.py:1976
+#: profiles/models.py:1539 profiles/models.py:1918
 msgid "Maksymalna odległość na trening"
 msgstr ""
 
-#: profiles/models.py:1615
+#: profiles/models.py:1557
 msgid "Województwo zamieszkania."
 msgstr ""
 
-#: profiles/models.py:1639
+#: profiles/models.py:1581
 msgid "Rola trenera"
 msgstr ""
 
-#: profiles/models.py:1644
+#: profiles/models.py:1586
 msgid "This field represents the role of the coach."
 msgstr ""
 
-#: profiles/models.py:1647
+#: profiles/models.py:1589
 msgid "Custom Coach Role"
 msgstr ""
 
-#: profiles/models.py:1660
+#: profiles/models.py:1602
 msgid "This field represents the preferred formation of the coach."
 msgstr ""
 
-#: profiles/models.py:1751
+#: profiles/models.py:1693
 msgid "The type of licence held by the coach"
 msgstr ""
 
-#: profiles/models.py:1757
+#: profiles/models.py:1699
 msgid "User holding this license"
 msgstr ""
 
-#: profiles/models.py:1760
+#: profiles/models.py:1702
 msgid "The expiry date of the licence (optional)"
 msgstr ""
 
-#: profiles/models.py:1793
+#: profiles/models.py:1735
 msgid "Custom Role"
 msgstr ""
 
-#: profiles/models.py:1829
+#: profiles/models.py:1771
 msgid "Other"
 msgstr ""
 
-#: profiles/models.py:1834
+#: profiles/models.py:1776
 msgid "Agency Phone"
 msgstr ""
 
-#: profiles/models.py:1838
+#: profiles/models.py:1780
 msgid "Contact phone number for the managing agency."
 msgstr ""
 
-#: profiles/models.py:1841 users/models.py:451
+#: profiles/models.py:1783 users/models.py:430
 msgid "Dial Code"
 msgstr ""
 
-#: profiles/models.py:1845
+#: profiles/models.py:1787
 msgid "Country dial code for the agency phone number."
 msgstr ""
 
-#: profiles/models.py:1848
+#: profiles/models.py:1790
 msgid "Agency Email"
 msgstr ""
 
-#: profiles/models.py:1851
+#: profiles/models.py:1793
 msgid "Contact email address for the managing agency."
 msgstr ""
 
-#: profiles/models.py:1854
+#: profiles/models.py:1796
 msgid "Agency Transfermarkt URL"
 msgstr ""
 
-#: profiles/models.py:1858
+#: profiles/models.py:1800
 msgid "URL of the managing agency's profile on Transfermarkt."
 msgstr ""
 
-#: profiles/models.py:1861
+#: profiles/models.py:1803
 msgid "Agency Website URL"
 msgstr ""
 
-#: profiles/models.py:1865
+#: profiles/models.py:1807
 msgid "URL of the managing agency's official website."
 msgstr ""
 
-#: profiles/models.py:1868
+#: profiles/models.py:1810
 msgid "Agency Instagram URL"
 msgstr ""
 
-#: profiles/models.py:1872
+#: profiles/models.py:1814
 msgid "URL of the managing agency's Instagram profile."
 msgstr ""
 
-#: profiles/models.py:1875
+#: profiles/models.py:1817
 msgid "Agency Twitter URL"
 msgstr ""
 
-#: profiles/models.py:1879
+#: profiles/models.py:1821
 msgid "URL of the managing agency's Twitter profile."
 msgstr ""
 
-#: profiles/models.py:1882 profiles/models.py:1889
+#: profiles/models.py:1824 profiles/models.py:1831
 msgid "Agency Facebook URL"
 msgstr ""
 
-#: profiles/models.py:1886
+#: profiles/models.py:1828
 msgid "URL of the managing agency's Facebook profile."
 msgstr ""
 
-#: profiles/models.py:1893
+#: profiles/models.py:1835
 msgid "Other agency URL."
 msgstr ""
 
-#: profiles/models.py:1950
+#: profiles/models.py:1892
 msgid "Skauting jako hobby"
 msgstr "Scouting als Hobby"
 
-#: profiles/models.py:1987
+#: profiles/models.py:1929
 msgid "Deklarowany klub"
 msgstr ""
 
-#: profiles/models.py:1995
+#: profiles/models.py:1937
 msgid "Deklarowany poziom rozgrywkowy"
 msgstr ""
 
-#: profiles/models.py:2078
+#: profiles/models.py:2020
 msgid "Sędzia główny"
 msgstr "Hauptschiedsrichter"
 
-#: profiles/models.py:2079
+#: profiles/models.py:2021
 msgid "Asystent"
 msgstr "Schiedsrichterassistent"
 
-#: profiles/models.py:2088
+#: profiles/models.py:2030
 msgid "Role"
 msgstr ""
 
-#: profiles/models.py:2246
+#: profiles/models.py:2188
 msgid ""
 "Role of the contributor in the team. Role specified for club/coach profile"
 msgstr ""
@@ -1768,173 +1716,194 @@ msgstr "Vereinsfunktionär"
 msgid "Menadżer"
 msgstr "Manager"
 
-#: roles/definitions.py:60
+#: roles/definitions.py:10 utils/__init__.py:11
+msgid "Skaut"
+msgstr "Scout"
+
+#: roles/definitions.py:11 utils/__init__.py:8
+msgid "Kibic"
+msgstr "Fan"
+
+#: roles/definitions.py:13 utils/__init__.py:10
+msgid "Sędzia"
+msgstr "Schiedsrichter"
+
+#: roles/definitions.py:71
 msgid "Dyrektor sportowy"
 msgstr "Sportdirektor"
 
-#: roles/definitions.py:62
+#: roles/definitions.py:73
 msgid "Dyrektor skautingu"
 msgstr "Scoutingdirektor"
 
-#: roles/definitions.py:63
+#: roles/definitions.py:74
 msgid "Kierownik drużyny"
 msgstr "Teammanager"
 
-#: roles/definitions.py:96
+#: roles/definitions.py:107
 msgid "Rozważę propozycje"
 msgstr "Offen für Angebote"
 
-#: roles/definitions.py:98
+#: roles/definitions.py:109
 msgid "Piłkarska emerytura"
 msgstr "Fußballrente"
 
-#: roles/definitions.py:109
+#: roles/definitions.py:120
 msgid "Status nieznany"
 msgstr "Unbekannter Status"
 
-#: roles/definitions.py:119
+#: roles/definitions.py:130
 msgid "Dostępny od zaraz"
 msgstr "Sofort verfügbar"
 
-#: roles/definitions.py:120
+#: roles/definitions.py:131
 msgid "Wracam po kontuzji"
 msgstr "Rückkehr nach Verletzung"
 
-#: roles/definitions.py:121
+#: roles/definitions.py:132
 msgid "Możliwe wypożyczenie"
 msgstr "Leihe möglich"
 
-#: roles/definitions.py:122
+#: roles/definitions.py:133
 msgid "Po przeprowadzce"
 msgstr "Nach Umzug"
 
-#: roles/definitions.py:123
+#: roles/definitions.py:134
 msgid "Studiuje zaoczne"
 msgstr "Fernstudium"
 
-#: roles/definitions.py:124
+#: roles/definitions.py:135
 msgid "Pracuje w nieregularnym trybie pracy"
 msgstr "Arbeite in unregelmäßigen Arbeitszeiten"
 
-#: roles/definitions.py:141
+#: roles/definitions.py:152
 msgid "Środkowy Obrońca"
 msgstr "Innenverteidiger"
 
-#: roles/definitions.py:142
+#: roles/definitions.py:153
 msgid "Lewy Obrońca"
 msgstr "Linker Verteidiger"
 
-#: roles/definitions.py:143
+#: roles/definitions.py:154
 msgid "Prawy Obrońca"
 msgstr "Rechter Verteidiger"
 
-#: roles/definitions.py:144
+#: roles/definitions.py:155
 msgid "Defensywny Pomocnik #6"
 msgstr "Defensiver Mittelfeldspieler #6"
 
-#: roles/definitions.py:145
+#: roles/definitions.py:156
 msgid "Środkowy Pomocnik #8"
 msgstr "Zentraler Mittelfeldspieler #8"
 
-#: roles/definitions.py:146
+#: roles/definitions.py:157
 msgid "Ofensywny Pomocnik #10"
 msgstr "Offensiver Mittelfeldspieler #10"
 
-#: roles/definitions.py:147
+#: roles/definitions.py:158
 msgid "Lewy Pomocnik"
 msgstr "Linker Mittelfeldspieler"
 
-#: roles/definitions.py:148
+#: roles/definitions.py:159
 msgid "Prawy Pomocnik"
 msgstr "Rechter Mittelfeldspieler"
 
-#: roles/definitions.py:205
+#: roles/definitions.py:216
 msgid "1-2 treningi tygodniowo"
 msgstr "1-2 Trainingseinheiten pro Woche"
 
-#: roles/definitions.py:206
+#: roles/definitions.py:217
 msgid "3-4 treningi tygodniowo"
 msgstr "3-4 Trainingseinheiten pro Woche"
 
-#: roles/definitions.py:207
+#: roles/definitions.py:218
 msgid "5+ treningów tygodniowo"
 msgstr "5+ Trainingseinheiten pro Woche"
 
-#: roles/definitions.py:221
+#: roles/definitions.py:232
 msgid "Zwrot lub organizacja transportu"
 msgstr "Transporterstattung oder -organisation"
 
-#: roles/definitions.py:222
+#: roles/definitions.py:233
 msgid "Zwrot za buty lub rękawice"
 msgstr "Erstattung für Schuhe oder Handschuhe"
 
-#: roles/definitions.py:224
+#: roles/definitions.py:235
 msgid "Dobre zaplecze treningowe"
 msgstr "Gute Trainingseinrichtungen"
 
-#: roles/definitions.py:225
+#: roles/definitions.py:236
 msgid "Premie za wygrane"
 msgstr "Siegprämien"
 
-#: roles/definitions.py:226
+#: roles/definitions.py:237
 msgid "Fizjoterapeuta w sztabie"
 msgstr "Physiotherapeut im Team"
 
-#: roles/definitions.py:227
+#: roles/definitions.py:238
 msgid "Siłownia do dyspozycji"
 msgstr "Fitnessstudio verfügbar"
 
-#: roles/definitions.py:228
+#: roles/definitions.py:239
 msgid "Walka o awans"
 msgstr "Kampf um Aufstieg"
 
-#: roles/definitions.py:229
+#: roles/definitions.py:240
 msgid "Doświadczony trener"
 msgstr "Erfahrener Trainer"
 
-#: roles/definitions.py:249
+#: roles/definitions.py:260
 msgid "0 - 499 zł"
 msgstr "0 - 499 PLN"
 
-#: roles/definitions.py:250
+#: roles/definitions.py:261
 msgid "500 - 999 zł"
 msgstr "500 - 999 PLN"
 
-#: roles/definitions.py:251
+#: roles/definitions.py:262
 msgid "1000 - 1999 zł"
 msgstr "1000 - 1999 PLN"
 
-#: roles/definitions.py:252
+#: roles/definitions.py:263
 msgid "2000 - 3999 zł"
 msgstr "2000 - 3999 PLN"
 
-#: roles/definitions.py:253
+#: roles/definitions.py:264
 msgid "4000+ zł"
 msgstr "4000+ PLN"
 
-#: roles/definitions.py:269
+#: roles/definitions.py:280
 msgid "Nieznany"
 msgstr "Unbekannt"
 
-#: roles/definitions.py:270
+#: roles/definitions.py:281
 msgid "Szukam piłkarzy"
 msgstr "Suche Spieler"
 
-#: roles/definitions.py:271
+#: roles/definitions.py:282
 msgid "Nie szukam piłkarzy"
 msgstr "Suche keine Spieler"
 
-#: roles/definitions.py:285
+#: roles/definitions.py:296
 msgid "Not Calculated"
 msgstr ""
 
-#: roles/definitions.py:286
+#: roles/definitions.py:297
 msgid "In Progress"
 msgstr ""
 
-#: roles/definitions.py:287
+#: roles/definitions.py:298
 msgid "Calculated"
 msgstr ""
+
+#: soccerbase/templates/soccerbase/tables/table_players_card.html:29
+#: soccerbase/templates/soccerbase/tables/table_players_card.html:74
+msgid "r."
+msgstr ""
+
+#: transfers/api/serializers.py:273
+msgid "Anonimowa drużyna"
+msgstr "Anonyme Mannschaft"
 
 #: transfers/models.py:32
 msgid "Benefits defines as integers with comma. Example: 1,2"
@@ -1944,39 +1913,39 @@ msgstr ""
 msgid "If true, the transfer object will be anonymous."
 msgstr ""
 
-#: transfers/models.py:135
+#: transfers/models.py:137
 msgid "League name filled automatically from team.club.voivodeship_obj"
 msgstr ""
 
-#: transfers/models.py:142
+#: transfers/models.py:144
 msgid "Voivodeship name filled automatically from team.club.voivodeship_obj"
 msgstr ""
 
-#: users/admin.py:170
+#: users/admin.py:171
 msgid "Personal info"
 msgstr ""
 
-#: users/admin.py:182
+#: users/admin.py:184
 msgid "Piłkarskie fakty"
 msgstr ""
 
-#: users/admin.py:193
+#: users/admin.py:195
 msgid "Important dates"
 msgstr ""
 
-#: users/admin.py:195
+#: users/admin.py:197
 msgid "Permissions"
 msgstr ""
 
-#: users/admin.py:366
+#: users/admin.py:400
 msgid "user - czy przypisany do użytkownika?"
 msgstr ""
 
-#: users/admin.py:371
+#: users/admin.py:405
 msgid "Tak"
 msgstr ""
 
-#: users/admin.py:372
+#: users/admin.py:406
 msgid "Nie"
 msgstr ""
 
@@ -1992,107 +1961,142 @@ msgstr ""
 msgid "Superuser must have is_superuser=True."
 msgstr ""
 
-#: users/models.py:95
+#: users/models.py:94
 msgid "first name"
 msgstr ""
 
-#: users/models.py:97
+#: users/models.py:96
 msgid "last name"
 msgstr ""
 
-#: users/models.py:261
+#: users/models.py:260
 msgid "Skip full setup"
 msgstr ""
 
-#: users/models.py:267
+#: users/models.py:266
 msgid "Adres email"
 msgstr ""
 
-#: users/models.py:286
+#: users/models.py:285
 msgid "Deklaracja klubu"
 msgstr ""
 
-#: users/models.py:294
+#: users/models.py:293
 msgid "Deklaracja roli"
 msgstr ""
 
-#: users/models.py:302
+#: users/models.py:301
 msgid "Deklaracja historycznej roli"
 msgstr ""
 
-#: users/models.py:310
+#: users/models.py:309
 msgid "Last Activity"
 msgstr ""
 
-#: users/models.py:410
+#: users/models.py:389
 msgid "Mężczyzna"
 msgstr "Männlich"
 
-#: users/models.py:411
+#: users/models.py:390
 msgid "Kobieta"
 msgstr "Weiblich"
 
-#: users/models.py:416
+#: users/models.py:395
 msgid "Localization"
 msgstr ""
 
-#: users/models.py:434
+#: users/models.py:413
 msgid "Gender"
 msgstr ""
 
-#: users/models.py:454
+#: users/models.py:433
 msgid "Country dial code for the phone number."
 msgstr ""
 
-#: users/models.py:457
+#: users/models.py:436
 msgid "Contact Email"
 msgstr ""
 
-#: users/models.py:460
+#: users/models.py:439
 msgid "Contact email address for the transfer."
+msgstr ""
+
+#: users/templates/admin/users/bulk_login_export.html:4
+msgid "Django site admin"
 msgstr ""
 
 #: users/utils/api_utils.py:17
 msgid "It is not possible to register with this email address"
 msgstr ""
 
-msgid "seniorzy"
-msgstr "Senioren"
+#: utils/__init__.py:5
+msgid "Piłkarka"
+msgstr "Spielerin"
 
-msgid "juniorzy"
-msgstr "Junioren"
+#: utils/__init__.py:6
+msgid "Trenerka"
+msgstr "Trainerin"
 
-msgid "mężczyźni"
-msgstr "Männer"
+#: utils/__init__.py:7
+msgid "Działacz klubowy"
+msgstr "Vereinsfunktionär"
 
-msgid "kobiety"
-msgstr "Frauen"
+#: utils/__init__.py:7
+msgid "Działaczka klubowa"
+msgstr "Vereinsfunktionärin"
 
-msgid "Jestem w trakcie kursu"
-msgstr "während des Kurses"
+#: utils/__init__.py:9
+msgid "Manager"
+msgstr "Manager"
 
-msgid "3 zapytań"
-msgstr "3 Anfragen"
+#~ msgid "Podstawowy plan"
+#~ msgstr "Grundplan"
 
-msgid "5 zapytań"
-msgstr "5 Anfragen"
+#~ msgid "Premium 3 zapytania"
+#~ msgstr "Premium 3 Anfragen"
 
-msgid "10 zapytań"
-msgstr "10 Anfragen"
+#~ msgid "Premium 5 zapytania"
+#~ msgstr "Premium 5 Anfragen"
 
-# Add missing anonymous translations
-msgid "Anonimowy"
-msgstr "Anonym"
+#~ msgid "Premium 10 zapytania"
+#~ msgstr "Premium 10 Anfragen"
 
-msgid "profil"  
-msgstr "Profil"
+#~ msgid "Dodatkowe 3 zapytań dostępne dla profilów premium"
+#~ msgstr "Zusätzliche 3 Anfragen verfügbar für Premium-Profile"
 
-msgid "Anonimowa drużyna"
-msgstr "Anonyme Mannschaft"
+#~ msgid "Dodatkowe 5 zapytań dostępne dla profilów premium"
+#~ msgstr "Zusätzliche 5 Anfragen verfügbar für Premium-Profile"
+
+#~ msgid "Dodatkowe 10 zapytań dostępne dla profilów premium"
+#~ msgstr "Zusätzliche 10 Anfragen verfügbar für Premium-Profile"
+
+#~ msgid "seniorzy"
+#~ msgstr "Senioren"
+
+#~ msgid "juniorzy"
+#~ msgstr "Junioren"
+
+#~ msgid "mężczyźni"
+#~ msgstr "Männer"
+
+#~ msgid "kobiety"
+#~ msgstr "Frauen"
+
+#~ msgid "Jestem w trakcie kursu"
+#~ msgstr "während des Kurses"
+
+#~ msgid "3 zapytań"
+#~ msgstr "3 Anfragen"
+
+#~ msgid "5 zapytań"
+#~ msgstr "5 Anfragen"
+
+#~ msgid "10 zapytań"
+#~ msgstr "10 Anfragen"
 
 # Premium product names for TPay payments - base format for dynamic profile type appending
-msgid "Miesięczne konto premium dla profilu"
-msgstr "Monatliches Premium-Konto für Profil"
+#~ msgid "Miesięczne konto premium dla profilu"
+#~ msgstr "Monatliches Premium-Konto für Profil"
 
-msgid "Roczne konto premium dla profilu"
-msgstr "Jährliches Premium-Konto für Profil"
+#~ msgid "Roczne konto premium dla profilu"
+#~ msgstr "Jährliches Premium-Konto für Profil"
