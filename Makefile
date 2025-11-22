@@ -37,12 +37,12 @@ startapp:
 
 
 .PHONY: restart
-restart: stop start tmp/restart.txt
-stop: stop-celery stop-celery-beat
-start: start-celery start-celery-beat
-tmp/restart.txt:
+restart: stop start bind_restart
+stop: stop-celery
+start: start-celery
+bind_restart:
 	@mkdir -p tmp
-	@touch tmp/restart.txt
+	touch tmp/restart.txt
 
 
 .PHONY: migrate
