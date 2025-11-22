@@ -33,12 +33,17 @@ from profiles.services import (
     ProfileService,
     ProfileVisitHistoryService,
 )
-from roles.definitions import PROFILE_TYPE_SHORT_MAP
-from transfers.models import ProfileTransferStatus
+from roles.definitions import (
+    CLUB_SHORT,
+    COACH_SHORT,
+    PROFILE_TYPE_SHORT_MAP,
+)
+from transfers.models import ProfileTransferRequest, ProfileTransferStatus
 from transfers.api.serializers import (
     ProfileTransferRequestSerializer,
     ProfileTransferStatusSerializer,
 )
+from api.serializers import ProfileEnumChoicesSerializer
 from users.api.serializers import UserDataSerializer, UserSocialStatsSerializer
 
 logger = logging.getLogger(__name__)
@@ -114,6 +119,7 @@ class BaseProfileSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(read_only=True)
     transfer_status = serializers.SerializerMethodField()
     transfer_requests = ProfileTransferRequestSerializer(many=True, read_only=True)
+    transfer_request = serializers.SerializerMethodField()
     visits = serializers.SerializerMethodField()
     promotion = PromoteProfileProductSerializer(read_only=True)
     social_stats = serializers.SerializerMethodField()
@@ -181,6 +187,38 @@ class BaseProfileSerializer(serializers.ModelSerializer):
                     result, required=False, context=self.context
                 )
                 return serializer.data
+
+    def get_transfer_request(self, obj: BaseProfile) -> Optional[dict]:
+        """
+        Get transfer request status for Coach (T) and Club (C) profiles.
+        Returns only the status (id + name) for listing endpoints.
+        """
+        role = self.get_role(obj)
+        
+        # Only return transfer_request for Coach (T) and Club (C) profiles
+        if role not in (COACH_SHORT, CLUB_SHORT):
+            return None
+        
+        # Check if profile has a transfer_request
+        if not hasattr(obj, "meta") or not hasattr(obj.meta, "transfer_request"):
+            return None
+        
+        transfer_request = obj.meta.transfer_request
+        if not transfer_request or not transfer_request.status:
+            return None
+        
+        # Serialize the status using ProfileEnumChoicesSerializer
+        # The serializer needs the model and source to access field choices
+        status_serializer = ProfileEnumChoicesSerializer(
+            model=ProfileTransferRequest,
+            source="status",
+        )
+        # Parse the status value first, then convert to representation
+        status_data = status_serializer.to_representation(
+            status_serializer.parse(transfer_request.status)
+        )
+        
+        return {"status": status_data}
 
     def get_labels(self, obj: BaseProfile):
         """Override labels field to return both profile and user related labels"""

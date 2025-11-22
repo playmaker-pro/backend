@@ -25,7 +25,11 @@ from profiles import errors, models, services
 from profiles.api import consts
 from profiles.api import errors as api_errors
 from profiles.services import ProfileVideoService
-from roles.definitions import CLUB_ROLES, GUEST_SHORT, PROFILE_TYPE_SHORT_MAP
+from roles.definitions import (
+    CLUB_ROLES,
+    GUEST_SHORT,
+    PROFILE_TYPE_SHORT_MAP,
+)
 from users.models import UserPreferences
 from users.services import UserService
 from utils import translate_to

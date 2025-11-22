@@ -47,6 +47,7 @@ class CoachProfileViewSerializer(BaseProfileSerializer):
             "training_ready",
             "formation",
             "transfer_status",
+            "transfer_request",
             "profile_video",
             "labels",
             "role",
